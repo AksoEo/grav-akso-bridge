@@ -176,7 +176,7 @@
     }
 }
 
-.account-pending-request-banner {
+.account-pending-request-banner, .account-cancel-change-request {
     --accent: var(--warning);
     background: var(--bg);
     border-radius: var(--radius);
@@ -205,10 +205,21 @@
         }
     }
 
+    .pending-description {
+        font-size: smaller;
+        margin-top: 0.5em;
+    }
+
     .cancel-button {
         font-size: smaller;
         background: var(--button);
         float: right;
+    }
+}
+
+.account-cancel-change-request {
+    .pending-changes {
+        margin: 1em 0;
     }
 }
 

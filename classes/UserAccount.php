@@ -9,6 +9,7 @@ class UserAccount {
     // query parameter used for loading the profile picture
     const QUERY_PROFILE_PICTURE = 'profile_picture';
     const QUERY_EDIT = 'redakti';
+    const QUERY_CANCEL_REQUEST = 'peto-nuligi';
 
     private $plugin, $app, $bridge, $page;
     private $editing = false;
@@ -20,11 +21,16 @@ class UserAccount {
 
         $this->loginsPath = $this->plugin->accountPath . $this->plugin->getGrav()['config']->get('plugins.akso-bridge.account_logins_path');
         $this->editPath = $this->plugin->accountPath . '?' . self::QUERY_EDIT;
+        $this->cancelRequestPath = $this->plugin->accountPath . '?' . self::QUERY_CANCEL_REQUEST;
         if ($path === $this->plugin->accountPath) {
             $this->page = 'account';
 
             if (isset($_GET[self::QUERY_EDIT])) {
                 $this->editing = true;
+            }
+
+            if (isset($_GET[self::QUERY_CANCEL_REQUEST])) {
+                $this->page = 'cancel_change_request';
             }
         } else if ($path === $this->loginsPath) {
             $this->page = 'logins';
@@ -41,7 +47,7 @@ class UserAccount {
                 'codeholderId' => $this->plugin->aksoUser['id'],
                 'status' => 'pending',
             ),
-            'fields' => ['time', 'codeholderDescription', 'data'],
+            'fields' => ['id', 'time', 'codeholderDescription', 'data'],
             'order' => [['time', 'desc']],
             'limit' => 1,
         ));
@@ -348,6 +354,29 @@ class UserAccount {
         );
     }
 
+    private function runCancelChgReq() {
+        $state = 'none';
+        $submitLink = $this->cancelRequestPath;
+
+        if (isset($_POST['cancel_request']) && $_POST['cancel_request']) {
+            $state = 'error';
+            $req = $this->getPendingRequest();
+            if ($req) {
+                $id = $req['id'];
+                $res = $this->app->bridge->patch("/codeholders/change_requests/$id", array(
+                    'status' => 'canceled',
+                ), [], []);
+                if ($res['k']) $state = 'success';
+            }
+        }
+
+        return array(
+            'active' => true,
+            'state' => $state,
+            'submit_link' => $submitLink,
+        );
+    }
+
     private function getLastLogins() {
         $res = $this->bridge->get('/codeholders/self/logins', array(
             'fields' => ['time', 'timezone', 'ip', 'userAgentParsed', 'userAgent', 'll', 'area', 'country', 'region', 'city'],
@@ -388,9 +417,9 @@ class UserAccount {
             $commitDesc = $input['commit_desc'] ?: null;
         }
 
-        $res = $this->bridge->patch('/codeholders/self', $codeholder, array(
-            'modDesc' => $commitDesc,
-        ), []);
+        $reqOptions = [];
+        if ($commitDesc) $reqOptions['modDesc'] = $commitDesc;
+        $res = $this->bridge->patch('/codeholders/self', $codeholder, $reqOptions, []);
         if ($res['k']) {
             $this->plugin->getGrav()->redirectLangSafe($this->plugin->accountPath, 303);
             die();
@@ -404,6 +433,7 @@ class UserAccount {
             'pending_request' => $this->getPendingRequest(),
             'own_field_asks' => $this->getOwnFieldAsks(),
             'account_link' => $this->plugin->accountPath,
+            'cancel_request_link' => $this->cancelRequestPath,
             'codeholder' => $codeholder,
             'commit_desc' => $commitDesc,
             'countries' => $this->getCountries(),
@@ -432,6 +462,7 @@ class UserAccount {
                     'pending_request' => $this->getPendingRequest(),
                     'own_field_asks' => $this->getOwnFieldAsks(),
                     'account_link' => $this->plugin->accountPath,
+                    'cancel_request_link' => $this->cancelRequestPath,
                     'codeholder' => $this->renderDetails(true),
                     'countries' => $this->getCountries(),
                     'editing' => $this->editing,
@@ -464,10 +495,17 @@ class UserAccount {
                 'logins_link' => $this->loginsPath,
                 'editing' => $this->editing,
                 'edit_link' => $this->editPath,
+                'cancel_request_link' => $this->cancelRequestPath,
             );
         } else if ($this->page === 'logins') {
             return array(
                 'logins' => $this->getLastLogins(),
+            );
+        } else if ($this->page === 'cancel_change_request') {
+            return array(
+                'pending_request' => $this->getPendingRequest(),
+                'account_link' => $this->plugin->accountPath,
+                'cancel_chgreq' => $this->runCancelChgReq(),
             );
         }
     }

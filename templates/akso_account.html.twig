@@ -27,13 +27,49 @@
             </button>
             {% endif %}
         </form>
+    {% elseif account.cancel_chgreq.active %}
+        <h1>{{ akso_locale.account.title }}</h1>
+        <h2>{{ akso_locale.account.cancel_chgreq_title }}</h2>
+        <div class="account-cancel-change-request">
+            {% if account.cancel_chgreq.state is same as('none') %}
+            <div class="pending-changes">
+                <div class="changes-title">{{ akso_locale.account.cancel_chgreq_changes_title }}:</div>
+                <ul class="changed-fields">
+                    {% for field, value in account.pending_request.data %}
+                        <li class="changed-field">
+                            {{ akso_locale.account[field] }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% elseif account.cancel_chgreq.state is same as('success') %}
+            <p>{{ akso_locale.account.cancel_chgreq_success }}</p>
+            {% elseif account.cancel_chgreq.state is same as('error') %}
+            <p>{{ akso_locale.account.cancel_chgreq_error }}</p>
+            {% endif %}
+            <form
+                class="reset-password-buttons"
+                method="POST"
+                action="{{ account.cancel_chgreq.submit_link }}">
+                <a class="link-button" href="{{ account.account_link }}">
+                    {{ akso_locale.account.cancel_chgreq_back }}
+                </a>
+                <div class="form-aux">
+                    <input name="cancel_request" value="1" />
+                </div>
+                {% if account.cancel_chgreq.state is same as('none') %}
+                <button class="is-primary" type="submit">
+                    {{ akso_locale.account.cancel_chgreq_commit }}
+                </button>
+                {% endif %}
+            </form>
+        </div>
     {% else %}
         <h1>{{ akso_locale.account.title }}</h1>
         {% if account.pending_request %}
             <div class="account-pending-request-banner">
-                <a class="link-button cancel-button">
+                <a class="link-button cancel-button" href="{{ account.cancel_request_link }}">
                     {{ akso_locale.account.pending_request_cancel }}
-                    TODO THIS BUTTON
                 </a>
                 <h3 class="banner-title">{{ akso_locale.account.pending_request_title }}</h3>
                 {% if account.editing %}
@@ -49,6 +85,10 @@
                             </li>
                         {% endfor %}
                     </ul>
+                </div>
+                <div class="pending-description">
+                    <b>{{ akso_locale.account.pending_request_description }}</b>:
+                    {{account.pending_request.codeholderDescription|default(akso_locale.account.pending_request_description_none)|e}}
                 </div>
                 {% endif %}
             </div>
@@ -105,6 +145,7 @@
                         </label>
                         <textarea
                             id="commit-desc"
+                            maxLength="500"
                             placeholder="{{akso_locale.account.commit_desc_desc|e('html_attr')}}"
                             name="commit_desc">{{account.commit_desc}}</textarea>
                     </div>
