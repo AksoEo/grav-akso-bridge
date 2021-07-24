@@ -1,3 +1,11 @@
+{% macro akso_field_extra(reg, akso_locale, field) %}
+    {# used in account editing; undefined in registration #}
+    {% if reg.state.own_field_asks[field] %}
+        <div class="own-field-ask">
+            {{akso_locale.account.field_edit_will_create_request}}
+        </div>
+    {% endif %}
+{% endmacro %}
     <input
         type="checkbox"
         id="codeholder-split-name"
@@ -28,6 +36,7 @@
                 required
                 value="{{chFirstName|e('html_attr')}}" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'firstName')}}
     </div>
     <div class="settings-field" data-el="input" data-type="text">
         <div class="inner-field">
@@ -42,6 +51,7 @@
                 type="text"
                 value="{{chLastName|e('html_attr')}}" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'lastName')}}
         <div class="field-description">
             <label for="codeholder-split-name" aria-hidden="true" tabindex="0" id="split-name-checkbox"></label>
             <label for="codeholder-split-name" aria-hidden="true">
@@ -62,6 +72,7 @@
                     type="text"
                     value="{{akso_registration.state.codeholder.firstNameLegal|e('html_attr')}}" />
             </div>
+            {{_self.akso_field_extra(akso_registration, akso_locale, 'firstNameLegal')}}
         </div>
         <div class="settings-field" data-el="input" data-type="text">
             <div class="inner-field">
@@ -83,6 +94,7 @@
                 type="text"
                 value="{{akso_registration.state.codeholder.honorific|e('html_attr')}}" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'honorific')}}
     </div>
     <hr />
     <div class="settings-field form-item" data-el="input" data-type="date">
@@ -98,6 +110,7 @@
                 required
                 value="{{akso_registration.state.codeholder.birthdate|e('html_attr')}}" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'birthdate')}}
     </div>
     <div class="settings-field" data-el="input" data-type="email">
         <div class="inner-field">
@@ -112,7 +125,14 @@
                 required
                 value="{{akso_registration.state.codeholder.email|e('html_attr')}}" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'email')}}
     </div>
+    {% if akso_reg_editing %}
+        <hr />
+        <div class="settings-description">
+            {{akso_locale.registration.codeholder_phone_desc}}
+        </div>
+    {% endif %}
     <div class="settings-field" data-el="input" data-type="phone">
         <div class="inner-field">
             <label for="codeholder-cellphone">{{akso_locale.registration.codeholder_cellphone}}</label>
@@ -122,13 +142,46 @@
                 type="text"
                 inputmode="numeric"
                 pattern="[+]?[a-z0-9\s]{1,49}"
-                title="{{akso_locale.registration.codeholder_cellphone_pattern_desc}}"
+                title="{{akso_locale.registration.codeholder_phone_pattern_desc}}"
                 value="{{akso_registration.state.codeholder.cellphone|e('html_attr')}}" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'cellphone')}}
+        {% if not akso_reg_editing %}
         <div class="field-description">
             {{akso_locale.registration.codeholder_cellphone_desc}}
         </div>
+        {% endif %}
     </div>
+    {% if akso_reg_editing %}
+        <div class="settings-field" data-el="input" data-type="phone">
+            <div class="inner-field">
+                <label for="codeholder-landline-phone">{{akso_locale.registration.codeholder_landline_phone}}</label>
+                <input
+                    id="codeholder-landline-phone"
+                    name="codeholder[landlinePhone]"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[+]?[a-z0-9\s]{1,49}"
+                    title="{{akso_locale.registration.codeholder_phone_pattern_desc}}"
+                    value="{{akso_registration.state.codeholder.landlinePhone|e('html_attr')}}" />
+            </div>
+            {{_self.akso_field_extra(akso_registration, akso_locale, 'landlinePhone')}}
+        </div>
+        <div class="settings-field" data-el="input" data-type="phone">
+            <div class="inner-field">
+                <label for="codeholder-office-phone">{{akso_locale.registration.codeholder_office_phone}}</label>
+                <input
+                    id="codeholder-office-phone"
+                    name="codeholder[officePhone]"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[+]?[a-z0-9\s]{1,49}"
+                    title="{{akso_locale.registration.codeholder_phone_pattern_desc}}"
+                    value="{{akso_registration.state.codeholder.officePhone|e('html_attr')}}" />
+            </div>
+            {{_self.akso_field_extra(akso_registration, akso_locale, 'officePhone')}}
+        </div>
+    {% endif %}
     <hr />
     <input
         type="checkbox"
@@ -142,7 +195,12 @@
     <div class="settings-field">
         <div class="inner-field">
             <label for="registration-field-fee-country">
-                {{akso_locale.registration.settings_fee_country}}
+                <span class="rf-country">
+                    {{akso_locale.registration.settings_country}}
+                </span>
+                <span class="rf-fee-country">
+                    {{akso_locale.registration.settings_fee_country}}
+                </span>
                 <span class="required-star" title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
             </label>
             <select
@@ -161,7 +219,8 @@
                 <!-- todo: default to IP country -->
             </select>
         </div>
-        {% if not akso_auth %}
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'feeCountry')}}
+        {% if akso_reg_editing or not akso_auth %}
         <div class="field-description">
             <label for="registration-split-country" aria-hidden="true" tabindex="0" id="split-country-checkbox"></label>
             <label for="registration-split-country" aria-hidden="true">
@@ -195,6 +254,7 @@
                 <!-- todo: default to IP country -->
             </select>
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'address.country')}}
     </div>
     <div class="settings-field is-address-field" data-address-field="countryArea">
         <div class="inner-field">
@@ -205,6 +265,7 @@
                 value="{{akso_registration.state.codeholder.address.countryArea|e('html_attr')}}"
                 type="text" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'address.countryArea')}}
     </div>
     <div class="settings-field is-address-field" data-address-field="city">
         <div class="inner-field">
@@ -215,6 +276,7 @@
                 value="{{akso_registration.state.codeholder.address.city|e('html_attr')}}"
                 type="text" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'address.city')}}
     </div>
     <div class="settings-field is-address-field" data-address-field="cityArea">
         <div class="inner-field">
@@ -225,6 +287,7 @@
                 value="{{akso_registration.state.codeholder.address.cityArea|e('html_attr')}}"
                 type="text" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'address.cityArea')}}
     </div>
     <div class="settings-field is-address-field" data-address-field="postalCode">
         <div class="inner-field">
@@ -235,6 +298,7 @@
                 value="{{akso_registration.state.codeholder.address.postalCode|e('html_attr')}}"
                 type="text" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'address.postalCode')}}
     </div>
     <div class="settings-field is-address-field" data-address-field="streetAddress">
         <div class="inner-field">
@@ -245,6 +309,7 @@
                 value="{{akso_registration.state.codeholder.address.streetAddress|e('html_attr')}}"
                 type="text" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'address.streetAddress')}}
     </div>
     <div class="settings-field is-address-field" data-address-field="sortingCode">
         <div class="inner-field">
@@ -255,4 +320,5 @@
                 value="{{akso_registration.state.codeholder.address.sortingCode|e('html_attr')}}"
                 type="text" />
         </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'address.sortingCode')}}
     </div>

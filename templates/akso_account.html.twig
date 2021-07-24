@@ -54,7 +54,7 @@
             </div>
         {% endif %}
         {% if account.editing %}
-            <div class="akso-registration-page">
+            <div class="akso-registration-page account-edit-page">
                 <a class="link-button back-button" href="{{ account.account_link }}">
                     <span class="back-icon"></span>
                     {{ akso_locale.account.cancel_edit }}
@@ -66,6 +66,7 @@
                 {% endif %}
                 <form class="account-details registration-settings" method="POST" action="{{ account.edit_path }}">
                     {% set akso_registration = { state: account, countries: account.countries } %}
+                    {% set akso_reg_editing = true %}
                     {% include 'partials/akso_user_profile_form.html.twig' %}
                     <hr />
                     <div class="settings-field" data-el="input" data-type="text">
@@ -96,6 +97,16 @@
                                 id="codeholder-biography"
                                 name="codeholder[biography]">{{account.codeholder.biography|e}}</textarea>
                         </div>
+                    </div>
+                    <hr />
+                    <div class="form-comments">
+                        <label for="commit-desc">
+                            {{akso_locale.account.commit_desc}}
+                        </label>
+                        <textarea
+                            id="commit-desc"
+                            placeholder="{{akso_locale.account.commit_desc_desc|e('html_attr')}}"
+                            name="commit_desc">{{account.commit_desc}}</textarea>
                     </div>
                     <div class="form-buttons">
                         <button type="submit" class="is-primary">

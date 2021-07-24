@@ -176,6 +176,11 @@
             }
         }
 
+        .settings-description {
+            margin-top: 0.5em;
+            font-size: 0.8em;
+        }
+
         .settings-field {
             margin-top: 0.5em;
             &:first-child {
@@ -202,6 +207,12 @@
             .field-description {
                 font-size: 0.8em;
             }
+
+            .own-field-ask {
+                font-size: smaller;
+                color: var(--accent);
+                margin-bottom: 0.5em;
+            }
         }
 
         hr {
@@ -222,6 +233,17 @@
         #codeholder-split-name:checked ~ .settings-field .field-description #split-name-checkbox,
         #registration-split-country:checked ~ .settings-field .field-description #split-country-checkbox {
             .checkbox-checked();
+        }
+        .rf-fee-country {
+            display: none;
+        }
+        #registration-split-country:checked ~ .settings-field {
+            .rf-country {
+                display: none;
+            }
+            .rf-fee-country {
+                display: inline;
+            }
         }
         #codeholder-split-name:not(:checked) ~ #codeholder-split-name-contents,
         #registration-split-country:not(:checked) ~ #registration-address-country {

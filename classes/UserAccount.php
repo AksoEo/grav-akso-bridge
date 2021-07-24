@@ -169,6 +169,9 @@ class UserAccount {
                 'address.sortingCode',
                 'feeCountry',
                 'email',
+                'officePhone',
+                'cellphone',
+                'landlinePhone',
                 'officePhoneFormatted',
                 'cellphoneFormatted',
                 'landlinePhoneFormatted',
@@ -185,7 +188,8 @@ class UserAccount {
             $details = $res['b'];
 
             if ($includePending) {
-                $details = array_merge($details, $this->getPendingDetails());
+                $pending = $this->getPendingDetails();
+                if ($pending) $details = array_merge($details, $pending);
             }
 
             $this->renderCodeholderFields($details);
@@ -357,6 +361,20 @@ class UserAccount {
         return null;
     }
 
+    function getOwnFieldAsks() {
+        $res = $this->bridge->get('/perms', []);
+        if (!$res['k']) {
+            return [];
+        }
+        $fields = [];
+        foreach ($res['b']['ownMemberFields'] as $field => $perms) {
+            if (strpos($perms, 'a') !== false) {
+                $fields[$field] = true;
+            }
+        }
+        return $fields;
+    }
+
     function applyProfileEdits($input) {
         if (!isset($input['codeholder'])) throw new \Exception('No codeholder data in input');
         $ch = $input['codeholder'];
@@ -365,7 +383,14 @@ class UserAccount {
         if (isset($ch['website']) && gettype($ch['website']) === 'string') $codeholder['website'] = $ch['website'] ?: null;
         if (isset($ch['biography']) && gettype($ch['biography']) === 'string') $codeholder['biography'] = $ch['biography'] ?: null;
 
-        $res = $this->bridge->patch('/codeholders/self', $codeholder, [], []);
+        $commitDesc = null;
+        if (isset($input['commit_desc']) && gettype($input['commit_desc']) === 'string') {
+            $commitDesc = $input['commit_desc'] ?: null;
+        }
+
+        $res = $this->bridge->patch('/codeholders/self', $codeholder, array(
+            'modDesc' => $commitDesc,
+        ), []);
         if ($res['k']) {
             $this->plugin->getGrav()->redirectLangSafe($this->plugin->accountPath, 303);
             die();
@@ -377,8 +402,10 @@ class UserAccount {
 
         return array(
             'pending_request' => $this->getPendingRequest(),
+            'own_field_asks' => $this->getOwnFieldAsks(),
             'account_link' => $this->plugin->accountPath,
             'codeholder' => $codeholder,
+            'commit_desc' => $commitDesc,
             'countries' => $this->getCountries(),
             'editing' => true,
             'error' => $error,
@@ -403,6 +430,7 @@ class UserAccount {
             if ($this->editing) {
                 return array(
                     'pending_request' => $this->getPendingRequest(),
+                    'own_field_asks' => $this->getOwnFieldAsks(),
                     'account_link' => $this->plugin->accountPath,
                     'codeholder' => $this->renderDetails(true),
                     'countries' => $this->getCountries(),

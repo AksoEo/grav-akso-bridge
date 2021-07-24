@@ -533,6 +533,14 @@ class Registration extends Form {
         if ($cellphone) {
             $cellphone = preg_replace('/[^+0-9]/u', '', $cellphone);
         }
+        $officePhone = self::readSafe('string', $ch, 'officePhone');
+        if ($officePhone) {
+            $officePhone = preg_replace('/[^+0-9]/u', '', $officePhone);
+        }
+        $landlinePhone = self::readSafe('string', $ch, 'landlinePhone');
+        if ($landlinePhone) {
+            $landlinePhone = preg_replace('/[^+0-9]/u', '', $landlinePhone);
+        }
 
         $codeholder = array(
             'firstName' => ((isset($ch['splitName']) && $ch['splitName'])
@@ -551,6 +559,8 @@ class Registration extends Form {
             'birthdate' => self::readSafe('string', $ch, 'birthdate') ?: null,
             'email' => self::readSafe('string', $ch, 'email') ?: null,
             'cellphone' => $cellphone ?: null,
+            'officePhone' => $officePhone ?: null,
+            'landlinePhone' => $landlinePhone ?: null,
             'feeCountry' => self::readSafe('string', $ch, 'feeCountry'),
             'address' => array(
                 'country' => (isset($ch['splitCountry']) && $ch['splitCountry'])
@@ -568,8 +578,16 @@ class Registration extends Form {
         // phone number post-processing: if the number does not start with a +, try to parse it as a
         // local number
         if ($codeholder['cellphone'] && !str_starts_with($codeholder['cellphone'], '+')) {
-            $res = $bridge->parsePhoneLocal($cellphone, $codeholder['address']['country']);
+            $res = $bridge->parsePhoneLocal($codeholder['cellphone'], $codeholder['address']['country']);
             if ($res['s']) $codeholder['cellphone'] = $res['n'];
+        }
+        if ($codeholder['officePhone'] && !str_starts_with($codeholder['officePhone'], '+')) {
+            $res = $bridge->parsePhoneLocal($codeholder['officePhone'], $codeholder['address']['country']);
+            if ($res['s']) $codeholder['officePhone'] = $res['n'];
+        }
+        if ($codeholder['landlinePhone'] && !str_starts_with($codeholder['landlinePhone'], '+')) {
+            $res = $bridge->parsePhoneLocal($codeholder['landlinePhone'], $codeholder['address']['country']);
+            if ($res['s']) $codeholder['landlinePhone'] = $res['n'];
         }
 
         return $codeholder;
