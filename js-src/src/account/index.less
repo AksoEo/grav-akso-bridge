@@ -224,6 +224,104 @@
 }
 
 .account-edit-page {
+    .country-change-alert {
+        position: relative;
+        margin: 0.2em 0 1.5em 0;
+        padding: 1em;
+        border: 1px solid var(--accent);
+        border-radius: var(--radius);
+
+        .alert-title {
+            font-weight: bold;
+        }
+        .alert-buttons {
+            text-align: right;
+
+            .alert-button {
+                margin: 0;
+
+                &.is-no {
+                    margin-right: 0.5em;
+                }
+            }
+        }
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--accent);
+            border-radius: var(--radius);
+            opacity: 0;
+            pointer-events: none;
+
+            @keyframes account-country-changed-box-fl-in {
+                0% {
+                    opacity: 1;
+                    clip-path: inset(0 0 0 0);
+                }
+                35% {
+                    opacity: 1;
+                    clip-path: inset(0 0 0 0);
+                }
+                100% {
+                    clip-path: inset(100% 0 0 0);
+                    opacity: 1;
+                }
+            }
+            animation: account-country-changed-box-fl-in 0.5s cubic-bezier(.2, .3, 0, 1);
+        }
+
+        @keyframes account-country-changed-box-in {
+            0% {
+                clip-path: inset(0 0 100% 0);
+            }
+            100% {
+                clip-path: inset(0 0 0 0);
+            }
+        }
+        animation: account-country-changed-box-in 0.4s cubic-bezier(.2, .3, 0, 1);
+
+        &.is-hiding {
+            @keyframes account-country-changed-box-out {
+                0% {
+                    clip-path: inset(0 0 0 0);
+                }
+                100% {
+                    clip-path: inset(0 0 100% 0);
+                }
+            }
+            animation: account-country-changed-box-out 0.3s 0.1s cubic-bezier(.2, .3, 0, 1) forwards;
+
+            &::before {
+                @keyframes account-country-changed-box-fl-out {
+                    0% {
+                        opacity: 1;
+                        clip-path: inset(100% 0 0 0);
+                    }
+                    100% {
+                        opacity: 1;
+                        clip-path: inset(0 0 0 0);
+                    }
+                }
+                animation: account-country-changed-box-fl-out 0.3s cubic-bezier(.2, .3, 0, 1) forwards;
+            }
+        }
+
+        &.is-hidden {
+            display: none;
+            animation: none;
+
+            &::before {
+                display: none;
+                animation: none;
+            }
+        }
+    }
+
     .form-comments {
         textarea {
             width: 100%;

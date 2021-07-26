@@ -186,7 +186,7 @@
     <input
         type="checkbox"
         name="codeholder[splitCountry]"
-        {% if akso_registration.state.codeholder.feeCountry != akso_registration.state.codeholder.address.country %}
+        {% if akso_reg_editing or (akso_registration.state.codeholder.feeCountry != akso_registration.state.codeholder.address.country) %}
         checked
         {% endif %}
         aria-label="{{akso_locale.registration.settings_fee_country_split}}"
@@ -219,13 +219,21 @@
                 <!-- todo: default to IP country -->
             </select>
         </div>
+        {% if akso_reg_editing %}
+        <div class="field-description">
+            {{akso_locale.account.fee_country_desc}}
+        </div>
+        {% endif %}
         {{_self.akso_field_extra(akso_registration, akso_locale, 'feeCountry')}}
-        {% if akso_reg_editing or not akso_auth %}
+        {% if not akso_reg_editing and not akso_auth %}
         <div class="field-description">
             <label for="registration-split-country" aria-hidden="true" tabindex="0" id="split-country-checkbox"></label>
             <label for="registration-split-country" aria-hidden="true">
                 {{akso_locale.registration.settings_fee_country_split}}
             </label>
+            <div class="split-country-description">
+                {{akso_locale.registration.settings_fee_country_split_desc}}
+            </div>
         </div>
         {% endif %}
     </div>
@@ -255,6 +263,26 @@
             </select>
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'address.country')}}
+        {% if akso_reg_editing %}
+            <div id="country-change-alert" class="country-change-alert is-hidden">
+                <div class="alert-contents">
+                    <div class="alert-title">
+                        {{akso_locale.account.country_change_title}}
+                    </div>
+                    <div class="alert-description">
+                        {{akso_locale.account.country_change_description}}
+                    </div>
+                </div>
+                <div class="alert-buttons">
+                    <button type="button" class="alert-button is-no">
+                        {{akso_locale.account.country_change_no}}
+                    </button>
+                    <button type="button" class="alert-button is-yes">
+                        {{akso_locale.account.country_change_yes}}
+                    </button>
+                </div>
+            </div>
+        {% endif %}
     </div>
     <div class="settings-field is-address-field" data-address-field="countryArea">
         <div class="inner-field">

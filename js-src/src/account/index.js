@@ -5,6 +5,12 @@ import initAddressFields from '../registration/address-fields';
 const locale = { account };
 
 function init() {
+    initMembershipsList();
+    initAddressFields();
+    initFeeCountryChanged();
+}
+
+function initMembershipsList() {
     const hasMore = document.querySelector('.memberships-has-more');
     if (hasMore) {
         hasMore.innerHTML = '';
@@ -98,8 +104,52 @@ function init() {
 
         showMore.addEventListener('click', showMoreItems);
     }
+}
 
-    initAddressFields();
+function initFeeCountryChanged() {
+    const feeCountry = document.querySelector('#registration-field-fee-country');
+    const addressCountry = document.querySelector('#codeholder-address-country');
+    const changeAlert = document.querySelector('#country-change-alert');
+
+    if (feeCountry && addressCountry && changeAlert) {
+        let lastMatchedFeeCountry = feeCountry.value;
+
+        let hideTimeout;
+        const updateVisibility = () => {
+            let visible = feeCountry.value !== lastMatchedFeeCountry;
+            if (visible) {
+                clearTimeout(hideTimeout);
+                changeAlert.classList.remove('is-hidden');
+                changeAlert.classList.remove('is-hiding');
+            } else {
+                changeAlert.classList.add('is-hiding');
+                if (!hideTimeout) {
+                    hideTimeout = setTimeout(() => {
+                        hideTimeout = null;
+                        changeAlert.classList.add('is-hidden');
+                    }, 400);
+                }
+            }
+        };
+
+        changeAlert.querySelector('button.is-no').addEventListener('click', () => {
+            lastMatchedFeeCountry = feeCountry.value;
+            updateVisibility();
+        });
+        changeAlert.querySelector('button.is-yes').addEventListener('click', () => {
+            addressCountry.value = feeCountry.value;
+            lastMatchedFeeCountry = feeCountry.value;
+            updateVisibility();
+        });
+
+        addressCountry.addEventListener('change', () => {
+            lastMatchedFeeCountry = feeCountry.value;
+            updateVisibility();
+        });
+        feeCountry.addEventListener('change', () => {
+            updateVisibility();
+        });
+    }
 }
 
 if (document.readyState === 'complete') init();
