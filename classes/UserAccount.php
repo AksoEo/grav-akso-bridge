@@ -417,17 +417,21 @@ class UserAccount {
             $commitDesc = $input['commit_desc'] ?: null;
         }
 
-        $reqOptions = [];
-        if ($commitDesc) $reqOptions['modDesc'] = $commitDesc;
-        $res = $this->bridge->patch('/codeholders/self', $codeholder, $reqOptions, []);
-        if ($res['k']) {
-            $this->plugin->getGrav()->redirectLangSafe($this->plugin->accountPath, 303);
-            die();
-        }
+        $error = Registration::getCodeholderError($this->bridge, $this->plugin->locale, $ch);
 
-        $error = $res['sc'] == 400
-            ? $this->plugin->locale['account']['edit_error_bad_request']
-            : $this->plugin->locale['account']['edit_error_unknown'];
+        if (!$error) {
+            $reqOptions = [];
+            if ($commitDesc) $reqOptions['modDesc'] = $commitDesc;
+            $res = $this->bridge->patch('/codeholders/self', $codeholder, $reqOptions, []);
+            if ($res['k']) {
+                $this->plugin->getGrav()->redirectLangSafe($this->plugin->accountPath, 303);
+                die();
+            }
+
+            $error = $res['sc'] == 400
+                ? $this->plugin->locale['account']['edit_error_bad_request']
+                : $this->plugin->locale['account']['edit_error_unknown'];
+        }
 
         return array(
             'pending_request' => $this->getPendingRequest(),
