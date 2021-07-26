@@ -183,6 +183,12 @@
         </div>
     {% endif %}
     <hr />
+    <div class="settings-section">
+        {{akso_locale.registration.codeholder_address}}
+        <span
+            class="required-star"
+            title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
+    </div>
     <input
         type="checkbox"
         name="codeholder[splitCountry]"
@@ -192,57 +198,6 @@
         aria-label="{{akso_locale.registration.settings_fee_country_split}}"
         id="registration-split-country"
         class="invisible-input" />
-    <div class="settings-field">
-        <div class="inner-field">
-            <label for="registration-field-fee-country">
-                <span class="rf-country">
-                    {{akso_locale.registration.settings_country}}
-                </span>
-                <span class="rf-fee-country">
-                    {{akso_locale.registration.settings_fee_country}}
-                </span>
-                <span class="required-star" title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
-            </label>
-            <select
-                id="registration-field-fee-country"
-                name="codeholder[feeCountry]">
-                <option value="">—</option>
-                {% for country in akso_registration.countries %}
-                    <option
-                        value="{{ country.code|e('html_attr') }}"
-                        {% if akso_registration.state.codeholder.feeCountry == country.code %}
-                        selected
-                        {% endif %}
-                        >{{country.name_eo|e}}</option>
-                {% endfor %}
-                <!-- todo: fancy JS selection with search -->
-                <!-- todo: default to IP country -->
-            </select>
-        </div>
-        {% if akso_reg_editing %}
-        <div class="field-description">
-            {{akso_locale.account.fee_country_desc}}
-        </div>
-        {% endif %}
-        {{_self.akso_field_extra(akso_registration, akso_locale, 'feeCountry')}}
-        {% if not akso_reg_editing and not akso_auth %}
-        <div class="field-description">
-            <label for="registration-split-country" aria-hidden="true" tabindex="0" id="split-country-checkbox"></label>
-            <label for="registration-split-country" aria-hidden="true">
-                {{akso_locale.registration.settings_fee_country_split}}
-            </label>
-            <div class="split-country-description">
-                {{akso_locale.registration.settings_fee_country_split_desc}}
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    <div class="settings-section">
-        {{akso_locale.registration.codeholder_address}}
-        <span
-            class="required-star"
-            title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
-    </div>
     <div class="settings-field" id="registration-address-country">
         <div class="inner-field">
             <label for="codeholder-address-country">
@@ -263,26 +218,6 @@
             </select>
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'address.country')}}
-        {% if akso_reg_editing %}
-            <div id="country-change-alert" class="country-change-alert is-hidden">
-                <div class="alert-contents">
-                    <div class="alert-title">
-                        {{akso_locale.account.country_change_title}}
-                    </div>
-                    <div class="alert-description">
-                        {{akso_locale.account.country_change_description}}
-                    </div>
-                </div>
-                <div class="alert-buttons">
-                    <button type="button" class="alert-button is-no">
-                        {{akso_locale.account.country_change_no}}
-                    </button>
-                    <button type="button" class="alert-button is-yes">
-                        {{akso_locale.account.country_change_yes}}
-                    </button>
-                </div>
-            </div>
-        {% endif %}
     </div>
     <div class="settings-field is-address-field" data-address-field="countryArea">
         <div class="inner-field">
@@ -349,4 +284,65 @@
                 type="text" />
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'address.sortingCode')}}
+    </div>
+    <hr />
+    {% if not akso_reg_editing and not akso_auth %}
+    <div class="settings-field">
+        <label for="registration-split-country" aria-hidden="true" tabindex="0" id="split-country-checkbox"></label>
+        <label for="registration-split-country" aria-hidden="true">
+            {{akso_locale.registration.settings_fee_country_split}}
+        </label>
+        <div class="field-description split-country-description">
+            {{akso_locale.registration.settings_fee_country_split_desc}}
+        </div>
+    </div>
+    {% endif %}
+    <div class="settings-field" id="registration-fee-country">
+        <div class="inner-field">
+            <label for="registration-field-fee-country">
+                {{akso_locale.registration.settings_fee_country}}
+                <span class="required-star" title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
+            </label>
+            <select
+                id="registration-field-fee-country"
+                name="codeholder[feeCountry]">
+                <option value="">—</option>
+                {% for country in akso_registration.countries %}
+                    <option
+                        value="{{ country.code|e('html_attr') }}"
+                        {% if akso_registration.state.codeholder.feeCountry == country.code %}
+                        selected
+                        {% endif %}
+                        >{{country.name_eo|e}}</option>
+                {% endfor %}
+                <!-- todo: fancy JS selection with search -->
+                <!-- todo: default to IP country -->
+            </select>
+        </div>
+        {% if akso_reg_editing %}
+        <div class="field-description">
+            {{akso_locale.account.fee_country_desc}}
+        </div>
+        {% endif %}
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'feeCountry')}}
+        {% if akso_reg_editing %}
+        <div id="country-change-alert" class="country-change-alert is-hidden">
+            <div class="alert-contents">
+                <div class="alert-title">
+                    {{akso_locale.account.country_change_title}}
+                </div>
+                <div class="alert-description">
+                    {{akso_locale.account.country_change_description}}
+                </div>
+            </div>
+            <div class="alert-buttons">
+                <button type="button" class="alert-button is-no">
+                    {{akso_locale.account.country_change_no}}
+                </button>
+                <button type="button" class="alert-button is-yes">
+                    {{akso_locale.account.country_change_yes}}
+                </button>
+            </div>
+        </div>
+        {% endif %}
     </div>

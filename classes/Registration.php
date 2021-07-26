@@ -561,11 +561,11 @@ class Registration extends Form {
             'cellphone' => $cellphone ?: null,
             'officePhone' => $officePhone ?: null,
             'landlinePhone' => $landlinePhone ?: null,
-            'feeCountry' => self::readSafe('string', $ch, 'feeCountry'),
+            'feeCountry' => (isset($ch['splitCountry']) && $ch['splitCountry'])
+                ? self::readSafe('string', $ch, 'feeCountry')
+                : self::readSafe('string', $ch, 'address.country'),
             'address' => array(
-                'country' => (isset($ch['splitCountry']) && $ch['splitCountry'])
-                    ? self::readSafe('string', $ch, 'address.country')
-                    : self::readSafe('string', $ch, 'feeCountry'),
+                'country' => self::readSafe('string', $ch, 'address.country'),
                 'countryArea' => self::readSafe('string', $ch, 'address.countryArea') ?: null,
                 'city' => self::readSafe('string', $ch, 'address.city') ?: null,
                 'cityArea' => self::readSafe('string', $ch, 'address.cityArea') ?: null,

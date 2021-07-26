@@ -7,7 +7,7 @@ const locale = { account };
 function init() {
     initMembershipsList();
     initAddressFields();
-    initFeeCountryChanged();
+    initCountryChanged();
 }
 
 function initMembershipsList() {
@@ -106,17 +106,17 @@ function initMembershipsList() {
     }
 }
 
-function initFeeCountryChanged() {
+function initCountryChanged() {
     const feeCountry = document.querySelector('#registration-field-fee-country');
     const addressCountry = document.querySelector('#codeholder-address-country');
     const changeAlert = document.querySelector('#country-change-alert');
 
     if (feeCountry && addressCountry && changeAlert) {
-        let lastMatchedFeeCountry = feeCountry.value;
+        let lastMatchedCountry = addressCountry.value;
 
         let hideTimeout;
         const updateVisibility = () => {
-            let visible = feeCountry.value !== lastMatchedFeeCountry;
+            let visible = addressCountry.value !== lastMatchedCountry;
             if (visible) {
                 clearTimeout(hideTimeout);
                 changeAlert.classList.remove('is-hidden');
@@ -133,20 +133,20 @@ function initFeeCountryChanged() {
         };
 
         changeAlert.querySelector('button.is-no').addEventListener('click', () => {
-            lastMatchedFeeCountry = feeCountry.value;
+            lastMatchedCountry = addressCountry.value;
             updateVisibility();
         });
         changeAlert.querySelector('button.is-yes').addEventListener('click', () => {
-            addressCountry.value = feeCountry.value;
-            lastMatchedFeeCountry = feeCountry.value;
+            lastMatchedCountry = addressCountry.value;
+            feeCountry.value = addressCountry.value;
             updateVisibility();
         });
 
         addressCountry.addEventListener('change', () => {
-            lastMatchedFeeCountry = feeCountry.value;
             updateVisibility();
         });
         feeCountry.addEventListener('change', () => {
+            lastMatchedCountry = addressCountry.value;
             updateVisibility();
         });
     }

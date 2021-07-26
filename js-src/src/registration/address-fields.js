@@ -10,10 +10,7 @@ export default function initAddressFields() {
     for (let i = 0; i < fieldSel.length; i++) addressFields.push(fieldSel[i]);
 
     const update = () => {
-        let country;
-        if (splitCountry.checked) country = countrySelector.value;
-        else country = feeCountrySelector.value;
-        console.log(splitCountry.checked, country);
+        let country = countrySelector.value;
         const requiredFields = countryFields[country.toLowerCase()];
         for (const node of addressFields) {
             const field = node.dataset.addressField;
