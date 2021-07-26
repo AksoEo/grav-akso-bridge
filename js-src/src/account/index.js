@@ -143,6 +143,10 @@ function initCountryChanged() {
         });
 
         addressCountry.addEventListener('change', () => {
+            if (addressCountry.value === feeCountry.value) {
+                lastMatchedCountry = addressCountry.value;
+            }
+
             updateVisibility();
         });
         feeCountry.addEventListener('change', () => {
