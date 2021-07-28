@@ -317,8 +317,7 @@ class UserAccount {
             }
             die();
         } else {
-            // TODO: error?
-            die();
+            throw new \Exception('Failed to load picture');
         }
     }
 
