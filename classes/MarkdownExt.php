@@ -515,36 +515,70 @@ class MarkdownExt {
 
                 while (true) {
                     $haveItems = count($codeholders);
-                    $res = $self->bridge->get('/lists/public/' . $listId . '/codeholders', array(
-                        'fields' => [
-                            'id',
-                            'name',
-                            'email',
-                            'emailPublicity',
-                            'address',
-                            'addressPublicity',
-                            'biography',
-                            'website',
-                            'profilePictureHash',
-                            'profilePicturePublicity'
-                        ],
+                    $res = $self->bridge->get('/lists/' . $listId . '/codeholders', array(
                         'offset' => $haveItems,
                         'limit' => 100
-                    ));
+                    ), 60);
 
                     if (!$res['k']) {
                         $error = '[internal error while fetching list: ' . $res['b'] . ']';
                         break;
                     }
 
+                    // $totalItems = $res['h']['x-total-items'];
+                    $totalItems = 99999999; // FIXME: the server doesn't send this apparently?
+                    $codeholderIds = $res['b'];
+
+                    $res = $self->bridge->get('/codeholders', array(
+                        'filter' => array('id' => array('$in' => $codeholderIds)),
+                        'fields' => [
+                            'id',
+                            'codeholderType',
+                            'honorific',
+                            'firstName',
+                            'firstNameLegal',
+                            'lastName',
+                            'lastNameLegal',
+                            'lastNamePublicity',
+                            'fullName',
+                            'nameAbbrev',
+                            'email',
+                            'emailPublicity',
+                            'publicEmail',
+                            'address.country',
+                            'address.countryArea',
+                            'address.city',
+                            'address.cityArea',
+                            'address.streetAddress',
+                            'address.postalCode',
+                            'address.sortingCode',
+                            'addressPublicity',
+                            'biography',
+                            'website',
+                            'profilePictureHash',
+                            'profilePicturePublicity'
+                        ],
+                        'limit' => 100,
+                    ), 60);
+                    if (!$res['k']) {
+                        $error = '[internal error while fetching list: ' . $res['b'] . ']';
+                        break;
+                    }
+                    $chData = array();
                     foreach ($res['b'] as $ch) {
+                        $chData[$ch['id']] = $ch;
+                    }
+
+                    foreach ($codeholderIds as $id) {
+                        if (!isset($chData[$id])) continue;
+                        $ch = $chData[$id];
                         // php refuses to encode json if we dont do this
                         $ch['profilePictureHash'] = bin2hex($ch['profilePictureHash']);
 
                         $codeholders[] = $ch;
                     }
 
-                    $totalItems = $res['h']['x-total-items'];
+                    if (count($res['b']) == 0) break; // in absence of x-total-items we'll need to do this
                     if (count($codeholders) < $totalItems) {
                         if (count($res['b']) == 0) {
                             // avoid an infinite loop
@@ -1383,6 +1417,26 @@ class MarkdownExt {
         }
     }
 
+    function getCountries() {
+        $res = $this->bridge->get('/countries', array(
+            'limit' => 300,
+            'fields' => ['code', 'name_eo'],
+        ), 600);
+        if (!$res['k']) return null;
+        return $res['b'];
+    }
+
+    // Formats a country code
+    function formatCountry($code) {
+        foreach ($this->getCountries() as $country) {
+            if ($country['code'] === $code) return $country['name_eo'];
+        }
+        return null;
+    }
+
+    const LIST_PICTURE_LIST = 'l';
+    const LIST_PICTURE_CHID = 'c';
+    const LIST_PICTURE_SIZE = 's';
     protected function handleHTMLLists($doc) {
         $isMember = false;
         if ($this->plugin->aksoUser !== null) {
@@ -1416,11 +1470,15 @@ class MarkdownExt {
                     $img = new Element('img');
                     $img->class = 'item-picture';
 
-                    $canSeePP = $isMember || $codeholder->profilePicturePublicity === 'public';
+                    $canSeePP = $codeholder->profilePicturePublicity === 'public'
+                        || ($isMember && $codeholder->profilePicturePublicity === 'members');
 
                     if ($canSeePP && $codeholder->profilePictureHash) {
                         // codeholder has a profile picture
-                        $picPrefix = $this->apiHost . '/lists/public/' . $listId . '/codeholders/' . $codeholder->id . '/profile_picture/';
+                        $picPrefix = AksoBridgePlugin::CODEHOLDER_LIST_PICTURE_PATH . '?'
+                            . 'l=' . $listId
+                            . '&c=' . $codeholder->id
+                            . '&s=';
                         $img->src = $picPrefix . '128px';
                         $img->srcset = $picPrefix . '128px 1x, ' . $picPrefix . '256px 2x, ' . $picPrefix . '512px 3x';
                     } else {
@@ -1432,16 +1490,34 @@ class MarkdownExt {
                     $right = new Element('div');
                     $right->class = 'item-details';
 
-                    $nameContainer = new Element('div', $codeholder->name);
+                    $codeholderName = '';
+                    if ($codeholder->codeholderType === 'human') {
+                        $canSeeLastName = $codeholder->lastNamePublicity === 'public'
+                            || ($isMember && $codeholder->lastNamePublicity === 'members');
+
+                        $codeholderName = $codeholder->honorific ?: '';
+                        if ($codeholderName) $codeholderName .= ' ';
+                        if ($codeholder->firstName) $codeholderName .= $codeholder->firstName;
+                        else $codeholderName .= $codeholder->firstNameLegal;
+
+                        if ($canSeeLastName) {
+                            if ($codeholder->lastName) $codeholderName .= ' ' . $codeholder->lastName;
+                            else if ($codeholder->lastNameLegal) $codeholderName .= ' ' . $codeholder->lastNameLegal;
+                        }
+                    } else if ($codeholder->codeholderType === 'org') {
+                        $codeholderName = $codeholder->fullName;
+                    }
+                    $nameContainer = new Element('div', $codeholderName);
                     $nameContainer->class = 'item-name';
                     $right->appendChild($nameContainer);
 
-                    $canSeeEmail = $isMember || $codeholder->emailPublicity === 'public';
+                    $canSeeEmail = $codeholder->emailPublicity === 'public'
+                        || ($isMember && $codeholder->emailPublicity === 'members');
 
-                    if ($canSeeEmail && $codeholder->email) {
+                    if ($codeholder->publicEmail || ($canSeeEmail && $codeholder->email)) {
                         $emailContainer = new Element('div');
                         $emailContainer->class = 'item-email';
-                        $emailLink = Utils::obfuscateEmail($codeholder->email);
+                        $emailLink = Utils::obfuscateEmail($codeholder->publicEmail ?: $codeholder->email);
                         $emailContainer->appendChild($emailLink);
                         $right->appendChild($emailContainer);
                     }
@@ -1455,6 +1531,31 @@ class MarkdownExt {
                         $websiteLink->href = $codeholder->website;
                         $websiteContainer->appendChild($websiteLink);
                         $right->appendChild($websiteContainer);
+                    }
+
+                    $canSeeAddress = $codeholder->addressPublicity === 'public'
+                        || ($isMember && $codeholder->addressPublicity === 'members');
+
+                    if ($canSeeAddress && $codeholder->address) {
+                        $countryName = $this->formatCountry($codeholder->address->country);
+                        $formatted = $this->bridge->renderAddress(array(
+                            'countryCode' => $codeholder->address->country,
+                            'countryArea' => $codeholder->address->countryArea,
+                            'city' => $codeholder->address->city,
+                            'cityArea' => $codeholder->address->cityArea,
+                            'streetAddress' => $codeholder->address->streetAddress,
+                            'postalCode' => $codeholder->address->postalCode,
+                            'sortingCode' => $codeholder->address->sortingCode,
+                        ), $countryName)['c'];
+                        $addressContainer = new Element('div');
+                        $addressContainer->class = 'item-address';
+                        $lines = preg_split('/\n/', $formatted);
+                        foreach ($lines as $line) {
+                            $lne = new Element('div', $line);
+                            $lne->class = 'address-line';
+                            $addressContainer->appendChild($lne);
+                        }
+                        $right->appendChild($addressContainer);
                     }
 
                     if ($codeholder->biography) {
@@ -1475,6 +1576,95 @@ class MarkdownExt {
                 $newList->class .= ' is-error';
                 $list->replace($newList);
             }
+        }
+    }
+
+    public function runListPicture() {
+        $listId = isset($_GET[self::LIST_PICTURE_LIST]) ? (int)$_GET[self::LIST_PICTURE_LIST] : 0;
+        $chId = isset($_GET[self::LIST_PICTURE_CHID]) ? (int)$_GET[self::LIST_PICTURE_CHID] : 0;
+        $size = isset($_GET[self::LIST_PICTURE_SIZE]) ? (string)$_GET[self::LIST_PICTURE_SIZE] : '';
+        if (!$listId || !$chId || !$size) {
+            $this->plugin->getGrav()->fireEvent('onPageNotFound');
+            return;
+        }
+        $this->initAppIfNeeded();
+
+        $found = false;
+        // TODO: use x-total-items when available
+        $offset = 0;
+        while (true) {
+            $res = $this->bridge->get('/lists/' . $listId . '/codeholders', array(
+                'offset' => $offset,
+                'limit' => 100
+            ), 60);
+            if (!$res['k']) {
+                if ($res['sc'] === 404) {
+                    $this->plugin->getGrav()->fireEvent('onPageNotFound');
+                    return;
+                } else {
+                    throw new \Exception('Failed to fetch list');
+                }
+            }
+            $offset += 100;
+            if (count($res['b']) === 0) {
+                break;
+            }
+            foreach ($res['b'] as $id) {
+                if ($id === $chId) {
+                    // found codeholder in list!
+                    $found = true;
+                    break;
+                }
+            }
+            if ($found) {
+                // fetch the entire batch so it can be cached more easily
+                $res = $this->bridge->get('/codeholders', array(
+                    'filter' => array('id' => array('$in' => $res['b'])),
+                    'fields' => [
+                        'id',
+                        'profilePictureHash',
+                        'profilePicturePublicity'
+                    ],
+                    'limit' => 100,
+                ), 60);
+                if (!$res['k']) throw new \Exception('Failed to fetch list codeholders');
+                $foundCh = false;
+                foreach ($res['b'] as $ch) {
+                    if ($ch['id'] === $chId) {
+                        $foundCh = true;
+                        $found = $ch;
+                        break;
+                    }
+                }
+                if (!$foundCh) {
+                    $found = false;
+                }
+                break;
+            }
+        }
+        if (!$found || !$ch['profilePictureHash']) {
+            $this->plugin->getGrav()->fireEvent('onPageNotFound');
+            return;
+        }
+        $isMember = $this->plugin->aksoUser && $this->plugin->aksoUser['member'];
+        if ($ch['profilePicturePublicity'] !== 'public' && !($ch['profilePicturePublicity'] === 'members' && $isMember)) {
+            $this->plugin->getGrav()->fireEvent('onPageNotFound');
+            return;
+        }
+        $hash = bin2hex($ch['profilePictureHash']);
+        $path = "/codeholders/$chId/profile_picture/$size";
+        // hack: use noop as unique cache key for getRaw
+        $res = $this->bridge->getRaw($path, 10, array('noop' => $hash));
+        if ($res['k']) {
+            header('Content-Type: ' . $res['h']['content-type']);
+            try {
+                readfile($res['ref']);
+            } finally {
+                $this->bridge->releaseRaw($path);
+            }
+            die();
+        } else {
+            throw new \Exception('Failed to load picture');
         }
     }
 

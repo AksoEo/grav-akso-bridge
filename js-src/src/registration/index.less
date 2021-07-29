@@ -206,6 +206,10 @@
             }
             .field-description {
                 font-size: 0.8em;
+
+                .split-country-description {
+                    opacity: 0.8;
+                }
             }
 
             .own-field-ask {
@@ -230,23 +234,15 @@
             .checkbox();
             vertical-align: -0.2em;
         }
-        #codeholder-split-name:checked ~ .settings-field .field-description #split-name-checkbox,
-        #registration-split-country:checked ~ .settings-field .field-description #split-country-checkbox {
+        #codeholder-split-name:checked ~ .settings-field #split-name-checkbox,
+        #registration-split-country:checked ~ .settings-field #split-country-checkbox {
             .checkbox-checked();
         }
         .rf-fee-country {
             display: none;
         }
-        #registration-split-country:checked ~ .settings-field {
-            .rf-country {
-                display: none;
-            }
-            .rf-fee-country {
-                display: inline;
-            }
-        }
         #codeholder-split-name:not(:checked) ~ #codeholder-split-name-contents,
-        #registration-split-country:not(:checked) ~ #registration-address-country {
+        #registration-split-country:not(:checked) ~ #registration-fee-country {
             display: none;
         }
         #codeholder-split-name:checked ~ .settings-field .inner-field #codeholder-first-name-required {

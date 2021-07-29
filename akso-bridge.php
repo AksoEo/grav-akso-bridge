@@ -39,6 +39,7 @@ class AksoBridgePlugin extends Plugin {
 
     const RESOURCE_PATH = '/_';
     const CONGRESS_REGISTRATION_PATH = 'alighilo';
+    const CODEHOLDER_LIST_PICTURE_PATH = self::RESOURCE_PATH . '/listo/bildo';
     const CONGRESS_LOC_THUMBNAIL_PATH = self::RESOURCE_PATH . '/kongresa_loko/bildo';
     const MAGAZINE_COVER_PATH = self::RESOURCE_PATH . '/revuo/bildo';
     const MAGAZINE_DOWNLOAD_PATH = self::RESOURCE_PATH . '/revuo/elshuto';
@@ -138,6 +139,9 @@ class AksoBridgePlugin extends Plugin {
             $loc = new CongressLocations($this, $app, null, null);
             $loc->runThumbnail();
             $app->close();
+        } else if ($this->path === self::CODEHOLDER_LIST_PICTURE_PATH) {
+            $md = new MarkdownExt($this);
+            $md->runListPicture();
         } else if ($this->path === self::MAGAZINE_COVER_PATH) {
             $app = new AppBridge($this->grav);
             $app->open();

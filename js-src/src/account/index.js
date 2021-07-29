@@ -5,6 +5,12 @@ import initAddressFields from '../registration/address-fields';
 const locale = { account };
 
 function init() {
+    initMembershipsList();
+    initAddressFields();
+    initCountryChanged();
+}
+
+function initMembershipsList() {
     const hasMore = document.querySelector('.memberships-has-more');
     if (hasMore) {
         hasMore.innerHTML = '';
@@ -98,8 +104,56 @@ function init() {
 
         showMore.addEventListener('click', showMoreItems);
     }
+}
 
-    initAddressFields();
+function initCountryChanged() {
+    const feeCountry = document.querySelector('#registration-field-fee-country');
+    const addressCountry = document.querySelector('#codeholder-address-country');
+    const changeAlert = document.querySelector('#country-change-alert');
+
+    if (feeCountry && addressCountry && changeAlert) {
+        let lastMatchedCountry = addressCountry.value;
+
+        let hideTimeout;
+        const updateVisibility = () => {
+            let visible = addressCountry.value !== lastMatchedCountry;
+            if (visible) {
+                clearTimeout(hideTimeout);
+                changeAlert.classList.remove('is-hidden');
+                changeAlert.classList.remove('is-hiding');
+            } else {
+                changeAlert.classList.add('is-hiding');
+                if (!hideTimeout) {
+                    hideTimeout = setTimeout(() => {
+                        hideTimeout = null;
+                        changeAlert.classList.add('is-hidden');
+                    }, 400);
+                }
+            }
+        };
+
+        changeAlert.querySelector('button.is-no').addEventListener('click', () => {
+            lastMatchedCountry = addressCountry.value;
+            updateVisibility();
+        });
+        changeAlert.querySelector('button.is-yes').addEventListener('click', () => {
+            lastMatchedCountry = addressCountry.value;
+            feeCountry.value = addressCountry.value;
+            updateVisibility();
+        });
+
+        addressCountry.addEventListener('change', () => {
+            if (addressCountry.value === feeCountry.value) {
+                lastMatchedCountry = addressCountry.value;
+            }
+
+            updateVisibility();
+        });
+        feeCountry.addEventListener('change', () => {
+            lastMatchedCountry = addressCountry.value;
+            updateVisibility();
+        });
+    }
 }
 
 if (document.readyState === 'complete') init();

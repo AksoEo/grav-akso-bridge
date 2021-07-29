@@ -561,11 +561,11 @@ class Registration extends Form {
             'cellphone' => $cellphone ?: null,
             'officePhone' => $officePhone ?: null,
             'landlinePhone' => $landlinePhone ?: null,
-            'feeCountry' => self::readSafe('string', $ch, 'feeCountry'),
+            'feeCountry' => (isset($ch['splitCountry']) && $ch['splitCountry'])
+                ? self::readSafe('string', $ch, 'feeCountry')
+                : self::readSafe('string', $ch, 'address.country'),
             'address' => array(
-                'country' => (isset($ch['splitCountry']) && $ch['splitCountry'])
-                    ? self::readSafe('string', $ch, 'address.country')
-                    : self::readSafe('string', $ch, 'feeCountry'),
+                'country' => self::readSafe('string', $ch, 'address.country'),
                 'countryArea' => self::readSafe('string', $ch, 'address.countryArea') ?: null,
                 'city' => self::readSafe('string', $ch, 'address.city') ?: null,
                 'cityArea' => self::readSafe('string', $ch, 'address.cityArea') ?: null,
@@ -1189,7 +1189,7 @@ class Registration extends Form {
         $this->updateOffersState();
 
         if ($this->state['step'] > 0) {
-            $err = $this->getCodeholderError();
+            $err = $this->getThisCodeholderError();
 
             if ($err) {
                 $this->state['form_error'] = $err;
@@ -1216,8 +1216,7 @@ class Registration extends Form {
         $_SESSION[self::SESSION_KEY_NAME] = $serializedState;
     }
 
-    // Returns a best-effort error message for the codeholder data.
-    private function getCodeholderError() {
+    private function getThisCodeholderError() {
         $disErr = $this->getDisabledError();
         if ($disErr) return $disErr;
 
@@ -1225,17 +1224,22 @@ class Registration extends Form {
         $ch = $this->state['codeholder'];
         if (isset($ch['locked'])) return null;
 
+        return self::getCodeholderError($this->app->bridge, $this->plugin->locale, $ch);
+    }
+
+    // Returns a best-effort error message for the codeholder data.
+    public static function getCodeholderError($bridge, $locale, $ch) {
         if (empty(trim($ch['firstNameLegal']))) {
-            return $this->localize('codeholder_error_name_required');
+            return $locale['registration']['codeholder_error_name_required'];
         }
         $birthdate = \DateTime::createFromFormat('Y-m-d', $ch['birthdate']);
         $now = new \DateTime();
         if (!$birthdate) {
-            return $this->localize('codeholder_error_birthdate_required');
+            return $locale['registration']['codeholder_error_birthdate_required'];
         }
         if ($birthdate->diff($now)->invert) {
             // this is a future date
-            return $this->localize('codeholder_error_invalid_birthdate');
+            return $locale['registration']['codeholder_error_invalid_birthdate'];
         }
         // HTML will take care of validating email
         // no need to check if countries are in the country set because it's a <select>
@@ -1244,20 +1248,32 @@ class Registration extends Form {
         $phone = $ch['cellphone'];
         if ($phone) {
             if (!preg_match('/^\+[a-z0-9]{1,49}$/u', $phone)) {
-                return $this->localize('codeholder_error_invalid_phone_format');
+                return $locale['registration']['codeholder_error_invalid_phone_format_cell'];
+            }
+        }
+        $phone = $ch['officePhone'];
+        if ($phone) {
+            if (!preg_match('/^\+[a-z0-9]{1,49}$/u', $phone)) {
+                return $locale['registration']['codeholder_error_invalid_phone_format_office'];
+            }
+        }
+        $phone = $ch['landlinePhone'];
+        if ($phone) {
+            if (!preg_match('/^\+[a-z0-9]{1,49}$/u', $phone)) {
+                return $locale['registration']['codeholder_error_invalid_phone_format_landline'];
             }
         }
 
         if (!$ch['feeCountry']) {
-            return $this->localize('codeholder_error_no_fee_country');
+            return $locale['registration']['codeholder_error_no_fee_country'];
         }
 
         // validate address
         $addr = $ch['address'];
         $addr['countryCode'] = $ch['address']['country'];
-        if (!$this->app->bridge->validateAddress($addr)) {
+        if (!$bridge->validateAddress($addr)) {
             // TODO: more granular validation?
-            return $this->localize('codeholder_error_invalid_address');
+            return $locale['registration']['codeholder_error_invalid_address'];
         }
 
         return null;
