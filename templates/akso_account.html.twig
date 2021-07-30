@@ -64,6 +64,77 @@
                 {% endif %}
             </form>
         </div>
+    {% elseif account.editing_picture %}
+        <h1>{{ akso_locale.account.title }}</h1>
+        <a class="link-button back-button" href="{{ account.account_link }}">
+            <span class="back-icon"></span>
+            {{ akso_locale.account.edit_pfp_back }}
+        </a>
+        <div class="account-profile-picture-page">
+            {% if account.error %}
+                <div class="error-banner">
+                    {{account.error}}
+                </div>
+            {% elseif account.message %}
+                <div class="message-banner">
+                    {{account.message}}
+                </div>
+            {% endif %}
+            <h2 class="inner-title">{{ akso_locale.account.edit_pfp_title }}</h2>
+            {% if account.details.profilePictureHash %}
+                <div class="account-profile-picture">
+                    <img
+                        src="{{ account.details.profilePicturePath }}"
+                        srcset="{{ account.details.profilePictureSizes }}" />
+                </div>
+            {% else %}
+                <div class="account-profile-picture">
+                    <div class="empty-picture">
+                        {{ akso_locale.account.pfp_empty }}
+                    </div>
+                </div>
+            {% endif %}
+            <form class="picture-upload-form" method="POST" enctype="multipart/form-data">
+                <h3>{{akso_locale.account.upload_pfp_title}}</h3>
+                <input type="hidden" name="action" value="upload" />
+                <div class="file-input-container">
+                    <input
+                        class="file-input"
+                        name="picture"
+                        accept="image/png, image/jpeg"
+                        type="file" />
+                </div>
+                <button class="upload-button" type="submit">
+                    {{ akso_locale.account.upload_pfp_upload }}
+                </button>
+                <div class="upload-description">
+                    {{ akso_locale.account.upload_pfp_description }}
+                </div>
+            </form>
+            {% if account.details.profilePictureHash %}
+            <form class="picture-delete-form" method="POST">
+                <h3>{{akso_locale.account.delete_pfp_title}}</h3>
+                <input type="hidden" name="action" value="delete" />
+                <input class="delete-switch" type="checkbox" id="pfp-delete" />
+                <div class="delete-button-container">
+                    <label aria-role="button" tabindex="0" class="link-button delete-button" for="pfp-delete">
+                        {{ akso_locale.account.delete_pfp }}
+                    </label>
+                </div>
+                <div class="delete-confirmation">
+                    {{ akso_locale.account.delete_pfp_sure }}
+                    <div class="confirmation-buttons">
+                        <label aria-role="button" tabindex="0" class="link-button cancel-button" for="pfp-delete">
+                            {{ akso_locale.account.delete_pfp_sure_no }}
+                        </label>
+                        <button type="submit" class="submit-button">
+                            {{ akso_locale.account.delete_pfp_sure_yes }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+            {% endif %}
+        </div>
     {% else %}
         <h1>{{ akso_locale.account.title }}</h1>
         {% if account.pending_request %}
@@ -198,6 +269,15 @@
                     </div>
                 {% endif %}
                 {{ _self.pending_field(pfd, 'fmtLocalName') }}
+                {% if account.details.profilePictureHash %}
+                    <a class="link-button account-picture-button" href="{{ account.edit_picture_link }}">
+                        {{ akso_locale.account.edit_pfp }}
+                    </a>
+                {% else %}
+                    <a class="account-picture-link" href="{{ account.edit_picture_link }}">
+                        {{ akso_locale.account.add_pfp }}
+                    </a>
+                {% endif %}
                 <div class="table-clear" />
                 <table class="details-table">
                     <tbody>
@@ -276,11 +356,11 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
-            <div class="account-management">
                 <a class="link-button" href="{{ account.edit_link }}">
                     {{ akso_locale.account.begin_edit }}
                 </a>
+            </div>
+            <div class="account-management">
                 <a class="link-button" href="{{ account.reset_password.link }}">
                     {{ akso_locale.account.reset_password }}
                 </a>

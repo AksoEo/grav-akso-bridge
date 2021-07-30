@@ -610,10 +610,11 @@ const messageHandlers = {
             const file = f[n];
             assertType(file, 'object', 'expected file to be an object');
             assertType(file.t, 'string', 'expected file.t to be a string');
+            assertType(file.b, 'string', 'expected file.b to be a string');
             files.push({
                 name: n,
                 type: file.t,
-                value: file.b,
+                value: Buffer.from(file.b, 'base64'),
             });
         }
 
@@ -645,10 +646,11 @@ const messageHandlers = {
             const file = f[n];
             assertType(file, 'object', 'expected file to be an object');
             assertType(file.t, 'string', 'expected file.t to be a string');
+            assertType(file.b, 'string', 'expected file.b to be a string');
             files.push({
                 name: n,
                 type: file.t,
-                value: file.b,
+                value: Buffer.from(file.b, 'base64'),
             });
         }
 

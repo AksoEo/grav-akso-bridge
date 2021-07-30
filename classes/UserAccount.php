@@ -10,6 +10,7 @@ class UserAccount {
     const QUERY_PROFILE_PICTURE = 'profile_picture';
     const QUERY_EDIT = 'redakti';
     const QUERY_CANCEL_REQUEST = 'peto-nuligi';
+    const QUERY_EDIT_PICTURE = 'redakti-profilbildon';
 
     private $plugin, $app, $bridge, $page;
     private $editing = false;
@@ -22,6 +23,7 @@ class UserAccount {
         $this->loginsPath = $this->plugin->accountPath . $this->plugin->getGrav()['config']->get('plugins.akso-bridge.account_logins_path');
         $this->editPath = $this->plugin->accountPath . '?' . self::QUERY_EDIT;
         $this->cancelRequestPath = $this->plugin->accountPath . '?' . self::QUERY_CANCEL_REQUEST;
+        $this->editPicturePath = $this->plugin->accountPath . '?' . self::QUERY_EDIT_PICTURE;
         if ($path === $this->plugin->accountPath) {
             $this->page = 'account';
 
@@ -31,6 +33,8 @@ class UserAccount {
 
             if (isset($_GET[self::QUERY_CANCEL_REQUEST])) {
                 $this->page = 'cancel_change_request';
+            } else if (isset($_GET[self::QUERY_EDIT_PICTURE])) {
+                $this->page = 'edit_picture';
             }
         } else if ($path === $this->loginsPath) {
             $this->page = 'logins';
@@ -445,9 +449,63 @@ class UserAccount {
         );
     }
 
+    function applyPictureAction($input) {
+        $action = 'upload';
+        if (isset($input['action']) && $input['action'] === 'delete') $action = 'delete';
+
+        $error = null;
+        $message = null;
+        if ($action === 'upload') {
+            $fileErr = isset($_FILES['picture']) ? $_FILES['picture']['error'] : -1;
+            $fileSize = isset($_FILES['picture']) ? $_FILES['picture']['size'] : -1;
+            if ($fileErr === UPLOAD_ERR_INI_SIZE || $fileErr === UPLOAD_ERR_FORM_SIZE || $fileSize > 2097152) {
+                $error = $this->plugin->locale['account']['upload_pfp_error_too_big'];
+            } else if (!isset($_FILES['picture']) || $_FILES['picture']['error'] !== UPLOAD_ERR_OK) {
+                $error = $this->plugin->locale['account']['upload_pfp_error_bad_request'];
+            } else {
+                $file = file_get_contents($_FILES['picture']['tmp_name']);
+                $res = $this->bridge->put('/codeholders/self/profile_picture', null, [], array(
+                    'picture' => array(
+                        't' => $_FILES['picture']['type'],
+                        'b' => base64_encode($file),
+                    ),
+                ));
+
+                if ($res['k']) {
+                    $message = $this->plugin->locale['account']['upload_pfp_success'];
+                } else if ($res['sc'] === 400) {
+                    $error = $this->plugin->locale['account']['upload_pfp_error_bad_request'];
+                } else {
+                    $error = $this->plugin->locale['account']['upload_pfp_error_unknown'];
+                }
+            }
+        } else if ($action === 'delete') {
+            $res = $this->bridge->delete('/codeholders/self/profile_picture', [], [], []);
+            if ($res['k']) {
+                $message = $this->plugin->locale['account']['delete_pfp_success'];
+            } else if ($res['sc'] === 404) {
+                $error = $this->plugin->locale['account']['delete_pfp_error_not_found'];
+            } else {
+                $error = $this->plugin->locale['account']['delete_pfp_error'];
+            }
+        }
+
+        $details = $this->renderDetails();
+        return array(
+            'editing_picture' => true,
+            'account_link' => $this->plugin->accountPath,
+            'details' => $details,
+            'error' => $error,
+            'message' => $message,
+        );
+    }
+
     public function run() {
         if ($this->editing && $_SERVER['REQUEST_METHOD'] === 'POST') {
             return $this->applyProfileEdits($_POST);
+        }
+        if ($this->page === 'edit_picture' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            return $this->applyPictureAction($_POST);
         }
 
         if (isset($_GET[self::QUERY_PROFILE_PICTURE])) {
@@ -499,6 +557,7 @@ class UserAccount {
                 'editing' => $this->editing,
                 'edit_link' => $this->editPath,
                 'cancel_request_link' => $this->cancelRequestPath,
+                'edit_picture_link' => $this->editPicturePath,
             );
         } else if ($this->page === 'logins') {
             return array(
@@ -509,6 +568,13 @@ class UserAccount {
                 'pending_request' => $this->getPendingRequest(),
                 'account_link' => $this->plugin->accountPath,
                 'cancel_chgreq' => $this->runCancelChgReq(),
+            );
+        } else if ($this->page === 'edit_picture') {
+            $details = $this->renderDetails();
+            return array(
+                'editing_picture' => true,
+                'account_link' => $this->plugin->accountPath,
+                'details' => $details,
             );
         }
     }
