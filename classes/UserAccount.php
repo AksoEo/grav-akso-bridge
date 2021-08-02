@@ -167,6 +167,7 @@ class UserAccount {
                 'fullName',
                 'fullNameLocal',
                 'nameAbbrev',
+                'careOf',
                 'newCode',
                 'oldCode',
                 'birthdate',
@@ -190,6 +191,7 @@ class UserAccount {
                 'profession',
                 'website',
                 'biography',
+                'mainDescriptor',
             ],
         ));
 
@@ -289,6 +291,7 @@ class UserAccount {
         $res = $this->bridge->get('/countries', array(
             'limit' => 300,
             'fields' => ['code', 'name_eo'],
+            'order' => [['name_eo', 'asc']],
         ), 600);
         if (!$res['k']) return null;
         return $res['b'];
@@ -411,6 +414,9 @@ class UserAccount {
         if (!isset($input['codeholder'])) throw new \Exception('No codeholder data in input');
         $ch = $input['codeholder'];
         $codeholder = Registration::readCodeholderStateSafe($this->bridge, $ch);
+        // we'll take the user's word for it about whether they're an org. AKSO API will deal with it later if it's wrong
+        $isOrg = isset($ch['codeholderType']) && $ch['codeholderType'] === 'org';
+        if (isset($ch['mainDescriptor']) && gettype($ch['mainDescriptor']) === 'string') $codeholder['mainDescriptor'] = $ch['mainDescriptor'] ?: null;
         if (isset($ch['profession']) && gettype($ch['profession']) === 'string') $codeholder['profession'] = $ch['profession'] ?: null;
         if (isset($ch['website']) && gettype($ch['website']) === 'string') $codeholder['website'] = $ch['website'] ?: null;
         if (isset($ch['biography']) && gettype($ch['biography']) === 'string') $codeholder['biography'] = $ch['biography'] ?: null;
@@ -420,7 +426,7 @@ class UserAccount {
             $commitDesc = $input['commit_desc'] ?: null;
         }
 
-        $error = Registration::getCodeholderError($this->bridge, $this->plugin->locale, $ch);
+        $error = Registration::getCodeholderError($this->bridge, $this->plugin->locale, $codeholder, $isOrg);
 
         if (!$error) {
             $reqOptions = [];
@@ -434,6 +440,7 @@ class UserAccount {
             $error = $res['sc'] == 400
                 ? $this->plugin->locale['account']['edit_error_bad_request']
                 : $this->plugin->locale['account']['edit_error_unknown'];
+            var_dump($codeholder, $res['b']);
         }
 
         return array(

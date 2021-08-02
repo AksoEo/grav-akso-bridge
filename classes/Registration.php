@@ -542,25 +542,40 @@ class Registration extends Form {
             $landlinePhone = preg_replace('/[^+0-9]/u', '', $landlinePhone);
         }
 
-        $codeholder = array(
-            'firstName' => ((isset($ch['splitName']) && $ch['splitName'])
-                ? self::readSafe('string', $ch, 'firstName')
-                : null) ?: null,
-            'lastName' => ((isset($ch['splitName']) && $ch['splitName'])
-                ? self::readSafe('string', $ch, 'lastName')
-                : null) ?: null,
-            'firstNameLegal' => ((isset($ch['splitName']) && $ch['splitName'])
-                ? self::readSafe('string', $ch, 'firstNameLegal')
-                : self::readSafe('string', $ch, 'firstName')) ?: null,
-            'lastNameLegal' => (isset($ch['splitName']) && $ch['splitName']
-                ? self::readSafe('string', $ch, 'lastNameLegal')
-                : self::readSafe('string', $ch, 'lastName')) ?: null,
-            'honorific' => self::readSafe('string', $ch, 'honorific') ?: null,
-            'birthdate' => self::readSafe('string', $ch, 'birthdate') ?: null,
+        $isOrg = isset($ch['codeholderType']) && $ch['codeholderType'] === 'org';
+
+        $codeholder = array();
+        if ($isOrg) {
+            $codeholder = array_merge($codeholder, array(
+                'fullName' => self::readSafe('string', $ch, 'fullName'),
+                'fullNameLocal' => self::readSafe('string', $ch, 'fullNameLocal'),
+                'nameAbbrev' => self::readSafe('string', $ch, 'nameAbbrev'),
+                'careOf' => self::readSafe('string', $ch, 'careOf'),
+            ));
+        } else {
+            $codeholder = array_merge($codeholder, array(
+                'firstName' => ((isset($ch['splitName']) && $ch['splitName'])
+                    ? self::readSafe('string', $ch, 'firstName')
+                    : null) ?: null,
+                'lastName' => ((isset($ch['splitName']) && $ch['splitName'])
+                    ? self::readSafe('string', $ch, 'lastName')
+                    : null) ?: null,
+                'firstNameLegal' => ((isset($ch['splitName']) && $ch['splitName'])
+                    ? self::readSafe('string', $ch, 'firstNameLegal')
+                    : self::readSafe('string', $ch, 'firstName')) ?: null,
+                'lastNameLegal' => (isset($ch['splitName']) && $ch['splitName']
+                    ? self::readSafe('string', $ch, 'lastNameLegal')
+                    : self::readSafe('string', $ch, 'lastName')) ?: null,
+                'honorific' => self::readSafe('string', $ch, 'honorific') ?: null,
+                'birthdate' => self::readSafe('string', $ch, 'birthdate') ?: null,
+                'cellphone' => $cellphone ?: null,
+                'landlinePhone' => $landlinePhone ?: null,
+            ));
+        }
+
+        $codeholder = array_merge($codeholder, array(
             'email' => self::readSafe('string', $ch, 'email') ?: null,
-            'cellphone' => $cellphone ?: null,
             'officePhone' => $officePhone ?: null,
-            'landlinePhone' => $landlinePhone ?: null,
             'feeCountry' => (isset($ch['splitCountry']) && $ch['splitCountry'])
                 ? self::readSafe('string', $ch, 'feeCountry')
                 : self::readSafe('string', $ch, 'address.country'),
@@ -573,11 +588,11 @@ class Registration extends Form {
                 'sortingCode' => self::readSafe('string', $ch, 'address.sortingCode') ?: null,
                 'streetAddress' => self::readSafe('string', $ch, 'address.streetAddress') ?: null,
             ),
-        );
+        ));
 
         // phone number post-processing: if the number does not start with a +, try to parse it as a
         // local number
-        if ($codeholder['cellphone'] && !str_starts_with($codeholder['cellphone'], '+')) {
+        if (isset($codeholder['cellphone']) && $codeholder['cellphone'] && !str_starts_with($codeholder['cellphone'], '+')) {
             $res = $bridge->parsePhoneLocal($codeholder['cellphone'], $codeholder['address']['country']);
             if ($res['s']) $codeholder['cellphone'] = $res['n'];
         }
@@ -585,7 +600,7 @@ class Registration extends Form {
             $res = $bridge->parsePhoneLocal($codeholder['officePhone'], $codeholder['address']['country']);
             if ($res['s']) $codeholder['officePhone'] = $res['n'];
         }
-        if ($codeholder['landlinePhone'] && !str_starts_with($codeholder['landlinePhone'], '+')) {
+        if (isset($codeholder['landlinePhone']) && $codeholder['landlinePhone'] && !str_starts_with($codeholder['landlinePhone'], '+')) {
             $res = $bridge->parsePhoneLocal($codeholder['landlinePhone'], $codeholder['address']['country']);
             if ($res['s']) $codeholder['landlinePhone'] = $res['n'];
         }
@@ -1228,27 +1243,33 @@ class Registration extends Form {
     }
 
     // Returns a best-effort error message for the codeholder data.
-    public static function getCodeholderError($bridge, $locale, $ch) {
-        if (empty(trim($ch['firstNameLegal']))) {
+    public static function getCodeholderError($bridge, $locale, $ch, $isOrg = false) {
+        if (!$isOrg && empty(trim($ch['firstNameLegal']))) {
+            return $locale['registration']['codeholder_error_name_required'];
+        } else if ($isOrg && (empty(trim($ch['fullName'])) || empty(trim($ch['fullNameLocal'])))) {
             return $locale['registration']['codeholder_error_name_required'];
         }
-        $birthdate = \DateTime::createFromFormat('Y-m-d', $ch['birthdate']);
-        $now = new \DateTime();
-        if (!$birthdate) {
-            return $locale['registration']['codeholder_error_birthdate_required'];
-        }
-        if ($birthdate->diff($now)->invert) {
-            // this is a future date
-            return $locale['registration']['codeholder_error_invalid_birthdate'];
+        if (!$isOrg) {
+            $birthdate = \DateTime::createFromFormat('Y-m-d', $ch['birthdate']);
+            $now = new \DateTime();
+            if (!$birthdate) {
+                return $locale['registration']['codeholder_error_birthdate_required'];
+            }
+            if ($birthdate->diff($now)->invert) {
+                // this is a future date
+                return $locale['registration']['codeholder_error_invalid_birthdate'];
+            }
         }
         // HTML will take care of validating email
         // no need to check if countries are in the country set because it's a <select>
 
-        // validate phone number
-        $phone = $ch['cellphone'];
-        if ($phone) {
-            if (!preg_match('/^\+[a-z0-9]{1,49}$/u', $phone)) {
-                return $locale['registration']['codeholder_error_invalid_phone_format_cell'];
+        // validate phone numbers
+        if (isset($ch['cellphone'])) {
+            $phone = $ch['cellphone'];
+            if ($phone) {
+                if (!preg_match('/^\+[a-z0-9]{1,49}$/u', $phone)) {
+                    return $locale['registration']['codeholder_error_invalid_phone_format_cell'];
+                }
             }
         }
         $phone = $ch['officePhone'];
@@ -1257,10 +1278,12 @@ class Registration extends Form {
                 return $locale['registration']['codeholder_error_invalid_phone_format_office'];
             }
         }
-        $phone = $ch['landlinePhone'];
-        if ($phone) {
-            if (!preg_match('/^\+[a-z0-9]{1,49}$/u', $phone)) {
-                return $locale['registration']['codeholder_error_invalid_phone_format_landline'];
+        if (isset($ch['landlinePhone'])) {
+            $phone = $ch['landlinePhone'];
+            if ($phone) {
+                if (!preg_match('/^\+[a-z0-9]{1,49}$/u', $phone)) {
+                    return $locale['registration']['codeholder_error_invalid_phone_format_landline'];
+                }
             }
         }
 

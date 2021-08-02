@@ -6,6 +6,83 @@
         </div>
     {% endif %}
 {% endmacro %}
+    {% if akso_registration.state.codeholder.codeholderType == 'org' %}
+    <div class="settings-field" data-el="input" data-type="text">
+        <div class="inner-field">
+            <label for="codeholder-full-name">
+                {{akso_locale.registration.codeholder_full_name}}
+                <span
+                    class="required-star"
+                    title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
+            </label>
+            <input
+                id="codeholder-full-name"
+                name="codeholder[fullName]"
+                type="text"
+                required
+                value="{{akso_registration.state.codeholder.fullName|e('html_attr')}}" />
+        </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'fullName')}}
+        <div class="field-description">
+            {{akso_locale.registration.codeholder_full_name_desc}}
+        </div>
+    </div>
+    <div class="settings-field" data-el="input" data-type="text">
+        <div class="inner-field">
+            <label for="codeholder-full-name-local">
+                {{akso_locale.registration.codeholder_full_name_local}}
+                <span
+                    class="required-star"
+                    title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
+            </label>
+            <input
+                id="codeholder-full-name-local"
+                name="codeholder[fullNameLocal]"
+                type="text"
+                required
+                value="{{akso_registration.state.codeholder.fullNameLocal|e('html_attr')}}" />
+        </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'fullNameLocal')}}
+        <div class="field-description">
+            {{akso_locale.registration.codeholder_full_name_local_desc}}
+        </div>
+    </div>
+    <div class="settings-field" data-el="input" data-type="text">
+        <div class="inner-field">
+            <label for="codeholder-name-abbrev">
+                {{akso_locale.registration.codeholder_name_abbrev}}
+                <span
+                    class="required-star"
+                    title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
+            </label>
+            <input
+                id="codeholder-name-abbrev"
+                name="codeholder[nameAbbrev]"
+                type="text"
+                required
+                value="{{akso_registration.state.codeholder.nameAbbrev|e('html_attr')}}" />
+        </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'nameAbbrev')}}
+    </div>
+    <div class="settings-field" data-el="input" data-type="text">
+        <div class="inner-field">
+            <label for="codeholder-care-of">
+                {{akso_locale.registration.codeholder_care_of}}
+                <span
+                    class="required-star"
+                    title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
+            </label>
+            <input
+                id="codeholder-care-of"
+                name="codeholder[careOf]"
+                type="text"
+                required
+                value="{{akso_registration.state.codeholder.careOf|e('html_attr')}}" />
+        </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'nameAbbrev')}}
+    </div>
+    <hr />
+    {% else %}
     <input
         type="checkbox"
         id="codeholder-split-name"
@@ -112,6 +189,7 @@
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'birthdate')}}
     </div>
+    {% endif %}
     <div class="settings-field" data-el="input" data-type="email">
         <div class="inner-field">
             <label for="codeholder-email">
@@ -133,6 +211,7 @@
             {{akso_locale.registration.codeholder_phone_desc}}
         </div>
     {% endif %}
+    {% if akso_registration.state.codeholder.codeholderType != 'org' %}
     <div class="settings-field" data-el="input" data-type="phone">
         <div class="inner-field">
             <label for="codeholder-cellphone">{{akso_locale.registration.codeholder_cellphone}}</label>
@@ -152,7 +231,9 @@
         </div>
         {% endif %}
     </div>
+    {% endif %}
     {% if akso_reg_editing %}
+        {% if akso_registration.state.codeholder.codeholderType != 'org' %}
         <div class="settings-field" data-el="input" data-type="phone">
             <div class="inner-field">
                 <label for="codeholder-landline-phone">{{akso_locale.registration.codeholder_landline_phone}}</label>
@@ -167,6 +248,7 @@
             </div>
             {{_self.akso_field_extra(akso_registration, akso_locale, 'landlinePhone')}}
         </div>
+        {% endif %}
         <div class="settings-field" data-el="input" data-type="phone">
             <div class="inner-field">
                 <label for="codeholder-office-phone">{{akso_locale.registration.codeholder_office_phone}}</label>

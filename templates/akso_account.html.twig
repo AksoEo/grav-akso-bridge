@@ -176,10 +176,26 @@
                     </div>
                 {% endif %}
                 <form class="account-details registration-settings" method="POST" action="{{ account.edit_path }}">
+                    <input
+                        type="hidden"
+                        name="codeholder[codeholderType]"
+                        value="{{account.codeholder.codeholderType}}" />
                     {% set akso_registration = { state: account, countries: account.countries } %}
                     {% set akso_reg_editing = true %}
                     {% include 'partials/akso_user_profile_form.html.twig' %}
                     <hr />
+                    {% if account.codeholder.codeholderType == 'org' %}
+                    <div class="settings-field" data-el="input" data-type="text">
+                        <div class="inner-field">
+                            <label for="codeholder-main-descriptor">{{akso_locale.account.main_descriptor}}</label>
+                            <input
+                                id="codeholder-main-descriptor"
+                                name="codeholder[mainDescriptor]"
+                                type="text"
+                                value="{{account.codeholder.mainDescriptor|e('html_attr')}}" />
+                        </div>
+                    </div>
+                    {% else %}
                     <div class="settings-field" data-el="input" data-type="text">
                         <div class="inner-field">
                             <label for="codeholder-profession">{{akso_locale.account.profession}}</label>
@@ -190,6 +206,7 @@
                                 value="{{account.codeholder.profession|e('html_attr')}}" />
                         </div>
                     </div>
+                    {% endif %}
                     <div class="settings-field" data-el="input" data-type="text">
                         <div class="inner-field">
                             <label for="codeholder-website">{{akso_locale.account.website}}</label>
@@ -294,6 +311,12 @@
                                 {{ _self.pending_field(pfd, 'newCode') }}
                             </td>
                         </tr>
+                        {% if account.details.codeholderType == 'org' %}
+                        <tr>
+                            <th class="field-label">{{ akso_locale.account.care_of }}</th>
+                            <td>{{ account.details.careOf|e }}</td>
+                        </tr>
+                        {% endif %}
                         <tr>
                             <th class="field-label">{{ akso_locale.account.email }}</th>
                             <td>
@@ -339,6 +362,12 @@
                                     {{ _self.pending_field(pfd, 'profession') }}
                                 </td>
                             </tr>
+                        {% endif %}
+                        {% if account.details.codeholderType == 'org' %}
+                        <tr>
+                            <th class="field-label">{{ akso_locale.account.main_descriptor }}</th>
+                            <td>{{ account.details.mainDescriptor|e }}</td>
+                        </tr>
                         {% endif %}
                         <tr>
                             <th class="field-label">{{ akso_locale.account.website }}</th>
