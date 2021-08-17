@@ -191,7 +191,7 @@ class UserAccount {
                 'profession',
                 'website',
                 'biography',
-                'mainDescriptor',
+                // 'mainDescriptor', FIXME causes issues on API side
             ],
         ));
 
@@ -567,8 +567,15 @@ class UserAccount {
                 'edit_picture_link' => $this->editPicturePath,
             );
         } else if ($this->page === 'logins') {
+            $countries = [];
+            foreach ($this->getCountries() as $country) {
+                $countries[$country['code']] = $country['name_eo'];
+            }
+
             return array(
                 'logins' => $this->getLastLogins(),
+                'countries' => $countries,
+                'return_link' => $this->plugin->accountPath,
             );
         } else if ($this->page === 'cancel_change_request') {
             return array(

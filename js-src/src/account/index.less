@@ -460,3 +460,50 @@
         }
     }
 }
+
+.account-logins {
+    padding: 0;
+    list-style-type: none;
+
+    .login-item {
+        margin: 1em 0;
+        border-radius: var(--radius);
+        background: var(--bg);
+        box-shadow: @shade-both;
+        padding: 0.5em 1em;
+
+        .item-timestamp {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .item-label {
+            font-weight: 600;
+        }
+
+        .item-location {
+            .item-region, .item-city {
+                font-size: 0.9em;
+                border: 1px solid var(--light-separator);
+                border-radius: var(--radius);
+                padding: 0.1em 0.2em;
+
+                &:empty {
+                    display: none;
+                }
+            }
+
+            .item-region {
+                opacity: 0.9;
+            }
+            .item-city {
+                opacity: 0.8;
+            }
+        }
+
+        .item-location-link {
+            font-size: 0.9em;
+            margin-top: 0.2em;
+        }
+    }
+}

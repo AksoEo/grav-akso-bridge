@@ -23,7 +23,7 @@ fs.mkdirSync(rawCachePath, { recursive: true, mode: 0o755 });
 // set up socket directory
 const bridgePath = 'aksobridge';
 fs.mkdirSync(bridgePath, { recursive: true, mode: 0o755 });
-const userAgent = `AKSOBridge/${version} (+https://github.com/AksoEo/aksobridged)`;
+const userAgent = `AKSOBridge/${version} (+https://akso.org)`;
 
 try {
     // if aksobridged crashed or was sigkilled, ipc pipes will still exist in the bridge path
