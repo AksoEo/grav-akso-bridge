@@ -565,6 +565,7 @@ class UserAccount {
                 'edit_link' => $this->editPath,
                 'cancel_request_link' => $this->cancelRequestPath,
                 'edit_picture_link' => $this->editPicturePath,
+                'registration_link' => $this->plugin->registrationPath
             );
         } else if ($this->page === 'logins') {
             $countries = [];

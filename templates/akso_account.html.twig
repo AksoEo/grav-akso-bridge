@@ -399,6 +399,12 @@
             </div>
             <div class="account-memberships">
                 <h2 class="memberships-title">{{ akso_locale.account.memberships_title }}</h2>
+                <div class="sign-up-container">
+                    <a class="link-button" href="{{ account.registration_link }}">
+                        {{ akso_locale.account.memberships_register }}
+                    </a>
+                </div>
+                <div class="memberships-title-clear"></div>
                 {% if account.membership.categories is empty %}
                     <div class="memberships-none">
                         {{ akso_locale.account.memberships_none }}
