@@ -295,6 +295,34 @@
             animation: account-country-changed-box-fl-in 0.5s cubic-bezier(.2, .3, 0, 1);
         }
 
+        &::after {
+            content: '';
+            position: absolute;
+            border-radius: var(--radius);
+            border: 1px solid var(--accent);
+            pointer-events: none;
+            @keyframes account-country-changed-ambient {
+                0% {
+                    inset: -20px;
+                    opacity: 0;
+                    border-radius: calc(var(--radius) + 19px);
+                    border-width: 6px;
+                }
+                70% {
+                    inset: -1px;
+                    opacity: 0.5;
+                    border-radius: var(--radius);
+                    border-width: 1px;
+                }
+                100% {
+                    inset: -1px;
+                    opacity: 0;
+                    border-radius: var(--radius);
+                }
+            }
+            animation: account-country-changed-ambient 3s infinite 1s;
+        }
+
         @keyframes account-country-changed-box-in {
             0% {
                 clip-path: inset(0 0 100% 0);
@@ -328,6 +356,9 @@
                     }
                 }
                 animation: account-country-changed-box-fl-out 0.3s cubic-bezier(.2, .3, 0, 1) forwards;
+            }
+            &::after {
+                display: none;
             }
         }
 

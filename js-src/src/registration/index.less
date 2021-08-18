@@ -362,6 +362,13 @@
 
                         .selection-box {
                             .checkbox();
+
+                            &.is-already-registered {
+                                .checkbox-checked();
+                                border-color: transparent;
+                                background: none;
+                                color: inherit;
+                            }
                         }
                     }
 
@@ -388,6 +395,11 @@
                             p:last-child {
                                 margin-bottom: 0;
                             }
+                        }
+
+                        .item-already-registered {
+                            font-size: 0.8em;
+                            color: var(--accent);
                         }
                     }
 
@@ -489,7 +501,9 @@
                     }
 
                     &.not-available {
-                        opacity: 0.5;
+                        .item-selection, .item-name, .item-description {
+                            opacity: 0.5;
+                        }
                     }
                 }
 

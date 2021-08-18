@@ -64,17 +64,35 @@ class Registration extends Form {
     }
 
     // Loads all available offer years.
-    private function loadAllOffers($skipOffers = false) {
+    private function loadAllOffers($skipOffers = false, $codeholder = null) {
+        $registeredOffers = [];
+        if ($codeholder) {
+            $res = $this->app->bridge->get("/codeholders/$codeholder/membership", array(
+                'fields' => ['year', 'categoryId'],
+                'order' => [['year', 'desc']],
+                'limit' => 100, // fetch 100 items; probably enough
+            ));
+            if ($res['k']) {
+                foreach ($res['b'] as $item) {
+                    $year = $item['year'];
+                    if (!isset($registeredOffers[$year])) {
+                        $registeredOffers[$year] = [];
+                    }
+                    $registeredOffers[$year][] = $item['categoryId'];
+                }
+            }
+        }
+
         $fields = ['year', 'paymentOrgId', 'currency'];
         if (!$skipOffers) $fields[] = 'offers';
         $res = $this->app->bridge->get('/registration/options', array(
             'limit' => 100,
             'filter' => ['enabled' => true],
             'fields' => $fields,
-            'order' => [['year', 'asc']],
+            'order' => [['year', 'desc']],
         ));
         if ($res['k']) {
-            $offerYears = $res['b'];
+            $offerYears = array_reverse($res['b']);
 
             $scriptCtx = new FormScriptExecCtx($this->app);
             {
@@ -123,6 +141,9 @@ class Registration extends Form {
 
                         foreach ($offerGroup['offers'] as &$offer) {
                             if (!isset($offer['price'])) continue;
+
+                            $offer['is_duplicate'] = isset($registeredOffers[$offerYear['year']])
+                                && in_array($offer['id'], $registeredOffers[$offerYear['year']]);
 
                             if ($offer['price']) {
                                 if (gettype($offer['price']['description']) === 'string') {
@@ -796,7 +817,8 @@ class Registration extends Form {
         }
 
         if ($this->state['step'] >= 1) {
-            $this->offers = $this->loadAllOffers();
+            $codeholderId = $this->plugin->aksoUser ? $this->plugin->aksoUser['id'] : null;
+            $this->offers = $this->loadAllOffers(false, $codeholderId);
             $this->offersByYear = [];
             foreach ($this->offers as $offerYear) {
                 $this->offersByYear[$offerYear['year']] = $offerYear;
