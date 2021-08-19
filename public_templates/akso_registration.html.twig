@@ -278,6 +278,27 @@
                             {{offerYear.year|e}}
                         </span>
                     </label>
+
+                    {% set hasMembershipItemForThisYear = false %}
+                    {% for offerGroup in offerYear.offers %}
+                        {% for offer in offerGroup.offers %}
+                            {% if offer.type == 'membership' %}
+                                {% set category = akso_registration.categories[offer.id] %}
+                                {% if offer.is_duplicate and category.givesMembership %}
+                                    {% set hasMembershipItemForThisYear = true %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% if hasMembershipItemForThisYear %}
+                        <div class="year-already-registered">
+                            <div class="inner-description">
+                                {{akso_locale.registration.offers_year_already_registered}}
+                            </div>
+                        </div>
+                    {% endif %}
+
                     {% for groupIndex, offerGroup in offerYear.offers %}
                     <div class="year-offer-group" role="group" aria-label="{{offerGroup.title|e}}">
                         <div class="offer-group-info">
@@ -289,6 +310,7 @@
                         {% set classes = '' %}
                         {% set available = true %}
                         {% set duplicate = false %}
+                        {% set is_mem_duplicate = false %}
                         {% if offer.type == 'membership' and not offer.price %}
                             {% set available = false %}
                             {% set classes = classes ~ ' not-available' %}
@@ -297,6 +319,12 @@
                             {% set duplicate = true %}
                             {% set available = false %}
                             {% set classes = classes ~ ' not-available already-registered' %}
+                        {% endif %}
+                        {% if offer.type == 'membership' and not duplicate and akso_registration.categories[offer.id].givesMembership and hasMembershipItemForThisYear %}
+                            {% set duplicate = true %}
+                            {% set available = false %}
+                            {% set classes = classes ~ ' not-available already-registered' %}
+                            {% set is_mem_duplicate = true %}
                         {% endif %}
 
                         {% if available %}
@@ -327,7 +355,11 @@
                             <div class="offer-item-inner">
                                 <div class="item-selection">
                                     {% if duplicate %}
-                                    <span class="selection-box is-already-registered"></span>
+                                        {% if is_mem_duplicate %}
+                                            <span class="selection-box is-already-registered-with-other"></span>
+                                        {% else %}
+                                            <span class="selection-box is-already-registered"></span>
+                                        {% endif %}
                                     {% else %}
                                     <label tabindex="0" aria-hidden="true" class="selection-box" for="{{id|e('html_attr')}}"></label>
                                     {% endif %}
@@ -341,11 +373,6 @@
                                     <div class="item-description">
                                         {{akso_registration.categories[offer.id].description}}
                                     </div>
-                                    {% if duplicate %}
-                                    <div class="item-already-registered">
-                                        {{akso_locale.registration.offer_already_registered}}
-                                    </div>
-                                    {% endif %}
                                 </div>
                                 {% if not duplicate %}
                                 <div class="item-price">

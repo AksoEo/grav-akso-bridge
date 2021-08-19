@@ -315,6 +315,23 @@
                 }
             }
 
+            .year-already-registered {
+                margin: 0.5em;
+                border-radius: var(--radius);
+                background: var(--light-accent);
+                color: var(--light-accent-fg);
+                padding: 0.5em 1em;
+                display: none;
+
+                .inner-description {
+                    font-size: 0.9em;
+                }
+            }
+
+            .year-expansion-switch:checked ~ .year-already-registered {
+                display: block;
+            }
+
             .year-offer-group {
                 overflow: hidden;
 
@@ -365,6 +382,10 @@
 
                             &.is-already-registered {
                                 .checkbox-checked();
+                            }
+
+                            &.is-already-registered,
+                            &.is-already-registered-with-other {
                                 border-color: transparent;
                                 background: none;
                                 color: inherit;
@@ -395,11 +416,6 @@
                             p:last-child {
                                 margin-bottom: 0;
                             }
-                        }
-
-                        .item-already-registered {
-                            font-size: 0.8em;
-                            color: var(--accent);
                         }
                     }
 
@@ -502,7 +518,7 @@
 
                     &.not-available {
                         .item-selection, .item-name, .item-description {
-                            opacity: 0.5;
+                            opacity: 0.7;
                         }
                     }
                 }
