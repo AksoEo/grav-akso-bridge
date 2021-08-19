@@ -385,12 +385,15 @@ function assertType (v, t, n) {
     }
 }
 
+const transformUserAgent = ua => ua ? `${ua} (via ${workerData.userAgent})` : ua;
+
 const messageHandlers = {
-    hi: async (conn, { ip, co, api }) => {
+    hi: async (conn, { ip, co, api, ua }) => {
         debug(`connection handshake from ip ${ip}`);
         assertType(api, 'string', 'expected api to be a string');
         assertType(ip, 'string', 'expected ip to be a string');
         assertType(co, 'object', 'expected co to be an object');
+        assertType(ua, 'string', 'expected ua to be a string');
         if (conn.didHandshake) {
             throw new Error('double handshake');
         }
@@ -421,7 +424,7 @@ const messageHandlers = {
 
         conn.client = new UserClient({
             host: apiHost,
-            userAgent: workerData.userAgent,
+            userAgent: transformUserAgent(ua) || workerData.userAgent,
             cookieJar: conn.cookies,
             headers: {
                 'X-Forwarded-For': ip,
@@ -440,11 +443,12 @@ const messageHandlers = {
             member: sesx.isActiveMember,
         };
     },
-    hic: async (conn, { api, key, sec }) => {
+    hic: async (conn, { api, key, sec, ua }) => {
         debug(`api client handshake for ${key}`);
         assertType(api, 'string', 'expected api to be a string');
         assertType(key, 'string', 'expected key to be a string');
         assertType(sec, 'string', 'expected sec to be a string');
+        assertType(ua, 'string', 'expected ua to be a string');
         if (conn.didHandshake) {
             throw new Error('double handshake');
         }
@@ -454,7 +458,7 @@ const messageHandlers = {
 
         conn.client = new AppClient({
             host: apiHost,
-            userAgent: workerData.userAgent,
+            userAgent: transformUserAgent(ua) || workerData.userAgent,
             apiKey: key,
             apiSecret: sec,
         });
@@ -610,10 +614,11 @@ const messageHandlers = {
             const file = f[n];
             assertType(file, 'object', 'expected file to be an object');
             assertType(file.t, 'string', 'expected file.t to be a string');
+            assertType(file.b, 'string', 'expected file.b to be a string');
             files.push({
                 name: n,
                 type: file.t,
-                value: file.b,
+                value: Buffer.from(file.b, 'base64'),
             });
         }
 
@@ -645,10 +650,11 @@ const messageHandlers = {
             const file = f[n];
             assertType(file, 'object', 'expected file to be an object');
             assertType(file.t, 'string', 'expected file.t to be a string');
+            assertType(file.b, 'string', 'expected file.b to be a string');
             files.push({
                 name: n,
                 type: file.t,
-                value: file.b,
+                value: Buffer.from(file.b, 'base64'),
             });
         }
 

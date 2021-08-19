@@ -1,18 +1,45 @@
 {% extends 'partials/base.html.twig' %}
 {% block content %}
     <h1>{{ akso_locale.account.title }}</h1>
+    <a class="link-button back-button" href="{{ account.return_link }}">
+        <span class="back-icon"></span>
+        {{ akso_locale.account.logins_back }}
+    </a>
     <h2>{{ akso_locale.account.logins_title }}</h2>
-    <ul>
+    <ul class="account-logins">
     {% for item in account.logins %}
-        <li>
-            <ul>
-                <li>{{item.time|date("c")}}</li>
-                <li>{{item.ll[0]}}, {{item.ll[1]}} / area {{item.area}}</li>
-                <li>{{item.timezone}}</li>
-                <li>{{item.country}} / {{item.region}} / {{item.city}}</li>
-                <li>{{item.ip}}</li>
-                <li title="{{item.userAgent}}">{{item.userAgentParsed}}</li>
-            </ul>
+        <li class="login-item">
+            <div class="item-timestamp">
+                {{item.time|date("c")}}
+            </div>
+            <div class="item-location">
+                <span class="item-label">{{akso_locale.account.logins_location}}:</span>
+                <span class="item-country">{{account.countries[item.country|lower]}}</span>
+                <span class="item-region">{{item.region}}</span>
+                <span class="item-city">{{item.city}}</span>
+            </div>
+            <div class="item-browser">
+                <span class="item-label">{{akso_locale.account.logins_browser}}:</span>
+                <span title="{{item.userAgent}}" aria-label="{{item.userAgentParsed}}">{{item.userAgentParsed}}</span>
+            </div>
+            <div class="item-ip">
+                <span class="item-label">{{akso_locale.account.logins_ip}}:</span>
+                <span class="item-ip">{{item.ip}}</span>
+            </div>
+            {# FIXME: how good is this zoom approximation? #}
+            {% set zoom = "6" %}
+            {% if item.area < 50 %}
+                {% set zoom = "10" %}
+            {% elseif item.area < 100 %}
+                {% set zoom = "9" %}
+            {% elseif item.area < 200 %}
+                {% set zoom = "8" %}
+            {% endif %}
+            <a data-area={{item.area}} target="_blank" rel="noopener noreferrer" class="item-location-link" href="{{
+                akso_locale.account.logins_osm_link|e('html_attr') ~ zoom ~ "/" ~ item.ll[0] ~ "/" ~ item.ll[1]
+            }}">
+                {{akso_locale.account.logins_show_map}}
+            </a>
         </li>
     {% endfor %}
     </ul>

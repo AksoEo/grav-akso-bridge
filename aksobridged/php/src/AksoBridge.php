@@ -162,7 +162,8 @@ class AksoBridge {
         return $this->request('hi', array(
             'api' => $apiHost,
             'ip' => $ip,
-            'co' => $cookies
+            'co' => $cookies,
+            'ua' => $_SERVER['HTTP_USER_AGENT']
         ));
     }
 
@@ -170,7 +171,8 @@ class AksoBridge {
         return $this->request('hic', array(
             'api' => $apiHost,
             'key' => $key,
-            'sec' => $secret
+            'sec' => $secret,
+            'ua' => $_SERVER['HTTP_USER_AGENT']
         ));
     }
 

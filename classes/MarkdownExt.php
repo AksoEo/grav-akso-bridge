@@ -1421,6 +1421,7 @@ class MarkdownExt {
         $res = $this->bridge->get('/countries', array(
             'limit' => 300,
             'fields' => ['code', 'name_eo'],
+            'order' => [['name_eo', 'asc']],
         ), 600);
         if (!$res['k']) return null;
         return $res['b'];
