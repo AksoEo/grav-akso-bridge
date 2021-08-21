@@ -505,7 +505,7 @@ class CongressLocations {
             }
             die();
         } else {
-            // TODO: error?
+            $this->plugin->getGrav()->fireEvent('onPageNotFound');
             die();
         }
     }

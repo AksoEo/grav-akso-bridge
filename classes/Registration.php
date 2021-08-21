@@ -1261,11 +1261,11 @@ class Registration extends Form {
         $ch = $this->state['codeholder'];
         if (isset($ch['locked'])) return null;
 
-        return self::getCodeholderError($this->app->bridge, $this->plugin->locale, $ch);
+        return self::getCodeholderError($this->app->bridge, $this->plugin->locale, $ch, false, $this->plugin->aksoUser != null);
     }
 
     // Returns a best-effort error message for the codeholder data.
-    public static function getCodeholderError($bridge, $locale, $ch, $isOrg = false) {
+    public static function getCodeholderError($bridge, $locale, $ch, $isOrg = false, $isNewUser = false) {
         if (!$isOrg && empty(trim($ch['firstNameLegal']))) {
             return $locale['registration']['codeholder_error_name_required'];
         } else if ($isOrg && (empty(trim($ch['fullName'])) || empty(trim($ch['fullNameLocal'])))) {
@@ -1310,7 +1310,11 @@ class Registration extends Form {
         }
 
         if (!$ch['feeCountry']) {
-            return $locale['registration']['codeholder_error_no_fee_country'];
+            if ($isNewUser) {
+                return $locale['registration']['codeholder_error_no_fee_country'];
+            } else {
+                return $locale['registration']['codeholder_error_new_user_no_fee_country'];
+            }
         }
 
         // validate address

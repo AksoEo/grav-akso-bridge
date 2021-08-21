@@ -53,6 +53,9 @@
                             <span class="inner-org-name">{{org.fullName|e}}</span>
                             {% endif %}
                         </h4>
+                        {% if org.fullNameLocal %}
+                        <h5 class="org-local-name">{{org.fullNameLocal|e}}</h5>
+                        {% endif %}
                         <div class="org-descriptor">{{org.mainDescriptor|e}}</div>
                     </div>
                     <details class="org-details">
@@ -109,9 +112,6 @@
                             </tbody>
                         </table>
                         <div class="org-post-info">
-                            {% if org.fullNameLocal %}
-                            <h5 class="org-local-name">{{org.fullNameLocal|e}}</h5>
-                            {% endif %}
                             <div class="org-biography">
                                 {% set is_first = true %}
                                 {% for line in org.biography|split('\n') %}
