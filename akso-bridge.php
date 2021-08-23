@@ -242,6 +242,7 @@ class AksoBridgePlugin extends Plugin {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/registration.js');
             $state['akso_login_path'] = $this->loginPath;
             $state['akso_account_path'] = $this->accountPath;
+            $state['uea_hide_support_button'] = true;
 
             $app = new AppBridge($this->grav);
             $app->open();
@@ -305,6 +306,9 @@ class AksoBridgePlugin extends Plugin {
         $state['akso_auth'] = $this->aksoUser !== null;
         $state['akso_full_auth'] = $this->aksoUser ? !$this->aksoUser['totp'] : false;
         $state['akso_user_is_member'] = $this->aksoUser ? $this->aksoUser['member'] : false;
+        if (!isset($state['uea_hide_support_button'])) {
+            $state['uea_hide_support_button'] = $state['akso_user_is_member'];
+        }
         if ($this->aksoUser !== null) {
             $state['akso_user_fmt_name'] = $this->aksoUserFormattedName;
             $state['akso_uea_code'] = $this->aksoUser['uea'];
