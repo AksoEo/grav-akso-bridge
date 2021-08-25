@@ -78,8 +78,10 @@
                 <div class="summary-contact">
                     {{akso_registration.state.codeholder.email|e}}
                     {% if akso_registration.state.codeholder_derived.cellphone is not empty %}
-                        &nbsp;
-                        {{akso_registration.state.codeholder_derived.cellphone|e}}
+                        · {{akso_locale.registration.codeholder_cellphone}}: {{akso_registration.state.codeholder_derived.cellphone|e}}
+                    {% endif %}
+                    {% if akso_registration.state.codeholder_derived.landline_phone is not empty %}
+                        · {{akso_locale.registration.codeholder_landline_phone}}: {{akso_registration.state.codeholder_derived.landline_phone|e}}
                     {% endif %}
                 </div>
                 <div class="summary-address">

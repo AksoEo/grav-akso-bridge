@@ -698,11 +698,19 @@ class Registration extends Form {
         else $cellphoneFmt = null;
         if ($cellphoneFmt === null) $cellphoneFmt = $this->state['codeholder']['cellphone'];
 
+        $landlinePhoneFmt = $this->app->bridge->evalScript([array(
+            'number' => array('t' => 's', 'v' => $this->state['codeholder']['landlinePhone']),
+        )], [], array('t' => 'c', 'f' => 'phone_fmt', 'a' => ['number']));
+        if ($landlinePhoneFmt['s']) $landlinePhoneFmt = $landlinePhoneFmt['v'];
+        else $landlinePhoneFmt = null;
+        if ($landlinePhoneFmt === null) $landlinePhoneFmt = $this->state['codeholder']['landlinePhone'];
+
         $this->state['codeholder_derived'] = array(
             'birthdate' => Utils::formatDate($this->state['codeholder']['birthdate']),
             'address' => $addressFmt,
             'fee_country' => $feeCountryName,
             'cellphone' => $cellphoneFmt,
+            'landline_phone' => $landlinePhoneFmt,
         );
     }
 

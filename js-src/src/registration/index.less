@@ -1,6 +1,8 @@
 @import '../prelude';
 @import '../form/index.less';
 
+@media-narrow: 520px;
+
 .checkbox() {
     display: inline-block;
     position: relative;
@@ -126,7 +128,7 @@
                         }
                     }
 
-                    @media (max-width: 420px) {
+                    @media (max-width: @media-narrow) {
                         .item-inner, .item-addon {
                             display: block;
                         }
@@ -192,7 +194,7 @@
                 justify-content: space-between;
                 align-items: center;
 
-                @media (max-width: 420px) {
+                @media (max-width: @media-narrow) {
                     display: block;
 
                     label {
@@ -201,11 +203,23 @@
                     input {
                         margin-left: 0;
                         margin-right: 0;
+                        width: 100%;
+
+                        &[type=date] {
+                            // on iOS 14, date inputs may have zero size
+                            min-width: 6em;
+                            min-height: 2em;
+                        }
                     }
                 }
             }
             .field-description {
                 font-size: 0.8em;
+                margin-top: 0.2em;
+
+                @media (max-width: @media-narrow) {
+                    margin-top: 0.5em;
+                }
 
                 .split-country-description {
                     opacity: 0.8;
@@ -493,7 +507,7 @@
                         }
                     }
 
-                    @media (max-width: 420px) {
+                    @media (max-width: @media-narrow) {
                         .offer-item-inner {
                             display: block;
                         }
@@ -557,7 +571,7 @@
             .year-expansion-switch:checked ~ .year-offer-group .offer-item {
                 display: block;
             }
-            @media (max-width: 420px) {
+            @media (max-width: @media-narrow) {
                 .year-expansion-switch:not(:checked) ~ .year-offer-group .offer-item-selection:checked + .offer-item {
                     .item-description {
                         display: none;
@@ -578,7 +592,7 @@
                 display: flex;
                 justify-content: space-between;
 
-                @media (max-width: 420px) {
+                @media (max-width: @media-narrow) {
                     display: block;
 
                     .title-price {
@@ -628,7 +642,7 @@
                             display: flex;
                             justify-content: space-between;
 
-                            @media (max-width: 420px) {
+                            @media (max-width: @media-narrow) {
                                 display: block;
 
                                 .submit-container {

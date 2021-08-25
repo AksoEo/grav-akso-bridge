@@ -168,8 +168,14 @@
             <input
                 id="codeholder-honorific"
                 name="codeholder[honorific]"
+                list="codeholder-honorific-suggestions"
                 type="text"
                 value="{{akso_registration.state.codeholder.honorific|e('html_attr')}}" />
+            <datalist class="hidden-input" id="codeholder-honorific-suggestions">
+                {% for suggestion in akso_locale.honorific_suggestions %}
+                    <option value="{{ suggestion|e('html_attr') }}" />
+                {% endfor %}
+            </datalist>
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'honorific')}}
     </div>
@@ -205,13 +211,25 @@
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'email')}}
     </div>
-    {% if akso_reg_editing %}
-        <hr />
-        <div class="settings-description">
-            {{akso_locale.registration.codeholder_phone_desc}}
-        </div>
-    {% endif %}
+    <hr />
+    <div class="settings-description">
+        {{akso_locale.registration.codeholder_phone_desc}}
+    </div>
     {% if akso_registration.state.codeholder.codeholderType != 'org' %}
+    <div class="settings-field" data-el="input" data-type="phone">
+        <div class="inner-field">
+            <label for="codeholder-landline-phone">{{akso_locale.registration.codeholder_landline_phone}}</label>
+            <input
+                id="codeholder-landline-phone"
+                name="codeholder[landlinePhone]"
+                type="text"
+                inputmode="numeric"
+                pattern="[+]?[a-z0-9\s]{1,49}"
+                title="{{akso_locale.registration.codeholder_phone_pattern_desc}}"
+                value="{{akso_registration.state.codeholder.landlinePhone|e('html_attr')}}" />
+        </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'landlinePhone')}}
+    </div>
     <div class="settings-field" data-el="input" data-type="phone">
         <div class="inner-field">
             <label for="codeholder-cellphone">{{akso_locale.registration.codeholder_cellphone}}</label>
@@ -225,30 +243,10 @@
                 value="{{akso_registration.state.codeholder.cellphone|e('html_attr')}}" />
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'cellphone')}}
-        {% if not akso_reg_editing %}
-        <div class="field-description">
-            {{akso_locale.registration.codeholder_cellphone_desc}}
-        </div>
-        {% endif %}
     </div>
     {% endif %}
+
     {% if akso_reg_editing %}
-        {% if akso_registration.state.codeholder.codeholderType != 'org' %}
-        <div class="settings-field" data-el="input" data-type="phone">
-            <div class="inner-field">
-                <label for="codeholder-landline-phone">{{akso_locale.registration.codeholder_landline_phone}}</label>
-                <input
-                    id="codeholder-landline-phone"
-                    name="codeholder[landlinePhone]"
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[+]?[a-z0-9\s]{1,49}"
-                    title="{{akso_locale.registration.codeholder_phone_pattern_desc}}"
-                    value="{{akso_registration.state.codeholder.landlinePhone|e('html_attr')}}" />
-            </div>
-            {{_self.akso_field_extra(akso_registration, akso_locale, 'landlinePhone')}}
-        </div>
-        {% endif %}
         <div class="settings-field" data-el="input" data-type="phone">
             <div class="inner-field">
                 <label for="codeholder-office-phone">{{akso_locale.registration.codeholder_office_phone}}</label>
