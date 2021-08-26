@@ -27,9 +27,9 @@
     <h3 class="section-marker edition-year-header" id="{{year}}">{{year}}</h3>
     <ul class="magazines-cover-gallery">
         {% for edition in editions %}
-        <li class="magazine-item">
-            {% set edition_path = akso_magazines.path_components.base ~ '/' ~ akso_magazines.path_components.magazine ~ '/'
-                ~ akso_magazines.magazine.id ~ '/' ~ akso_magazines.path_components.edition ~ '/' ~ edition.id %}
+        {% set edition_path = akso_magazines.path_components.base ~ '/' ~ akso_magazines.path_components.magazine ~ '/'
+            ~ akso_magazines.magazine.id ~ '/' ~ akso_magazines.path_components.edition ~ '/' ~ edition.id %}
+        <li class="magazine-item magazine-edition-item" data-path="{{edition_path}}" data-name="{{akso_magazines.magazine.name}} {{edition.idHuman}}">
             <div class="item-inner-card">
                 <h4 class="item-edition-title">
                     <a href="{{edition_path}}">{{edition.idHuman}}</a>

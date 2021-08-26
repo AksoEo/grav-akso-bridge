@@ -317,17 +317,19 @@ class Magazines {
         return $entry;
     }
 
-    function getEditionTocEntries($magazine, $edition, $magazineName, $editionName) {
+    function getEditionTocEntries($magazine, $edition, $magazineName, $editionName, $highlightsOnly = false) {
         $allEntries = [];
+        $hasHighlighted = false;
         while (true) {
-            $res = $this->bridge->get("/magazines/$magazine/editions/$edition/toc", array(
+            $options = array(
                 'fields' => ['id', 'title', 'page', 'author', 'recitationAuthor', 'highlighted', 'availableRecitationFormats'],
                 'order' => [['page', 'asc']],
                 'offset' => count($allEntries),
                 'limit' => 100,
-            ), 240);
+            );
+            if ($highlightsOnly) $options['filter'] = array('highlighted' => true);
+            $res = $this->bridge->get("/magazines/$magazine/editions/$edition/toc", $options, 240);
             if (!$res['k']) throw new \Exception("Failed to fetch toc for $magazine/$edition:\n" . $res['b']);
-            $hasHighlighted = false;
             foreach ($res['b'] as $entry) {
                 if ($entry['highlighted']) $hasHighlighted = true;
                 $entry = $this->addEntryDownloadUrl($magazine, $edition, $entry, $magazineName, $editionName);
@@ -338,6 +340,7 @@ class Magazines {
                 for ($i = 0; $i < 3; $i++) {
                     if (isset($allEntries[$i])) $allEntries[$i]['highlighted'] = true;
                 }
+                $hasHighlighted = true;
             }
             if (count($allEntries) >= $res['h']['x-total-items']) break;
         }
@@ -444,6 +447,14 @@ class Magazines {
 
             $edition = $this->getMagazineEdition($route['magazine'], $route['edition'], $magazine['name']);
             if (!$edition || !$edition['published']) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
+
+            if (isset($_GET['js_toc_preview'])) {
+                $highlights = $this->getEditionTocEntries(
+                    $route['magazine'], $route['edition'], $magazine['name'], $edition['idHuman'], true
+                );
+                echo json_encode(array('highlights' => $highlights, 'canRead' => $canRead));
+                die();
+            }
 
             return array(
                 'path_components' => $pathComponents,
