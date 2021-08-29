@@ -22,14 +22,34 @@ function init() {
         }
     }
 
+    initAutoFeeCountry();
     initAutoCurrency();
     initAddressFields();
 }
 
-function initAutoCurrency() {
+function initAutoFeeCountry() {
+    const addressCountrySelector = document.querySelector('#codeholder-address-country');
     const feeCountrySelector = document.querySelector('#registration-field-fee-country');
+    const splitCountry = document.querySelector('#registration-split-country');
+
+    if (addressCountrySelector && feeCountrySelector && splitCountry) {
+        splitCountry.addEventListener('change', () => {
+            if (splitCountry.checked) {
+                // split country was checked! set feeCountry to addressCountry if empty
+                if (!feeCountrySelector.value) {
+                    feeCountrySelector.value = addressCountrySelector.value;
+                }
+            }
+        });
+    }
+}
+
+function initAutoCurrency() {
+    const addressCountrySelector = document.querySelector('#codeholder-address-country');
+    const feeCountrySelector = document.querySelector('#registration-field-fee-country');
+    const splitCountry = document.querySelector('#registration-split-country');
     const currencySelector = document.querySelector('#registration-settings-currency');
-    if (feeCountrySelector && currencySelector) {
+    if (addressCountrySelector && feeCountrySelector && currencySelector) {
         const availableCurrencies = [];
         const options = currencySelector.querySelectorAll('option');
         for (let i = 0; i < options.length; i++) {
@@ -37,12 +57,19 @@ function initAutoCurrency() {
         }
 
         const updateCurrency = () => {
-            const currency = countryCurrencies[feeCountrySelector.value];
+            const country = splitCountry.checked
+                ? feeCountrySelector.value
+                : addressCountrySelector.value;
+
+            const currency = countryCurrencies[country];
             if (currency && availableCurrencies.includes(currency)) {
                 currencySelector.value = currency;
             }
         };
         updateCurrency();
+
         feeCountrySelector.addEventListener('change', updateCurrency);
+        addressCountrySelector.addEventListener('change', updateCurrency);
+        splitCountry.addEventListener('change', updateCurrency);
     }
 }
