@@ -174,18 +174,18 @@ class CongressRegistration {
                         }
                     }
 
-                    $value = $post['amount'];
+                    $mvalue = $post['amount'];
                     $notes = $post['notes'];
-                    if (gettype($value) !== 'string' || gettype($notes) !== 'string' || gettype($currency) !== 'string') {
-                        $error = $this->locale['registration_form']['payment_err_bad_request'];
-                        break;
-                    }
-                    $value = floatval($value);
-                    if ($value < $min || $value > $max) {
+                    if (gettype($mvalue) !== 'string' || gettype($notes) !== 'string' || gettype($currency) !== 'string') {
                         $error = $this->plugin->locale['registration_form']['payment_err_bad_request'];
                         break;
                     }
-                    $value = floor($value * $multiplier);
+                    $mvalue = floatval($mvalue);
+                    if ($mvalue < $min || $mvalue > $max) {
+                        $error = $this->plugin->locale['registration_form']['payment_err_bad_request'];
+                        break;
+                    }
+                    $mvalue = floor($mvalue * $multiplier);
                     if (!in_array($currency, $method['currencies'])) {
                         $error = $this->plugin->locale['registration_form']['payment_err_bad_request'];
                         $value = $value / $multiplier;
@@ -198,11 +198,20 @@ class CongressRegistration {
                         break;
                     }
 
-                    $triggerAmount = $this->convertCurrency($currency, $this->currency, $value);
+                    $triggerAmount = $this->convertCurrency($currency, $this->currency, $mvalue);
 
                     $codeholderId = null;
                     if ($this->participant['codeholderId']) {
                         $codeholderId = $this->participant['codeholderId'];
+                    }
+
+                    if (!$customerName) {
+                        $error = $this->plugin->locale['registration_form']['err_submit_no_name'];
+                        break;
+                    }
+                    if (!$customerEmail) {
+                        $error = $this->plugin->locale['registration_form']['err_submit_no_email'];
+                        break;
                     }
 
                     $res = $this->app->bridge->post('/aksopay/payment_intents', array(
@@ -219,7 +228,7 @@ class CongressRegistration {
                             'type' => 'trigger',
                             'title' => $this->plugin->locale['registration_form']['payment_intent_purpose_title'],
                             'description' => $this->congressName,
-                            'amount' => $value,
+                            'amount' => $mvalue,
                             'triggerAmount' => array(
                                 'currency' => $this->currency,
                                 'amount' => $triggerAmount
@@ -238,7 +247,7 @@ class CongressRegistration {
                         $paymentsHost = $this->plugin->getGrav()['config']->get('plugins.akso-bridge.payments_host');
                         $redirectTarget = $paymentsHost . '/i/' . $paymentId . '?return=' . urlencode($returnTarget);
                     } else {
-                        // TODO: handle error
+                        $error = $this->plugin->locale['registration_form']['err_submit_generic'];
                     }
 
                     break;
@@ -419,16 +428,16 @@ class CongressRegistration {
         $fvars = $this->participant['data'];
         $res = $this->app->bridge->evalScript($stack, $fvars, array('t' => 'c', 'f' => 'id', 'a' => [$idName]));
         if ($res['s']) {
-            $out['name'] = $res['v'] . '';
+            $out['name'] = gettype($res['v']) === 'array' ? implode('', $res['v']) : (string) $res['v'];
         }
         $res = $this->app->bridge->evalScript($stack, $fvars, array('t' => 'c', 'f' => 'id', 'a' => [$idEmail]));
         if ($res['s']) {
-            $out['email'] = $res['v'] . '';
+            $out['email'] = gettype($res['v']) === 'array' ? implode('', $res['v']) : (string) $res['v'];
         }
         if ($idCountryCode) {
             $res = $this->app->bridge->evalScript($stack, $fvars, array('t' => 'c', 'f' => 'id', 'a' => [$idCountryCode]));
             if ($res['s']) {
-                $out['countryCode'] = $res['v'] . '';
+                $out['countryCode'] = gettype($res['v']) === 'array' ? implode('', $res['v']) : (string) $res['v'];
             }
         }
 

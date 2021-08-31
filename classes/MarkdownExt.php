@@ -575,6 +575,19 @@ class MarkdownExt {
                         // php refuses to encode json if we dont do this
                         $ch['profilePictureHash'] = bin2hex($ch['profilePictureHash']);
 
+                        // FIXME: do not do this (sending a request for each codeholder)
+                        $res2 = $this->bridge->get("/codeholders/$id/roles", array(
+                            'fields' => ['role.name', 'dataCountry', 'dataOrg'],
+                            'filter' => array('isActive' => true),
+                            'order' => [['role.name', 'asc']],
+                            'limit' => 100
+                        ), 240);
+                        if ($res2['k']) {
+                            $ch['activeRoles'] = $res2['b'];
+                        } else {
+                            $ch['activeRoles'] = [];
+                        }
+
                         $codeholders[] = $ch;
                     }
 
@@ -1468,6 +1481,10 @@ class MarkdownExt {
 
                     $left = new Element('div');
                     $left->class = 'item-picture-container';
+                    $imgBack = new Element('img');
+                    $imgBack->class = 'item-back-picture';
+                    $imgBack->width = '1';
+                    $imgBack->height = '1';
                     $img = new Element('img');
                     $img->class = 'item-picture';
 
@@ -1482,11 +1499,18 @@ class MarkdownExt {
                             . '&s=';
                         $img->src = $picPrefix . '128px';
                         $img->srcset = $picPrefix . '128px 1x, ' . $picPrefix . '256px 2x, ' . $picPrefix . '512px 3x';
+
+                        $imgBack->src = $img->src;
+                        $imgBack->srcset = $img->srcset;
                     } else {
                         $left->class .= ' is-empty';
                     }
 
-                    $left->appendChild($img);
+                    $left->appendChild($imgBack);
+                    $innerPictureContainer = new Element('div');
+                    $innerPictureContainer->class = 'inner-picture-container';
+                    $innerPictureContainer->appendChild($img);
+                    $left->appendChild($innerPictureContainer);
 
                     $right = new Element('div');
                     $right->class = 'item-details';
@@ -1511,6 +1535,15 @@ class MarkdownExt {
                     $nameContainer = new Element('div', $codeholderName);
                     $nameContainer->class = 'item-name';
                     $right->appendChild($nameContainer);
+
+                    $rolesContainer = new Element('ul');
+                    $rolesContainer->class = 'item-roles';
+                    foreach ($codeholder->activeRoles as $role) {
+                        $li = new Element('li', $role->role->name);
+                        $li->class = 'item-role';
+                        $rolesContainer->appendChild($li);
+                    }
+                    $right->appendChild($rolesContainer);
 
                     $canSeeEmail = $codeholder->emailPublicity === 'public'
                         || ($isMember && $codeholder->emailPublicity === 'members');
@@ -1853,6 +1886,9 @@ class MarkdownExt {
                 continue;
             }
 
+            $desc = new Element('div', $this->plugin->locale['content']['members_only_desc']);
+            $membersOnlyBox->appendChild($desc);
+
             $loginLink = new Element('a', $this->plugin->locale['content']['members_only_login_0']);
             $signUpLink = new Element('a', $isLoggedIn
                 ? $this->plugin->locale['content']['members_only_sign_up_0']
@@ -1888,9 +1924,8 @@ class MarkdownExt {
             $signUpLink->href = $this->plugin->registrationPath;
 
             if ($isLoggedIn) {
-                $signUpLink->class = 'link-button';
                 $membersOnlyNotice->appendChild($signUpLink);
-                $membersOnlyBox->appendChild(new Element('span', $this->plugin->locale['content']['members_only_inline_sign_up_0']));
+                $membersOnlyNotice->appendChild(new Element('span', $this->plugin->locale['content']['members_only_inline_sign_up_1']));
             } else {
                 $membersOnlyNotice->appendChild($loginLink);
                 $membersOnlyNotice->appendChild(new Element('span', $this->plugin->locale['content']['members_only_inline_login_1']));
