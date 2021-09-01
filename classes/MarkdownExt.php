@@ -512,6 +512,8 @@ class MarkdownExt {
 
                 $error = null;
                 $codeholders = [];
+                $dataOrgIds = [];
+                $dataOrgCodeholders = [];
 
                 while (true) {
                     $haveItems = count($codeholders);
@@ -556,7 +558,8 @@ class MarkdownExt {
                             'biography',
                             'website',
                             'profilePictureHash',
-                            'profilePicturePublicity'
+                            'profilePicturePublicity',
+                            'publicCountry'
                         ],
                         'limit' => 100,
                     ), 60);
@@ -577,13 +580,19 @@ class MarkdownExt {
 
                         // FIXME: do not do this (sending a request for each codeholder)
                         $res2 = $this->bridge->get("/codeholders/$id/roles", array(
-                            'fields' => ['role.name', 'dataCountry', 'dataOrg'],
+                            'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString'],
                             'filter' => array('isActive' => true),
                             'order' => [['role.name', 'asc']],
                             'limit' => 100
                         ), 240);
                         if ($res2['k']) {
                             $ch['activeRoles'] = $res2['b'];
+
+                            foreach ($res2['b'] as $role) {
+                                if ($role['dataOrg'] && !in_array($role['dataOrg'], $dataOrgIds)) {
+                                    $dataOrgIds[] = $role['dataOrg'];
+                                }
+                            }
                         } else {
                             $ch['activeRoles'] = [];
                         }
@@ -604,10 +613,27 @@ class MarkdownExt {
                     }
                 }
 
+                for ($i = 0; $i < count($dataOrgIds); $i += 100) {
+                    $ids = array_slice($dataOrgIds, $i, 100);
+                    $res = $self->bridge->get('/codeholders', array(
+                        'fields' => ['id', 'fullName', 'nameAbbrev'],
+                        'filter' => array('id' => array('$in' => $ids)),
+                        'limit' => 100
+                    ), 60);
+                    if (!$res['k']) {
+                        $error = '[internal error while fetching list: ' . $res['b'] . ']';
+                        break;
+                    }
+                    foreach ($res['b'] as $ch) {
+                        $dataOrgCodeholders[$ch['id']] = $ch;
+                    }
+                }
+
                 $text = '!' . $error;
                 if ($error === null) {
                     $text = json_encode(array(
                         'codeholders' => $codeholders,
+                        'data_orgs' => $dataOrgCodeholders,
                         'id' => $listId
                     ));
                 }
@@ -1473,6 +1499,7 @@ class MarkdownExt {
                 $data = json_decode($textContent);
                 $listId = $data->id;
                 $codeholders = $data->codeholders;
+                $dataOrgs = $data->data_orgs;
 
                 foreach ($codeholders as $codeholder) {
                     $chNode = new Element('li');
@@ -1515,6 +1542,27 @@ class MarkdownExt {
                     $right = new Element('div');
                     $right->class = 'item-details';
 
+                    $canSeeAddress = $codeholder->addressPublicity === 'public'
+                        || ($isMember && $codeholder->addressPublicity === 'members');
+
+                    if ($codeholder->publicCountry || $canSeeAddress) {
+                        $country = $codeholder->publicCountry ?: $codeholder->address->country;
+                        $countryBadge = new Element('div');
+                        $countryBadge->class = 'item-country-badge';
+
+                        $emoji = $this->getEmojiForFlag($country);
+                        $countryFlag = new Element('img');
+                        $countryFlag->class = 'inline-flag-icon';
+                        $countryFlag->draggable = 'false';
+                        $countryFlag->alt = $emoji['alt'];
+                        $countryFlag->src = $emoji['src'];
+
+                        $countryName = new Element('span', ' ' . $this->formatCountry($country));
+                        $countryBadge->appendChild($countryFlag);
+                        $countryBadge->appendChild($countryName);
+                        $right->appendChild($countryBadge);
+                    }
+
                     $codeholderName = '';
                     if ($codeholder->codeholderType === 'human') {
                         $canSeeLastName = $codeholder->lastNamePublicity === 'public'
@@ -1539,8 +1587,45 @@ class MarkdownExt {
                     $rolesContainer = new Element('ul');
                     $rolesContainer->class = 'item-roles';
                     foreach ($codeholder->activeRoles as $role) {
-                        $li = new Element('li', $role->role->name);
+                        $li = new Element('li');
                         $li->class = 'item-role';
+
+                        $roleName = new Element('span', $role->role->name);
+                        $roleName->class = 'role-name';
+                        $li->appendChild($roleName);
+
+                        if ($role->dataCountry || $role->dataString || $role->dataOrg) {
+                            $roleDetails = new Element('span');
+                            $roleDetails->class = 'role-details';
+                            $roleDetails->appendChild(new Element('span', '('));
+
+                            if ($role->dataCountry) {
+                                $dCountry = new Element('span', $this->formatCountry($role->dataCountry));
+                                $dCountry->class = 'detail-country';
+                                $roleDetails->appendChild($dCountry);
+                            }
+
+                            if ($role->dataOrg) {
+                                if ($role->dataCountry) $roleDetails->appendChild(new Element('span', ': '));
+                                $orgId = $role->dataOrg;
+                                $dOrg = new Element('span', $dataOrgs->$orgId->nameAbbrev);
+                                $dOrg->title = $dataOrgs->$orgId->fullName;
+                                $dOrg->class = 'detail-org';
+                                $roleDetails->appendChild($dOrg);
+                            }
+
+                            if ($role->dataString) {
+                                if ($role->dataCountry || $role->dataOrg) $roleDetails->appendChild(new Element('span', ', '));
+                                $dStr = new Element('span', $role->dataString);
+                                $dStr->class = 'detail-string';
+                                $roleDetails->appendChild($dStr);
+                            }
+
+                            $roleDetails->appendChild(new Element('span', ')'));
+                            $li->appendChild(new Element('span', ' '));
+                            $li->appendChild($roleDetails);
+                        }
+
                         $rolesContainer->appendChild($li);
                     }
                     $right->appendChild($rolesContainer);
@@ -1566,9 +1651,6 @@ class MarkdownExt {
                         $websiteContainer->appendChild($websiteLink);
                         $right->appendChild($websiteContainer);
                     }
-
-                    $canSeeAddress = $codeholder->addressPublicity === 'public'
-                        || ($isMember && $codeholder->addressPublicity === 'members');
 
                     if ($canSeeAddress && $codeholder->address) {
                         $countryName = $this->formatCountry($codeholder->address->country);
