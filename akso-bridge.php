@@ -614,7 +614,9 @@ class AksoBridgePlugin extends Plugin {
     }
     public function addAccountPage() {
         $loginsPath = $this->grav['config']->get('plugins.akso-bridge.account_logins_path');
+        $votesPath = $this->grav['config']->get('plugins.akso-bridge.account_votes_path');
         $this->addVirtualPage($this->accountPath . $loginsPath, '/pages/akso_account/logins/akso_account_logins.md');
+        $this->addVirtualPage($this->accountPath . $votesPath, '/pages/akso_account/votes/akso_account_votes.md');
         $this->addVirtualPage($this->accountPath, '/pages/akso_account/akso_account.md');
     }
 

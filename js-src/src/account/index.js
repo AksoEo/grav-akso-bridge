@@ -1,6 +1,8 @@
 import { account } from '../../../locale.ini';
-import './index.less';
 import initAddressFields from '../registration/address-fields';
+import initVotes from './votes';
+import './index.less';
+import './votes.less';
 
 const locale = { account };
 
@@ -8,6 +10,7 @@ function init() {
     initMembershipsList();
     initAddressFields();
     initCountryChanged();
+    initVotes();
 }
 
 function initMembershipsList() {

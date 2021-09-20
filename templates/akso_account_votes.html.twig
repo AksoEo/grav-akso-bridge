@@ -1,0 +1,223 @@
+{% extends 'partials/base.html.twig' %}
+{% block content %}
+    {% if account.page == 'votes' %}
+        <ul class="account-vote-list">
+            {% for vote in account.votes %}
+            {% set vote_link = account.path ~ '?v=' ~ vote.id %}
+            <li class="vote-item">
+                <div class="vote-title">
+                    <span class="vote-org">{{vote.org}}</span>
+                    <a class="vote-name" href="{{vote_link}}">
+                        {{vote.name}}
+                    </a>
+                </div>
+                <div class="vote-time">
+                    TODO FORMAT NICER
+                    {{vote.timeStart|date('c')}}
+                    {{vote.timeEnd|date('c')}}
+                </div>
+                <div class="vote-description">
+                    {{vote.description_rendered|raw}}
+                </div>
+                <div class="vote-status">
+                    {% if vote.isActive %}
+                        <span class="status-open">
+                            <img src="/user/plugins/akso-bridge/assets/votes/vote.svg" />
+                            {{akso_locale.account_votes.vote_status_active}}
+                        </span>
+                    {% elseif vote.hasEnded %}
+                        <span class="status-open">
+                            <img src="/user/plugins/akso-bridge/assets/votes/closed.svg" />
+                            {{akso_locale.account_votes.vote_status_closed}}
+                        </span>
+                    {% else %}
+                        <span class="status-open">
+                            <img src="/user/plugins/akso-bridge/assets/votes/pending.svg" />
+                            {{akso_locale.account_votes.vote_status_inactive}}
+                        </span>
+                    {% endif %}
+
+                    {% if vote.isActive %}
+                        {% if vote.hasVoted %}
+                            <span class="status-voted">
+                                <img src="/user/plugins/akso-bridge/assets/votes/voted.svg" />
+                                {{akso_locale.account_votes.vote_status_voted}}
+                            </span>
+                        {% elseif vote.mayVote %}
+                            <a class="vote-button link-button" href="{{ vote_link }}">
+                                {{akso_locale.account_votes.vote_button}}
+                            </a>
+                        {% else %}
+                            <span class="status-passive">
+                                {{akso_locale.account_votes.vote_status_passive}}
+                            </span>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if vote.hasResults %}
+                        {% set vote_link = account.path ~ '?v=' ~ vote.id %}
+                        <a class="results-button link-button" href="{{ vote_link }}">
+                            {{akso_locale.account_votes.view_results}}
+                        </a>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% elseif account.page == 'vote' %}
+        <div class="vote-detail">
+            {% set vote = account.vote %}
+
+            {% if account.state.error %}
+                <div class="vote-error">
+                    {{account.state.error|e}}
+                </div>
+            {% endif %}
+            {% if account.state.message %}
+                <div class="vote-message">
+                    {{account.state.message|e}}
+                </div>
+            {% endif %}
+
+            <a class="back-button" href="{{account.path}}">
+                <span class="back-icon"></span>
+                {{akso_locale.account_votes.back_to_overview}}
+            </a>
+
+            <h1>{{vote.name|e}}</h1>
+            <div class="vote-description">
+                {{vote.description_rendered|raw}}
+            </div>
+
+            {% macro render_option(option, codeholders, verbose) %}
+                {% if option.type == 'simple' %}
+                    <div class="option-name">{{option.name}}</div>
+                    {% if verbose %}
+                        <div class="option-description">{{option.description_rendered|raw}}</div>
+                    {% endif %}
+                {% elseif option.type == 'codeholder' %}
+                    {% set codeholder = codeholders[option.codeholderId] %}
+                    <div class="option-name">{{codeholder.firstNameLegal}}</div>
+                    {% if verbose %}
+                        <div class="option-description">{{option.description_rendered|raw}}</div>
+                    {% endif %}
+                {% endif %}
+            {% endmacro %}
+            {% macro render_stv_ballot(vote, ballot, verbose) %}
+                <ol class="stv-ballot">
+                    {% for optid in ballot %}
+                        <li>
+                            {{_self.render_option(vote.options[optid], vote.codeholders, verbose)}}
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% endmacro %}
+            {% macro render_ballot(vote, ballot, verbose) %}
+                {% if vote.type == 'stv' %}
+                    {{_self.render_stv_ballot(vote, ballot, verbose)}}
+                {% endif %}
+            {% endmacro %}
+
+            {% if account.state.confirm %}
+                <h2>{{akso_locale.account_votes.confirm_vote_title}}</h2>
+                {{_self.render_ballot(vote, account.state.ballot, false)}}
+
+                <div class="confirm-buttons">
+                    <form class="inline-form" method="POST">
+                        <input type="hidden" name="action" value="back" />
+                        <input type="hidden" name="ballot" value="{{account.state.ballot_coded|e('html_attr')}}" />
+                        <button type="submit">
+                            {{akso_locale.account_votes.confirm_back}}
+                        </button>
+                    </form>
+                    <form class="inline-form" method="POST">
+                        <input type="hidden" name="action" value="confirm" />
+                        <input type="hidden" name="ballot" value="{{account.state.ballot_coded|e('html_attr')}}" />
+                        <button type="submit">
+                            {{akso_locale.account_votes.confirm_submit}}
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                {% if vote.hasVoted %}
+                    <div class="vote-review">
+                        <div class="review-title">
+                            {{akso_locale.account_votes.vote_status_voted}}
+                        </div>
+                        <div class="review-description">
+                            {{vote.ballot.time}}
+                            {{_self.render_ballot(vote, vote.ballot.ballot, true)}}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if vote.isActive and vote.mayVote %}
+                    <form class="vote-form" method="POST">
+                        <input type="hidden" name="action" value="vote" />
+
+                        {% if vote.type == 'yn' or vote.type == 'ynb' %}
+                            <ul class="options-ynb">
+                                <li class="ynb-option">
+                                    <label class="inner-option" for="ynb-y">
+                                        <input type="radio" name="choice" value="y" id="ynb-y" />
+                                        {{akso_locale.account_votes.vote_ynb_y}}
+                                    </label>
+                                </li>
+                                <li class="ynb-option">
+                                    <label class="inner-option" for="ynb-n">
+                                        <input type="radio" name="choice" value="n" id="ynb-n" />
+                                        {{akso_locale.account_votes.vote_ynb_n}}
+                                    </label>
+                                </li>
+                                {% if vote.type == 'ynb' %}
+                                    <li class="ynb-option">
+                                        <label class="inner-option" for="ynb-b">
+                                            <input type="radio" name="choice" value="b" id="ynb-b" />
+                                            {{akso_locale.account_votes.vote_ynb_b}}
+                                        </label>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        {% elseif vote.type == 'stv' or vote.type == 'rp' %}
+                            {% if vote.type == 'stv' %}
+                                <div class="method-description">
+                                    {{akso_locale.account_votes.vote_desc_stv}}
+                                </div>
+                            {% elseif vote.type == 'rp' %}
+                                <div class="method-description">
+                                    {{akso_locale.account_votes.vote_desc_rp}}
+                                </div>
+                            {% endif %}
+
+                            <ul class="ranked-options" data-type="{{vote.type}}">
+                                {% for index, option in vote.options %}
+                                    <li class="ranked-option">
+                                        <input
+                                            class="rank-input"
+                                            min="0"
+                                            max="{{ vote.options|count }}"
+                                            value="{{ account.state.values[index] }}"
+                                            name="ranks[{{ index }}]"
+                                            type="number" />
+                                        {{_self.render_option(option, vote.codeholders, true)}}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+
+                    {% if vote.ballotsSecret %}
+                        <div class="vote-secret-note">
+                            {{akso_locale.account_votes.vote_desc_secret}}
+                        </div>
+                    {% endif %}
+                        <div class="form-submit">
+                            <button type="submit">
+                                {{akso_locale.account_votes.submit_button}}
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}

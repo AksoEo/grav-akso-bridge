@@ -1,0 +1,169 @@
+@import '../prelude';
+
+.account-vote-list {
+    list-style-type: none;
+    padding: 0;
+
+    .vote-item {
+        padding: 0.5em 1em;
+        margin: 1em;
+        background: var(--bg);
+        border-radius: var(--radius);
+        box-shadow: @shade-both;
+
+        .vote-title {
+            font-size: 1.1em;
+
+            .vote-org {
+                font-size: smaller;
+                text-transform: uppercase;
+                opacity: 0.7;
+                border: 1px solid var(--light-separator);
+                border-radius: var(--radius);
+                padding: 0 0.2em;
+            }
+
+            .vote-name {
+                font-weight: bold;
+            }
+        }
+
+        .vote-time {
+            font-size: 0.9em;
+            opacity: 0.8;
+            border-bottom: 1px solid var(--light-separator);
+        }
+
+        .vote-description {
+            :first-child {
+                margin-top: 0;
+            }
+            :last-child {
+                margin-bottom: 0;
+            }
+        }
+    }
+}
+.rank-diagram {
+    .rank-container {
+        .inner-rank {
+            background: var(--bg);
+            border-radius: var(--radius);
+            display: flex;
+            border: 2px solid transparent;
+
+            .rank-label {
+                width: 4em;
+                padding: 0.5em 1em;
+            }
+            .card-area {
+                flex: 1;
+                padding: 0.5em 1em;
+                padding-left: 0;
+            }
+
+            &.is-dragging-over {
+                border: 2px dashed var(--accent);
+            }
+        }
+
+        .space-between {
+            position: relative;
+            height: 1em;
+
+            .space-drag-effect {
+                position: absolute;
+                background: var(--accent);
+                width: 100%;
+                height: 1px;
+                top: 50%;
+                left: 0;
+                transition: transform 0.1s;
+                opacity: 0;
+                transform: translateY(-50%);
+                pointer-events: none;
+            }
+            .space-add-icon {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                background: var(--accent);
+                width: 1.2em;
+                height: 1.2em;
+                border-radius: 1em;
+                z-index: 2;
+                color: var(--accent-fg);
+                transform: translate(-50%, -50%) scale(0.00001);
+                transition: transform 0.1s;
+                pointer-events: none;
+
+                &::before, &::after {
+                    content: '';
+                    position: absolute;
+                    background: currentColor;
+                    width: 0.8em;
+                    height: 2px;
+                    border-radius: 1px;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                }
+                &::after {
+                    transform: translate(-50%, -50%) rotate(90deg);
+                }
+            }
+
+            &.is-dragging-over {
+                .space-drag-effect {
+                    height: 2px;
+                }
+                .space-add-icon {
+                    transform: translate(-50%, -50%) scale(1);
+                }
+            }
+        }
+    }
+
+    &.is-dragging .space-between {
+        .space-drag-effect {
+            opacity: 1;
+        }
+    }
+
+    .unranked-remainder {
+        margin-top: 1em;
+
+        .unranked-title {
+            font-weight: bold;
+            opacity: 0.7;
+        }
+
+        .unranked-items {
+            background: var(--bg);
+            border: 2px solid transparent;
+            border-radius: var(--radius);
+            padding: 0.5em 1em;
+            min-height: 1.5em;
+        }
+
+        &.is-dragging-over {
+            .unranked-items {
+                border: 2px dashed var(--accent);
+            }
+        }
+    }
+
+    .option-card {
+        display: inline-block;
+        background: var(--bg2);
+        border-radius: var(--radius);
+        -webkit-user-select: none;
+        user-select: none;
+        margin: 0.2em;
+
+        .card-name {
+            padding: 0.2em 0.4em;
+            cursor: move;
+        }
+    }
+}

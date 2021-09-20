@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>vote</title>
+    <defs>
+        <path d="M12.2254809,0.975480947 L19.5866969,5.22548095 L17.9724978,8.02126047 C18.6530728,8.12128147 19.2431288,8.5673005 19.5194977,9.2121614 L21.919145,14.8113384 C21.9724923,14.9358153 22,15.0698309 22,15.2052577 L22,21 C22,22.1045695 21.1045695,23 20,23 L4,23 C2.8954305,23 2,22.1045695 2,21 L2,15.2052577 C2,15.0698309 2.02750775,14.9358153 2.08085497,14.8113384 L4.48050226,9.2121614 C4.79565984,8.47679371 5.5187361,8 6.31879232,8 L8.17,7.99948095 L12.2254809,0.975480947 Z" id="path-1"></path>
+        <filter x="-7.5%" y="-8.5%" width="115.0%" height="115.3%" filterUnits="objectBoundingBox" id="filter-2">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="0" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feColorMatrix values="0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.5 0" type="matrix" in="shadowOffsetOuter1"></feColorMatrix>
+        </filter>
+        <rect id="path-3" x="0" y="0" width="17" height="12.5"></rect>
+    </defs>
+    <g id="vote" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="shadow" fill="black" fill-opacity="1">
+            <use filter="url(#filter-2)" xlink:href="#path-1"></use>
+        </g>
+        <g id="box" transform="translate(2.000000, 8.000000)" stroke="#000000">
+            <path d="M15.6812077,0.75 C15.9312253,0.75 16.1692147,0.824499017 16.3693214,0.956448635 C16.5694282,1.08839825 16.7316522,1.27779847 16.830139,1.50760088 L16.830139,1.50760088 L19.1711551,6.96997187 L19.25,13 C19.25,13.345178 19.110089,13.657678 18.8838835,13.8838835 C18.657678,14.110089 18.345178,14.25 18,14.25 L18,14.25 L2,14.25 C1.65482203,14.25 1.34232203,14.110089 1.11611652,13.8838835 C0.889911016,13.657678 0.75,13.345178 0.75,13 L0.75,13 L0.75,7.35433189 L3.16986103,1.50760088 C3.26834777,1.27779847 3.43057181,1.08839825 3.63067856,0.956448635 C3.8307853,0.824499017 4.06877475,0.75 4.31879232,0.75 L4.31879232,0.75 Z" id="box-outline" stroke-width="1.5" fill="#FFFFFF"></path>
+            <line x1="1" y1="7" x2="19" y2="7" id="box-seam" stroke-width="1.5"></line>
+            <line x1="4.5" y1="4" x2="15.5" y2="4" id="box-slot" stroke-linecap="round"></line>
+        </g>
+        <g id="ballot" transform="translate(5.000000, 0.000000)">
+            <mask id="mask-4" fill="white">
+                <use xlink:href="#path-3"></use>
+            </mask>
+            <g id="ballot-mask" transform="translate(8.500000, 6.250000) scale(1, -1) translate(-8.500000, -6.250000) "></g>
+            <rect id="ballot-shape" stroke="#000000" stroke-width="1.5" fill="#FFFFFF" mask="url(#mask-4)" transform="translate(8.031089, 8.080127) rotate(-60.000000) translate(-8.031089, -8.080127) " x="3.03108891" y="4.58012702" width="10" height="7"></rect>
+        </g>
+    </g>
+</svg>

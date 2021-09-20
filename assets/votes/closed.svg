@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>vote-voted</title>
+    <defs>
+        <path d="M4.13238076,0 L15.8676192,0 C16.5701449,4.94916292e-16 17.2211586,0.368597668 17.5826051,0.971008489 L19.8574929,4.76248821 C19.9507422,4.91790361 20,5.09574002 20,5.27698396 L20,20 C20,21.1045695 19.1045695,22 18,22 L2,22 C0.8954305,22 1.3527075e-16,21.1045695 0,20 L0,5.27698396 C-2.21959818e-17,5.09574002 0.0492578333,4.91790361 0.142507074,4.76248821 L2.41739491,0.971008489 C2.7788414,0.368597668 3.42985505,5.73141088e-16 4.13238076,0 Z" id="path-1"></path>
+        <filter x="-7.5%" y="-6.8%" width="115.0%" height="113.6%" filterUnits="objectBoundingBox" id="filter-2">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="0" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feComposite in="shadowOffsetOuter1" in2="SourceAlpha" operator="out" result="shadowOffsetOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.5 0" type="matrix" in="shadowOffsetOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="vote-voted" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="box" transform="translate(2.000000, 1.000000)">
+            <g id="box-outline">
+                <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                <path stroke="#000000" stroke-width="1.5" d="M15.8676192,0.75 C16.3066978,0.75 16.7135813,0.980373542 16.9394854,1.35688031 L16.9394854,1.35688031 L19.2143732,5.14836003 L19.25,20 C19.25,20.345178 19.110089,20.657678 18.8838835,20.8838835 C18.657678,21.110089 18.345178,21.25 18,21.25 L18,21.25 L2,21.25 C1.65482203,21.25 1.34232203,21.110089 1.11611652,20.8838835 C0.889911016,20.657678 0.75,20.345178 0.75,20 L0.75,20 L0.75,5.27698396 L3.0605146,1.35688031 C3.28641866,0.980373542 3.69330219,0.75 4.13238076,0.75 L4.13238076,0.75 Z" stroke-linejoin="square" fill="#FFFFFF" fill-rule="evenodd"></path>
+            </g>
+            <line x1="1" y1="5.5" x2="19" y2="5.5" id="box-seam" stroke="#000000" stroke-width="1.5"></line>
+            <line x1="5" y1="3" x2="15" y2="3" id="box-slot" stroke="#000000" stroke-linecap="round"></line>
+        </g>
+        <polyline id="Path-17" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="7 15 11.5 19.5 17 9.5"></polyline>
+    </g>
+</svg>

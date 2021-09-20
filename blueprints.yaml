@@ -32,6 +32,12 @@ form:
     registration_path:
       type: text
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.REGISTRATION_PATH
+    account_logins_path:
+      type: text
+      label: PLUGIN_AKSO_BRIDGE.SETTINGS.ACCOUNT_LOGINS_PATH
+    account_votes_path:
+      type: text
+      label: PLUGIN_AKSO_BRIDGE.SETTINGS.ACCOUNT_VOTES_PATH
     api_host:
       type: text
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.API_HOST
