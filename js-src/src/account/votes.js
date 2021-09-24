@@ -31,7 +31,7 @@ function initRankedOptions() {
         cardName.textContent = option.name;
         card.appendChild(cardName);
 
-        option.rankInput.addEventListener('change', () => renderRanks());
+        option.rankInput.addEventListener('change', () => renderRanks(true));
 
         card.draggable = true;
         card.addEventListener('dragstart', e => {
@@ -87,6 +87,15 @@ function initRankedOptions() {
         renderRanks();
     }
 
+    const getRankCard = index => {
+        for (const card of cards) {
+            if (+card.rankInput.value === index + 1) {
+                return card;
+            }
+        }
+        return null;
+    };
+
     const ranks = [];
     const createRank = () => {
         const node = document.createElement('div');
@@ -114,6 +123,7 @@ function initRankedOptions() {
 
         cardArea.addEventListener('dragover', e => {
             e.preventDefault();
+
             e.dataTransfer.dropEffect = 'move';
             innerRank.classList.add('is-dragging-over');
         });
@@ -126,7 +136,16 @@ function initRankedOptions() {
             if (!e.dataTransfer.getData(CARD_MIME)) return;
             e.preventDefault();
             const card = cards[+e.dataTransfer.getData(CARD_MIME)];
-            card.rankInput.value = index + 1;
+
+            let existingCard;
+            if (method === 'stv' && (existingCard = getRankCard(index))) {
+                // there's already a card here, replace!
+                const thisValue = card.rankInput.value;
+                card.rankInput.value = existingCard.rankInput.value;
+                existingCard.rankInput.value = thisValue;
+            } else {
+                card.rankInput.value = index + 1;
+            }
             renderRanks();
         });
 
@@ -173,8 +192,8 @@ function initRankedOptions() {
         }
     };
 
-    renderRanks = () => {
-        removeRankSpaces();
+    renderRanks = (skipRemoveSpaces = false) => {
+        if (!skipRemoveSpaces) removeRankSpaces();
 
         const cardRanks = [];
         const unrankedCards = [];
@@ -209,8 +228,15 @@ function initRankedOptions() {
 
         for (let i = 0; i < ranks.length; i++) {
             ranks[i].setIndex(i);
+            ranks[i].cardArea.textContent = '';
             for (const card of (cardRanks[i] || [])) {
                 ranks[i].cardArea.appendChild(card.node);
+            }
+            if (!cardRanks[i]) {
+                const placeholderText = document.createElement('span');
+                placeholderText.className = 'rank-placeholder';
+                placeholderText.textContent = account_votes.interactive_rank_drop_here;
+                ranks[i].cardArea.appendChild(placeholderText);
             }
         }
         for (const card of unrankedCards) {

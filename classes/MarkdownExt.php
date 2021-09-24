@@ -1474,7 +1474,6 @@ class MarkdownExt {
         return null;
     }
 
-    const LIST_PICTURE_LIST = 'l';
     const LIST_PICTURE_CHID = 'c';
     const LIST_PICTURE_SIZE = 's';
     protected function handleHTMLLists($doc) {
@@ -1520,9 +1519,8 @@ class MarkdownExt {
 
                     if ($canSeePP && $codeholder->profilePictureHash) {
                         // codeholder has a profile picture
-                        $picPrefix = AksoBridgePlugin::CODEHOLDER_LIST_PICTURE_PATH . '?'
-                            . 'l=' . $listId
-                            . '&c=' . $codeholder->id
+                        $picPrefix = AksoBridgePlugin::CODEHOLDER_PICTURE_PATH . '?'
+                            . 'c=' . $codeholder->id
                             . '&s=';
                         $img->src = $picPrefix . '128px';
                         $img->srcset = $picPrefix . '128px 1x, ' . $picPrefix . '256px 2x, ' . $picPrefix . '512px 3x';
@@ -1696,68 +1694,40 @@ class MarkdownExt {
     }
 
     public function runListPicture() {
-        $listId = isset($_GET[self::LIST_PICTURE_LIST]) ? (int)$_GET[self::LIST_PICTURE_LIST] : 0;
         $chId = isset($_GET[self::LIST_PICTURE_CHID]) ? (int)$_GET[self::LIST_PICTURE_CHID] : 0;
         $size = isset($_GET[self::LIST_PICTURE_SIZE]) ? (string)$_GET[self::LIST_PICTURE_SIZE] : '';
-        if (!$listId || !$chId || !$size) {
+        if (!$chId || !$size) {
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
             return;
         }
         $this->initAppIfNeeded();
 
-        $found = false;
-        // TODO: use x-total-items when available
-        $offset = 0;
-        while (true) {
-            $res = $this->bridge->get('/lists/' . $listId . '/codeholders', array(
-                'offset' => $offset,
-                'limit' => 100
+        $found = true;
+        {
+            // fetch the entire batch so it can be cached more easily
+            $res = $this->bridge->get('/codeholders', array(
+                'filter' => array('id' => array('$in' => [$chId])),
+                'fields' => [
+                    'id',
+                    'profilePictureHash',
+                    'profilePicturePublicity'
+                ],
+                'limit' => 100,
             ), 60);
-            if (!$res['k']) {
-                if ($res['sc'] === 404) {
-                    $this->plugin->getGrav()->fireEvent('onPageNotFound');
-                    return;
-                } else {
-                    throw new \Exception('Failed to fetch list');
-                }
-            }
-            $offset += 100;
-            if (count($res['b']) === 0) {
-                break;
-            }
-            foreach ($res['b'] as $id) {
-                if ($id === $chId) {
-                    // found codeholder in list!
-                    $found = true;
+            if (!$res['k']) throw new \Exception('Failed to fetch list codeholders');
+            $foundCh = false;
+            foreach ($res['b'] as $ch) {
+                if ($ch['id'] === $chId) {
+                    $foundCh = true;
+                    $found = $ch;
                     break;
                 }
             }
-            if ($found) {
-                // fetch the entire batch so it can be cached more easily
-                $res = $this->bridge->get('/codeholders', array(
-                    'filter' => array('id' => array('$in' => $res['b'])),
-                    'fields' => [
-                        'id',
-                        'profilePictureHash',
-                        'profilePicturePublicity'
-                    ],
-                    'limit' => 100,
-                ), 60);
-                if (!$res['k']) throw new \Exception('Failed to fetch list codeholders');
-                $foundCh = false;
-                foreach ($res['b'] as $ch) {
-                    if ($ch['id'] === $chId) {
-                        $foundCh = true;
-                        $found = $ch;
-                        break;
-                    }
-                }
-                if (!$foundCh) {
-                    $found = false;
-                }
-                break;
+            if (!$foundCh) {
+                $found = false;
             }
         }
+        $ch = $found;
         if (!$found || !$ch['profilePictureHash']) {
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
             return;

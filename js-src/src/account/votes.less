@@ -44,7 +44,77 @@
         }
     }
 }
+
+.vote-option {
+    display: flex;
+
+    .option-icon {
+        margin-right: 1em;
+
+        img {
+            display: block;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: contain;
+        }
+    }
+
+    .option-contents {
+        flex: 1;
+    }
+
+    .option-extra {
+        float: right;
+        font-size: smaller;
+        opacity: 0.7;
+    }
+
+    .option-codeholder-details {
+        font-size: smaller;
+        margin-top: 0.5em;
+    }
+}
+
+.vote-ballot {
+    .vote-option {
+        align-items: center;
+
+        .option-icon {
+            margin-right: 0.5em;
+
+            img {
+                width: 24px;
+                height: 24px;
+            }
+        }
+    }
+
+    &.rp-ballot > li {
+        margin-bottom: 1em;
+    }
+}
+
+.vote-form {
+    .form-submit {
+        text-align: right;
+    }
+}
+.vote-ballot-confirmation {
+    .vote-confirm-buttons {
+        text-align: right;
+
+        .vote-inline-form {
+            display: inline-block;
+        }
+    }
+}
+
 .rank-diagram {
+    padding-bottom: 1em;
+    border-bottom: 1px solid var(--light-separator);
+    margin: 1em 0;
+
     .rank-container {
         .inner-rank {
             background: var(--bg);
@@ -53,13 +123,21 @@
             border: 2px solid transparent;
 
             .rank-label {
-                width: 4em;
+                width: 2em;
                 padding: 0.5em 1em;
             }
             .card-area {
                 flex: 1;
                 padding: 0.5em 1em;
                 padding-left: 0;
+
+                .rank-placeholder {
+                    opacity: 0.6;
+                    font-size: smaller;
+                    border: 2px dashed var(--light-separator);
+                    padding: 0.2em 0.4em;
+                    border-radius: var(--radius);
+                }
             }
 
             &.is-dragging-over {
@@ -164,6 +242,52 @@
         .card-name {
             padding: 0.2em 0.4em;
             cursor: move;
+        }
+    }
+}
+
+.ranked-options {
+    list-style-type: none;
+    padding: 0;
+
+    .ranked-option {
+        background: var(--bg);
+        border-radius: var(--radius);
+        padding: 0.5em 1em;
+        margin: 0.5em 0;
+        display: flex;
+        align-items: flex-start;
+
+        .option-contents {
+            flex: 1;
+            margin-right: 1em;
+
+            .option-name {
+                font-weight: bold;
+            }
+            .option-description {
+                font-size: smaller;
+
+                :first-child {
+                    margin-top: 0;
+                }
+                :last-child {
+                    margin-bottom: 0;
+                }
+            }
+        }
+
+        .rank-input {
+            width: 8em;
+            margin: 0;
+        }
+
+        @media (max-width: 420px) {
+            display: block;
+
+            .rank-input-container {
+                text-align: right;
+            }
         }
     }
 }

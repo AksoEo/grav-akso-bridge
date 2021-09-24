@@ -1,6 +1,8 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Plugin\AksoBridgePlugin;
+use Grav\Plugin\AksoBridge\MarkdownExt;
 use Grav\Plugin\AksoBridge\Utils;
 
 class UserVotes {
@@ -74,16 +76,25 @@ class UserVotes {
             $chRes = $this->app->bridge->get("/codeholders", array(
                 'fields' => [
                     'id',
+                    'codeholderType',
                     'firstNameLegal',
                     'lastNameLegal',
                     'firstName',
                     'lastName',
                     'honorific',
                     'fullName',
-                    'fullNameLocal',
                     'nameAbbrev',
                     'lastNamePublicity',
                     'profilePictureHash',
+                    'profilePicturePublicity',
+                    'address.country',
+                    'addressPublicity',
+                    'publicCountry',
+                    'email',
+                    'emailPublicity',
+                    'publicEmail',
+                    'website',
+                    'biography',
                 ],
                 'filter' => array('id' => array('$in' => $codeholderIds)),
                 'limit' => 100,
@@ -92,7 +103,53 @@ class UserVotes {
                 throw new \Exception('Could not fetch vote option codeholders');
             }
             $codeholders = array();
-            foreach ($chRes['b'] as $ch) $codeholders[$ch['id']] = $ch;
+            $isMember = $this->plugin->aksoUser['member'];
+            foreach ($chRes['b'] as $ch) {
+                if ($ch['codeholderType'] === 'human') {
+                    $canSeeLastName = $ch['lastNamePublicity'] === 'public'
+                        || ($ch['lastNamePublicity'] === 'members' && $isMember);
+
+                    $ch['fmt_name'] = implode(' ', array_filter([
+                        $ch['honorific'],
+                        $ch['firstName'] ?: $ch['firstNameLegal'],
+                        $canSeeLastName ? ($ch['lastName'] ?: $ch['lastNameLegal']) : null,
+                    ]));
+                } else if ($ch['codeholderType'] === 'org') {
+                    $ch['fmt_name'] = $ch['fullName'];
+                    if ($ch['nameAbbrev']) {
+                        $ch['fmt_name'] .= ' (' . $ch['nameAbbrev'] . ')';
+                    }
+                }
+
+                $ch['country'] = null;
+                if ($ch['publicCountry']) $ch['country'] = $ch['publicCountry'];
+                else if ($ch['addressPublicity'] === 'public'
+                    || ($ch['addressPublicity'] === 'members' && $isMember)) {
+                    $ch['country'] = $ch['address']['country'];
+                }
+                if ($ch['country']) {
+                    $ch['fmt_country'] = $this->formatCountry($ch['country']);
+                    $ch['fmt_country_emoji'] = MarkdownExt::getEmojiForFlag($ch['country']);
+                }
+
+                $ch['email'] = $ch['publicEmail'] ?:
+                    (($ch['emailPublicity'] === 'public' || ($ch['emailPublicity'] === 'members' && $isMember))
+                        ? $ch['email']
+                        : null);
+
+                if ($ch['profilePictureHash'] && ($ch['profilePicturePublicity'] === 'public'
+                    || ($ch['profilePicturePublicity'] === 'members' && $isMember))) {
+                    $picPrefix = AksoBridgePlugin::CODEHOLDER_PICTURE_PATH . '?'
+                        . 'c=' . $ch['id']
+                        . '&s=';
+                    $ch['icon_src'] = $picPrefix . '64px';
+                    $ch['icon_srcset'] = $picPrefix . '64px 1x, ' . $picPrefix . '128px 2x, ' . $picPrefix . '256px 3x';
+                }
+
+                $ch['has_details'] = $ch['email'] || $ch['website'] || $ch['biography'];
+
+                $codeholders[$ch['id']] = $ch;
+            }
             $vote['codeholders'] = $codeholders;
         }
 
@@ -125,7 +182,7 @@ class UserVotes {
                 $res = $this->bridge->put("/codeholders/self/votes/$voteId/ballot", array(
                     'ballot' => $choice,
                 ), [], []);
-            } else if ($vote['type'] == 'stv') {
+            } else if ($vote['type'] === 'stv' || $vote['type'] === 'rp') {
                 $optionCount = count($vote['options']);
                 $ranks = isset($_POST['ranks']) && gettype($_POST['ranks']) == 'array' ? $_POST['ranks'] : [];
                 if (isset($_POST['ballot'])) {
@@ -137,10 +194,13 @@ class UserVotes {
 
                 $isTieBreaker = $vote['tieBreakerCodeholder'] == $this->plugin->aksoUser['id'];
 
+                $optionsCovered = 0;
                 $options = [];
                 for ($i = 0; $i < count($ranks); $i++) {
                     if (!$ranks[$i]) continue;
                     $value = (int) $ranks[$i];
+                    $optionsCovered += 1;
+
                     if ($value <= 0 || $value > $optionCount) {
                         return array(
                             'error' => $this->plugin->locale['account_votes']['submit_err_bad_rank_0']
@@ -148,25 +208,34 @@ class UserVotes {
                             'values' => $ranks,
                         );
                     }
-                    if (isset($options[$value - 1])) {
+                    if (isset($options[$value - 1]) && $vote['type'] === 'stv') {
                         return array(
                             'error' => $this->plugin->locale['account_votes']['submit_err_dup_rank_0']
                                 . $value . $this->plugin->locale['account_votes']['submit_err_dup_rank_1'],
                             'values' => $ranks,
                         );
                     }
-                    $options[$value - 1] = $i;
+
+                    if ($vote['type'] === 'stv') {
+                        $options[$value - 1] = $i;
+                    } else {
+                        if (!isset($options[$value - 1])) $options[$value - 1] = [];
+                        $options[$value - 1][] = $i;
+                    }
                 }
+
+                if ($isTieBreaker && $optionsCovered < $optionCount) {
+                    return array(
+                        'error' => $this->plugin->locale['account_votes']['submit_err_tie_breaker_complete'],
+                    );
+                }
+
                 ksort($options);
+
+                // ensure there are no holes in the ranks
                 $prevWasNone = false;
                 for ($i = 0; $i < $optionCount; $i++) {
                     $isNone = !isset($options[$i]);
-                    if ($isNone && $isTieBreaker) {
-                        return array(
-                            'error' => $this->plugin->locale['account_votes']['submit_err_tie_breaker_complete'],
-                        );
-                    }
-
                     if (!$isNone && $prevWasNone) {
                         return array(
                             'error' => $this->plugin->locale['account_votes']['submit_err_rank_hole_0']
@@ -195,17 +264,35 @@ class UserVotes {
             if ($res['k']) {
                 return array('message' => $this->plugin->locale['account_votes']['submit_msg_success']);
             } else if ($res['sc'] == 400) {
-                return array('error' => $this->plugin->locale['account_votes']['submit_err_bad_request']);
+                return array('values' => $ranks, 'error' => $this->plugin->locale['account_votes']['submit_err_bad_request']);
             } else if ($res['sc'] == 404) {
-                return array('error' => $this->plugin->locale['account_votes']['submit_err_not_allowed']);
+                return array('values' => $ranks, 'error' => $this->plugin->locale['account_votes']['submit_err_not_allowed']);
             } else if ($res['sc'] == 409) {
-                return array('error' => $this->plugin->locale['account_votes']['submit_err_secret_resubmission']);
+                return array('values' => $ranks, 'error' => $this->plugin->locale['account_votes']['submit_err_secret_resubmission']);
             } else if ($res['sc'] == 423) {
-                return array('error' => $this->plugin->locale['account_votes']['submit_err_ended']);
+                return array('values' => $ranks, 'error' => $this->plugin->locale['account_votes']['submit_err_ended']);
             } else {
-                return array('error' => $this->plugin->locale['account_votes']['submit_err_unknown']);
+                return array('values' => $ranks, 'error' => $this->plugin->locale['account_votes']['submit_err_unknown']);
             }
         }
+    }
+
+    function getCountries() {
+        $res = $this->bridge->get('/countries', array(
+            'limit' => 300,
+            'fields' => ['code', 'name_eo'],
+            'order' => [['name_eo', 'asc']],
+        ), 600);
+        if (!$res['k']) return null;
+        return $res['b'];
+    }
+
+    // Formats a country code
+    function formatCountry($code) {
+        foreach ($this->getCountries() as $country) {
+            if ($country['code'] === $code) return $country['name_eo'];
+        }
+        return null;
     }
 
     public function run() {
