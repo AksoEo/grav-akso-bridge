@@ -11,6 +11,16 @@ class Utils {
         $node->appendChild($fragment);
     }
 
+    static function formatDateTimeUtc($dateTime) {
+        $time = $dateTime->getTimestamp();
+        $dateTime = new \DateTime("@$time");
+        $dateTime->setTimezone(new \DateTimeZone('+0000'));
+        $date = $dateTime->format('Y-m-d');
+        $time = $dateTime->format('H:i');
+
+        return Utils::formatDate($date) . ' ' . $time . ' UTC';
+    }
+
     static function formatDate($dateString) {
         $date = \DateTime::createFromFormat('Y-m-d', $dateString);
         if (!$date) return null;

@@ -31,6 +31,17 @@ class UserVotes {
                     $vote['description'] ?: '',
                     ['emphasis', 'strikethrough', 'link', 'list', 'table', 'image'],
                 )['c'];
+
+                {
+                    $startTime = $vote['timeStart'];
+                    $startTime = new \DateTime("@$startTime");
+                    $endTime = $vote['timeEnd'];
+                    $endTime = new \DateTime("@$endTime");
+
+                    $vote['fmt_time_start'] = Utils::formatDateTimeUtc($startTime);
+                    $vote['fmt_time_end'] = Utils::formatDateTimeUtc($endTime);
+                }
+
                 $votes[] = $vote;
             }
             if ($res['h']['x-total-items'] >= count($votes)) break;
@@ -160,6 +171,14 @@ class UserVotes {
             if (!$res['k']) {
                 throw new \Exception('Could not fetch vote ballot');
             }
+            if ($res['b']) {
+                try {
+                    $timeVoted = $res['b']['timeVoted'];
+                    $res['b']['fmt_time'] = Utils::formatDateTimeUtc(new \DateTime("@$timeVoted"));
+                } catch (\Exception $e) {
+                    $res['b']['fmt_time'] = '???';
+                }
+            }
             $vote['ballot'] = $res['b'];
         }
 
@@ -175,6 +194,7 @@ class UserVotes {
 
         if ($action == 'back' || $action == 'vote' || $action == 'confirm') {
             $res = null;
+            $rvalue = null;
 
             if ($vote['type'] == 'yn' || $vote['type'] == 'ynb') {
                 $choice = $_POST['choice'];
@@ -246,6 +266,7 @@ class UserVotes {
                     $prevWasNone = $isNone;
                 }
 
+                $rvalue = $ranks;
                 if ($action === 'vote') {
                     return array(
                         'confirm' => true,
@@ -264,15 +285,15 @@ class UserVotes {
             if ($res['k']) {
                 return array('message' => $this->plugin->locale['account_votes']['submit_msg_success']);
             } else if ($res['sc'] == 400) {
-                return array('values' => $ranks, 'error' => $this->plugin->locale['account_votes']['submit_err_bad_request']);
+                return array('values' => $rvalue, 'error' => $this->plugin->locale['account_votes']['submit_err_bad_request']);
             } else if ($res['sc'] == 404) {
-                return array('values' => $ranks, 'error' => $this->plugin->locale['account_votes']['submit_err_not_allowed']);
+                return array('values' => $rvalue, 'error' => $this->plugin->locale['account_votes']['submit_err_not_allowed']);
             } else if ($res['sc'] == 409) {
-                return array('values' => $ranks, 'error' => $this->plugin->locale['account_votes']['submit_err_secret_resubmission']);
+                return array('values' => $rvalue, 'error' => $this->plugin->locale['account_votes']['submit_err_secret_resubmission']);
             } else if ($res['sc'] == 423) {
-                return array('values' => $ranks, 'error' => $this->plugin->locale['account_votes']['submit_err_ended']);
+                return array('values' => $rvalue, 'error' => $this->plugin->locale['account_votes']['submit_err_ended']);
             } else {
-                return array('values' => $ranks, 'error' => $this->plugin->locale['account_votes']['submit_err_unknown']);
+                return array('values' => $rvalue, 'error' => $this->plugin->locale['account_votes']['submit_err_unknown']);
             }
         }
     }

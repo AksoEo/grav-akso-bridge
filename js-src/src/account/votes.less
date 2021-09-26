@@ -1,8 +1,23 @@
 @import '../prelude';
 
+.vote-message, .vote-error {
+    padding: 0.5em 1em;
+    margin: 1em 0;
+    border-radius: var(--radius);
+}
+.vote-message {
+    background: var(--light-accent);
+    color: var(--light-accent-fg);
+}
+.vote-error {
+    background: var(--error-bg);
+    color: var(--error-fg);
+}
+
 .account-vote-list {
     list-style-type: none;
     padding: 0;
+    text-align: left;
 
     .vote-item {
         padding: 0.5em 1em;
@@ -42,7 +57,21 @@
                 margin-bottom: 0;
             }
         }
+
+        .vote-status {
+            display: flex;
+            justify-content: space-between;
+
+            img {
+                vertical-align: middle;
+            }
+        }
     }
+}
+
+.vote-detail {
+    text-align: left;
+    margin: 1em 0;
 }
 
 .vote-option {
@@ -76,6 +105,37 @@
     }
 }
 
+.vote-review {
+    background: var(--bg);
+    border-radius: var(--radius);
+    margin: 1em 0;
+    padding: 0.5em 1em;
+
+    .review-title {
+        font-weight: bold;
+
+        img {
+            vertical-align: middle;
+        }
+    }
+
+    .review-timestamp {
+        font-size: smaller;
+        float: right;
+        margin-left: 1em;
+
+        @media (max-width: 480px) {
+            float: none;
+            margin-left: 0;
+        }
+    }
+
+    .review-secret {
+        margin-top: 0.5em;
+        font-size: smaller;
+    }
+}
+
 .vote-ballot {
     .vote-option {
         align-items: center;
@@ -96,6 +156,8 @@
 }
 
 .vote-form {
+    margin-top: 4em;
+
     .form-submit {
         text-align: right;
     }

@@ -8,13 +8,17 @@
                 <div class="vote-title">
                     <span class="vote-org">{{vote.org}}</span>
                     <a class="vote-name" href="{{vote_link}}">
-                        {{vote.name}}
+                        {{vote.name|e}}
                     </a>
                 </div>
                 <div class="vote-time">
-                    TODO FORMAT NICER
-                    {{vote.timeStart|date('c')}}
-                    {{vote.timeEnd|date('c')}}
+                    <time class="dyn-timestamp" datetime="{{vote.timeStart|date('c')}}">
+                        {{vote.fmt_time_start|e}}
+                    </time>
+                    —
+                    <time class="dyn-timestamp" datetime="{{vote.timeEnd|date('c')}}">
+                        {{vote.fmt_time_end|e}}
+                    </time>
                 </div>
                 <div class="vote-description">
                     {{vote.description_rendered|raw}}
@@ -197,7 +201,9 @@
                 {% endif %}
             {% endmacro %}
             {% macro render_ballot(vote, ballot, context, verbose) %}
-                {% if vote.type == 'stv' %}
+                {% if vote.type == 'yn' or vote.type == 'ynb' %}
+                    {{context.akso_locale.account_votes['vote_ynb_' ~ ballot]}}
+                {% elseif vote.type == 'stv' %}
                     {{_self.render_stv_ballot(vote, ballot, context, verbose)}}
                 {% elseif vote.type == 'rp' %}
                     {{_self.render_rp_ballot(vote, ballot, context, verbose)}}
@@ -229,13 +235,23 @@
             {% else %}
                 {% if vote.hasVoted %}
                     <div class="vote-review">
+                        <div class="review-timestamp">
+                            <time class="dyn-timestamp" datetime="{{vote.ballot.timeVoted|date('c')}}">
+                                {{vote.ballot.fmt_time}}
+                            </time>
+                        </div>
                         <div class="review-title">
+                            <img src="/user/plugins/akso-bridge/assets/votes/voted.svg" />
                             {{akso_locale.account_votes.vote_status_voted}}
                         </div>
-                        <div class="review-description">
-                            {{vote.ballot.timeVoted|date('c')}}
+                        <div class="review-ballot">
                             {{_self.render_ballot(vote, vote.ballot.ballot, context, false)}}
                         </div>
+                        {% if vote.ballotsSecret %}
+                        <div class="review-secret">
+                            {{akso_locale.account_votes.vote_review_secret}}
+                        </div>
+                        {% endif %}
                     </div>
                 {% endif %}
 
