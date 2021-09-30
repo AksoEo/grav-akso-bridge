@@ -61,6 +61,7 @@
         .vote-status {
             display: flex;
             justify-content: space-between;
+            flex-wrap: wrap;
 
             img {
                 vertical-align: middle;
@@ -157,6 +158,9 @@
 
 .vote-form {
     margin-top: 4em;
+    border: 1px solid var(--light-separator);
+    border-radius: var(--radius);
+    padding: 0.5em 1em;
 
     .form-submit {
         text-align: right;
@@ -349,6 +353,100 @@
 
             .rank-input-container {
                 text-align: right;
+            }
+        }
+    }
+}
+
+.vote-results {
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 0.5em 1em;
+
+    .option-icon {
+        margin-right: 0.5em;
+
+        img {
+            width: 24px;
+            height: 24px;
+        }
+    }
+
+    .results-title {
+        margin: 0;
+    }
+
+    .result-status {
+        background: var(--bg1);
+        padding: 0.2em 0.5em;
+        display: inline-block;
+        border-radius: var(--radius);
+        margin-top: 0.5em;
+        font-weight: bold;
+    }
+
+    .result-turnout {
+        margin-top: 0.5em;
+        font-size: smaller;
+    }
+
+    .result-chosen {
+        margin-top: 0.5em;
+
+        .chosen-title {
+            font-weight: bold;
+        }
+        .chosen-options {
+            margin: 0;
+        }
+    }
+
+    .result-ynb-tally, .result-rp-tally {
+        margin-top: 0.5em;
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        .inner-table {
+            min-width: 100%;
+        }
+    }
+    .result-ynb-tally td:first-child {
+        width: 8em;
+    }
+
+    .stv-rounds-container {
+        margin-top: 0.5em;
+        padding: 0.2em 0.5em;
+        background: var(--bg1);
+        border-radius: var(--radius);
+
+        summary {
+            font-size: smaller;
+        }
+
+        .stv-rounds {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            .stv-round {
+                border-radius: var(--radius);
+                border: 1px solid var(--light-separator);
+                margin-top: 0.5em;
+
+                .round-title {
+                    font-weight: bold;
+                    padding: 0.2em 0.5em;
+                }
+                .round-votes {
+                    overflow-x: auto;
+                    overflow-y: hidden;
+
+                    table {
+                        min-width: 100%;
+                        border: none;
+                    }
+                }
             }
         }
     }

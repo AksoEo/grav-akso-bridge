@@ -200,6 +200,21 @@
                     </ol>
                 {% endif %}
             {% endmacro %}
+            {% macro render_tm_ballot(vote, ballot, context, verbose) %}
+                {% if ballot is empty %}
+                    <div class="vote-ballot empty-ballot">
+                        {{context.akso_locale.account_votes.ranks_empty_ballot}}
+                    </div>
+                {% else %}
+                    <ul class="vote-ballot tm-ballot">
+                        {% for optid in ballot %}
+                            <li>
+                                {{_self.render_option(vote.options[optid], vote.codeholders, context, verbose)}}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endmacro %}
             {% macro render_ballot(vote, ballot, context, verbose) %}
                 {% if vote.type == 'yn' or vote.type == 'ynb' %}
                     {{context.akso_locale.account_votes['vote_ynb_' ~ ballot]}}
@@ -207,6 +222,8 @@
                     {{_self.render_stv_ballot(vote, ballot, context, verbose)}}
                 {% elseif vote.type == 'rp' %}
                     {{_self.render_rp_ballot(vote, ballot, context, verbose)}}
+                {% elseif vote.type == 'tm' %}
+                    {{_self.render_tm_ballot(vote, ballot, context, verbose)}}
                 {% endif %}
             {% endmacro %}
 
@@ -334,6 +351,29 @@
                                     </li>
                                 {% endfor %}
                             </ul>
+                        {% elseif vote.type == 'tm' %}
+                            <div class="method-description">
+                                {{akso_locale.account_votes.vote_desc_tm}}
+                            </div>
+                            <ul class="tm-options">
+                                {% for index, option in vote.options %}
+                                    <li class="tm-option">
+                                        <div class="option-control-container">
+                                            <input
+                                                class="option-checkbox"
+                                                type="checkbox"
+                                                {% if account.state.values[index] %}
+                                                checked
+                                                {% endif %}
+                                                name="selected[{{ index }}]"
+                                                type="number" />
+                                        </div>
+                                        <div class="option-contents">
+                                            {{_self.render_option(option, vote.codeholders, context, true)}}
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
                         {% endif %}
 
                         <div class="form-submit">
@@ -342,6 +382,156 @@
                             </button>
                         </div>
                     </form>
+                {% elseif vote.isActive %}
+                    <div class="vote-form is-disabled">
+                        {{akso_locale.account_votes.vote_form_disabled}}
+                    </div>
+                {% elseif vote.hasResults %}
+                    <div class="vote-results">
+                        <h2 class="results-title">
+                            {{akso_locale.account_votes.results_title}}
+                        </h2>
+
+                        {% set result = vote.result %}
+                        <div class="vote-result result-yn">
+                            <div class="result-status">
+                                {% if result.result == 'NO_QUORUM' %}
+                                    {{akso_locale.account_votes.result_no_quorum}}
+                                {% elseif result.result == 'MAJORITY' %}
+                                    {{akso_locale.account_votes.result_majority}}
+                                {% elseif result.result == 'NO_MAJORITY' %}
+                                    {{akso_locale.account_votes.result_no_majority}}
+                                {% elseif result.result == 'TOO_MANY_BLANK_BALLOTS' %}
+                                    {{akso_locale.account_votes.result_too_many_blank_ballots}}
+                                {% elseif result.result == 'TIE_BREAKER_NEEDED' %}
+                                    {{akso_locale.account_votes.result_tie_breaker_needed}}
+                                {% else %}
+                                    {{akso_locale.account_votes.result_success}}
+                                {% endif %}
+                            </div>
+                            {% if result.numVoters %}
+                                <div class="result-turnout">
+                                    {{result.numBallots}}
+                                    /
+                                    {{result.numVoters}}
+                                    {{akso_locale.account_votes.result_turnout_post}}
+                                    {% if result.numBlankBallots is defined %}
+                                        {{result.numBlankBallots}}
+                                        {% if result.numBlankBallots == 1 %}
+                                        {{akso_locale.account_votes.result_turnout_blank_post}}
+                                        {% else %}
+                                        {{akso_locale.account_votes.result_turnout_blanks_post}}
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            {% if vote.type == 'yn' or vote.type == 'ynb' %}
+                                <div class="result-ynb-tally">
+                                    <table class="inner-table">
+                                        <thead>
+                                            <tr>
+                                                <th>{{akso_locale.account_votes.result_table_header_option}}</th>
+                                                <th>{{akso_locale.account_votes.result_table_header_votes}}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>{{akso_locale.account_votes.vote_ynb_y}}</td>
+                                                <td>{{result.tally.y}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>{{akso_locale.account_votes.vote_ynb_n}}</td>
+                                                <td>{{result.tally.n}}</td>
+                                            </tr>
+                                            {% if result.tally.b is defined %}
+                                            <tr>
+                                                <td>{{akso_locale.account_votes.vote_ynb_b}}</td>
+                                                <td>{{result.tally.b}}</td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% elseif vote.type == 'rp' %}
+                                <div class="result-rp-tally">
+                                    <table class="inner-table">
+                                        <thead>
+                                            <tr>
+                                                <th>{{akso_locale.account_votes.result_table_header_option}}</th>
+                                                <th>{{akso_locale.account_votes.result_table_header_votes}}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for optid, votes in result.tally %}
+                                            <tr>
+                                                <td>{{_self.render_option(vote.options[optid], vote.codeholders, context, false)}}</td>
+                                                <td>{{votes}}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% endif %}
+                            {% if result.optsChosen %}
+                                <div class="result-chosen">
+                                    <div class="chosen-title">{{akso_locale.account_votes.result_opts_chosen}}</div>
+                                    <ul class="chosen-options">
+                                    {% for chosen in result.optsChosen %}
+                                        <li class="chosen-item">
+                                        {{_self.render_option(vote.options[chosen], vote.codeholders, context, false)}}
+                                        </li>
+                                    {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            {% if result.rounds %}
+                                <details class="stv-rounds-container">
+                                    <summary>{{akso_locale.account_votes.result_stv_rounds}}</summary>
+                                    <ul class="stv-rounds">
+                                        {% for index, round in result.rounds %}
+                                        <li class="stv-round">
+                                            <div class="round-title">
+                                                {{akso_locale.account_votes.result_stv_round_title_0}}{{index + 1}}{{akso_locale.account_votes.result_stv_round_title_1}}
+                                            </div>
+                                            <div class="round-votes">
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>{{akso_locale.account_votes.result_table_header_option}}</th>
+                                                            <th>{{akso_locale.account_votes.result_table_header_votes}}</th>
+                                                            <th>{{akso_locale.account_votes.result_table_header_status}}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for optid, votes in round.votes %}
+                                                        <tr>
+                                                            <td>
+                                                                {{_self.render_option(vote.options[optid], vote.codeholders, context, false)}}
+                                                            </td>
+                                                            <td>
+                                                                {{votes}}
+                                                            </td>
+                                                            <td>
+                                                                {% if optid in round.optsChosen %}
+                                                                    {{akso_locale.account_votes.result_table_status_chosen}}
+                                                                {% elseif optid in round.optsEliminated %}
+                                                                    {{akso_locale.account_votes.result_table_status_eliminated}}
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </details>
+                            {% endif %}
+                        </div>
+
+
+                    </div>
                 {% endif %}
             {% endif %}
         </div>

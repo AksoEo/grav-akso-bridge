@@ -183,7 +183,10 @@ class UserVotes {
         }
 
         if ($vote['hasResults']) {
-            // TODO: fetch results
+            $res = $this->bridge->get("/codeholders/self/votes/$id/result", []);
+            if ($res['k']) {
+                $vote['result'] = $res['b'];
+            }
         }
 
         return $vote;
@@ -280,8 +283,46 @@ class UserVotes {
                 } else if ($action === 'back') {
                     return array('values' => $ranks);
                 }
+            } else if ($vote['type'] === 'tm') {
+                $optionCount = count($vote['options']);
+                $selected = isset($_POST['selected']) && gettype($_POST['selected']) == 'array' ? $_POST['selected'] : [];
+
+                for ($i = 0; $i < $optionCount; $i++) {
+                    $selected[$i] = isset($selected[$i]);
+                }
+                ksort($selected);
+
+                if (isset($_POST['ballot'])) {
+                    try {
+                        $ballot = json_decode($_POST['ballot']);
+                        if (gettype($ballot) === 'array') $selected = $ballot;
+                    } catch (\Exception $e) {}
+                }
+
+                $options = [];
+                for ($i = 0; $i < $optionCount; $i++) {
+                    if (isset($selected[$i]) && $selected[$i]) {
+                        $options[] = $i;
+                    }
+                }
+
+                $rvalue = $selected;
+                if ($action === 'vote') {
+                    return array(
+                        'confirm' => true,
+                        'ballot' => $options,
+                        'ballot_coded' => json_encode($selected),
+                    );
+                } else if ($action === 'confirm') {
+                    $res = $this->bridge->put("/codeholders/self/votes/$voteId/ballot", array(
+                        'ballot' => $options,
+                    ), [], []);
+                } else if ($action === 'back') {
+                    return array('values' => $selected);
+                }
             }
 
+            var_dump($res);
             if ($res['k']) {
                 return array('message' => $this->plugin->locale['account_votes']['submit_msg_success']);
             } else if ($res['sc'] == 400) {
