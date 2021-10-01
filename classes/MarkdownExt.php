@@ -1305,12 +1305,24 @@ class MarkdownExt {
                             $imageNode = $pChild;
                         } else if ($pChild->isElementNode() && $pChild->tag === 'a') {
                             $ch = $pChild->children();
-                            if (count($pChild->children()) === 1) {
-                                $firstChild = $ch[0];
-                                if ($firstChild->isElementNode() && $firstChild->tag === 'img') {
-                                    $link = $pChild->getAttribute('href');
-                                    if (!$link) $link = '';
-                                    $imageNode = $firstChild;
+                            $isValid = true;
+                            foreach ($ch as $child) {
+                                if ($child->isElementNode() && $child->tag !== 'img') {
+                                    $isValid = false;
+                                    break;
+                                } else if ($child->isTextNode() && !empty(chop($child->text()))) {
+                                    $isValid = false;
+                                    break;
+                                }
+                            }
+                            if ($isValid) {
+                                foreach ($ch as $child) {
+                                    if ($child->isElementNode() && $child->tag === 'img') {
+                                        $link = $pChild->getAttribute('href');
+                                        if (!$link) $link = '';
+                                        $imageNode = $child;
+                                        break;
+                                    }
                                 }
                             }
                         }
