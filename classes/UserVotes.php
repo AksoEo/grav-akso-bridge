@@ -322,7 +322,6 @@ class UserVotes {
                 }
             }
 
-            var_dump($res);
             if ($res['k']) {
                 return array('message' => $this->plugin->locale['account_votes']['submit_msg_success']);
             } else if ($res['sc'] == 400) {

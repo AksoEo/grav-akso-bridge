@@ -1177,6 +1177,26 @@ class MarkdownExt {
         $mains = $document->find('main#main-content');
         if (count($mains) === 0) return $content;
 
+        $breadcrumbs = $document->find('.breadcrumbs-container');
+        if (count($breadcrumbs) > 0) {
+            // fix html a bit
+            $breadcrumbs[0]->setAttribute('role', 'navigation');
+            $breadcrumbs[0]->setAttribute('aria-label', $this->plugin->locale['content']['breadcrumbs_title']);
+            $document->first('.breadcrumbs-container [itemtype="http://schema.org/BreadcrumbList"]')->setAttribute('role', 'list');
+            $itemCount = 0;
+            foreach ($document->find('.breadcrumbs-container [itemtype="http://schema.org/Thing"]') as $li) {
+                $li->setAttribute('role', 'listitem');
+                $itemCount += 1;
+            }
+            // last item is always a span
+            $document->first('.breadcrumbs-container span[itemtype="http://schema.org/Thing"]')->setAttribute('aria-current', 'page');
+            $breadcrumbs[0]->remove();
+            if ($itemCount == 1) {
+                // only one item; probably "home". we dont need breadcrumbs for this
+                $breadcrumbs = [];
+            }
+        }
+
         $rootNode = $mains[0];
         $topLevelChildren = $rootNode->children();
         $containers = array();
@@ -1241,12 +1261,22 @@ class MarkdownExt {
         }
 
         $isFirstContainer = true;
+        $didAddBreadcrumbs = false;
         foreach ($containers as $container) {
             if ($container['kind'] === 'figure') {
                 $contentRootNode->appendChild($container['contents']);
             } else {
                 $containerNode = new Element('div');
                 $containerNode->class = 'md-container';
+
+                if (!$didAddBreadcrumbs) {
+                    // add breadcrumbs to first md-container
+                    $didAddBreadcrumbs = true;
+                    if (count($breadcrumbs) > 0) {
+                        $containerNode->appendChild($breadcrumbs[0]);
+                    }
+                }
+
                 foreach ($container['contents'] as $contentNode) {
                     $containerNode->appendChild($contentNode);
                 }
