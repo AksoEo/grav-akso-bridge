@@ -1,0 +1,90 @@
+{% extends 'partials/base.html.twig' %}
+{% block content %}
+    {{page.content}}
+
+    {% if akso_delegates.view_mode == 'country' or akso_delegates.view_mode == 'overview' %}
+        {% set should_collapse = '' %}
+        {% if akso_delegates.view_mode == 'country' %}
+            {% set should_collapse = 'init-collapsed' %}
+        {% endif %}
+        {% set country_selector = {
+            should_collapse: should_collapse,
+            view: akso_delegates.view,
+            list_country_codes: akso_delegates.list_country_codes,
+            list_country_links: akso_delegates.list_country_links,
+            country_names: akso_delegates.country_names,
+            country_emoji: akso_delegates.country_emoji,
+        } %}
+        {% include 'partials/akso_country_selector.html.twig' %}
+    {% endif %}
+
+    {% if akso_delegates.view_mode == 'country' %}
+        {% set code = akso_delegates.view %}
+        <h1 class="country-title">
+            <img
+                class="inline-flag-icon"
+                draggable="false"
+                src="{{akso_delegates.country_emoji[code].src|e('html_attr')}}"
+                alt="{{akso_delegates.country_emoji[code].alt|e('html_attr')}}" />
+            {{akso_delegates.country_names[code]}}
+        </h1>
+
+        <div>TODO js widget for jumping to letter A-Z</div>
+        <ul class="delegation-cities">
+            {% for city in akso_delegates.cities %}
+                {% set city_delegates = akso_delegates.delegates_by_city[city.id] %}
+                <li class="delegation-city" data-geo-id="{{city.id}}" data-label="{{city.label}}">
+                    <div class="city-info">
+                        <h2 class="city-label">{{city.label}}</h2>
+                        <div class="city-meta">
+                            <div class="city-subdivision">{{city.subdivision}}</div>
+                            <div class="city-population">
+                                {{akso_locale.delegates.population_0}}
+                                {{city.population}}
+                                {{akso_locale.delegates.population_1}}
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="city-delegates">
+                        {% for delegation in city_delegates %}
+                            {% set codeholder = akso_delegates.codeholders[delegation.codeholderId] %}
+                            <li class="delegate-item">
+                                {% if codeholder.profilePictureHash %}
+                                <div class="delegate-picture">
+                                    <img
+                                        src="{{codeholder.icon_src|e('html_attr')}}"
+                                        srcset="{{codeholder.icon_srcset|e('html_attr')}}">
+                                </div>
+                                {% endif %}
+                                <h3 class="delegate-name">
+                                    {{codeholder.fmt_name}}
+                                </h3>
+                                <ul class="delegate-subjects">
+                                {% for subjectId in delegation.subjects %}
+                                    {% set subject = akso_delegates.subjects[subjectId] %}
+                                    <li class="subject-item">
+                                        {{subject.name}}
+                                        {{subject.description}}
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                                <ul class="delegate-cities">
+                                {% for city in delegation.cities %}
+                                    <li class="city-item">
+                                        city {{city}}
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                                {% if delegation.hosting and (delegation.hosting.maxDays or delegation.hosting.maxPersons) %}
+                                    <div class="delegate-hosting-stub">
+                                        {{akso_locale.delegates.delegate_offers_hosting}}
+                                    </div>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}

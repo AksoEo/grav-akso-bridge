@@ -1,0 +1,100 @@
+@import './prelude';
+
+.country-overview-selector {
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 1em;
+    box-shadow: @shade-both;
+    overflow: hidden;
+    overflow-y: auto;
+    text-align: left;
+
+    &.init-collapsed {
+        max-height: 200px;
+
+        @media (max-height: 400px) {
+            max-height: 130px;
+        }
+    }
+
+    h3.overview-title {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 0.5em;
+    }
+
+    .list-search-box {
+        position: sticky;
+        top: 0;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(to bottom, var(--button1), var(--button));
+        border-radius: var(--radius);
+        box-shadow: @shade-both;
+        padding-left: 0.6em;
+
+        .search-icon {
+            width: 1.2em;
+        }
+
+        .search-input {
+            width: 0;
+            flex: 1;
+            border-top-left-radius: 1px;
+            border-bottom-left-radius: 1px;
+            margin-left: 0;
+            background: none;
+            box-shadow: none;
+
+            &:focus {
+                box-shadow: none;
+            }
+        }
+
+        &:focus-within {
+            .button-focus-focused();
+        }
+    }
+
+    .overview-items {
+        margin: 0;
+        margin-top: 0.5em;
+        padding: 0;
+        list-style-type: none;
+        display: grid;
+        grid-gap: 0.3em;
+
+        @media (min-width: 420px) {
+            grid-template-columns: 1fr 1fr;
+        }
+        @media (min-width: 720px) {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .country-item {
+            background: var(--bg1);
+            border-radius: var(--radius);
+            box-shadow: @shade-both;
+
+            .inner-item {
+                width: 100%;
+                box-sizing: border-box;
+                display: block;
+                padding: 0.2em 0.4em;
+                text-decoration: none;
+            }
+
+            &.search-hidden {
+                display: none;
+            }
+
+            &.is-current {
+                background: var(--accent);
+
+                .inner-item {
+                    color: var(--accent-fg);
+                }
+            }
+        }
+    }
+}

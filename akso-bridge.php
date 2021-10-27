@@ -13,6 +13,7 @@ use Grav\Plugin\AksoBridge\CongressLocations;
 use Grav\Plugin\AksoBridge\CongressPrograms;
 use Grav\Plugin\AksoBridge\CongressRegistration;
 use Grav\Plugin\AksoBridge\CountryLists;
+use Grav\Plugin\AksoBridge\Delegates;
 use Grav\Plugin\AksoBridge\Magazines;
 use Grav\Plugin\AksoBridge\Registration;
 use Grav\Plugin\AksoBridge\UserAccount;
@@ -267,6 +268,14 @@ class AksoBridgePlugin extends Plugin {
             $state['akso_login_path'] = $this->loginPath;
             $state['akso_registration_path'] = $this->registrationPath;
             $state['akso_clist'] = $countryLists->run();
+            $app->close();
+        } else if ($templateId === 'akso_delegates') {
+            $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegates.css');
+            $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegates.js');
+            $app = new AppBridge($this->grav);
+            $app->open();
+            $delegates = new Delegates($this, $app->bridge);
+            $state['akso_delegates'] = $delegates->run();
             $app->close();
         }
 

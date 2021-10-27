@@ -1,0 +1,10 @@
+title: AKSO Delegitoj
+'@extends':
+  type: default
+  context: blueprints://pages
+
+form:
+  fields:
+    header.org:
+      type: text
+      label: '[[Org]]'

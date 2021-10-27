@@ -1,0 +1,21 @@
+<div class="country-overview-selector {{country_selector.should_collapse}}" id="landoj">
+    <h3 class="overview-title">{{akso_locale.content.country_selector_title}}</h3>
+    <ul class="overview-items" aria-label="{{akso_locale.content.country_selector_all_label}}">
+        {% for code in country_selector.list_country_codes %}
+        {% set is_current = '' %}
+        {% if country_selector.view == code %}
+            {% set is_current = 'is-current' %}
+        {% endif %}
+        <li class="country-item {{is_current}}" data-code="{{code}}" data-name="{{country_selector.country_names[code]|e('html_attr')}}">
+            <a class="inner-item" href="{{country_selector.list_country_links[code]|e('html_attr')}}">
+                <img
+                    class="inline-flag-icon"
+                    draggable="false"
+                    src="{{country_selector.country_emoji[code].src|e('html_attr')}}"
+                    alt="{{country_selector.country_emoji[code].alt|e('html_attr')}}" />
+                {{country_selector.country_names[code]}}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>

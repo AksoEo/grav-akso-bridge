@@ -5,27 +5,15 @@
     {% if not akso_clist.view_all %}
         {% set should_collapse = 'init-collapsed' %}
     {% endif %}
-    <div class="country-org-list-overview {{should_collapse}}">
-        <h3 class="overview-title">{{akso_locale.country_org_lists.overview_title}}</h3>
-        <ul class="overview-items" aria-label="{{akso_locale.country_org_lists.country_list_all_label}}">
-            {% for code in akso_clist.list_country_codes %}
-            {% set is_current = '' %}
-            {% if akso_clist.view == code %}
-                {% set is_current = 'is-current' %}
-            {% endif %}
-            <li class="country-item {{is_current}}" data-code="{{code}}" data-name="{{akso_clist.country_names[code]|e('html_attr')}}">
-                <a class="inner-item" href="{{akso_clist.list_country_links[code]|e('html_attr')}}">
-                    <img
-                        class="inline-flag-icon"
-                        draggable="false"
-                        src="{{akso_clist.country_emoji[code].src|e('html_attr')}}"
-                        alt="{{akso_clist.country_emoji[code].alt|e('html_attr')}}" />
-                    {{akso_clist.country_names[code]}}
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
+    {% set country_selector = {
+        should_collapse: should_collapse,
+        view: akso_clist.view,
+        list_country_codes: akso_clist.list_country_codes,
+        list_country_links: akso_clist.list_country_links,
+        country_names: akso_clist.country_names,
+        country_emoji: akso_clist.country_emoji,
+    } %}
+    {% include 'partials/akso_country_selector.html.twig' %}
     {% if not akso_clist.view_all %}
         <div class="country-org-list">
             {% set code = akso_clist.view %}

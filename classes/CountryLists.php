@@ -17,10 +17,8 @@ class CountryLists {
         $this->user = $plugin->aksoUser ? $plugin->bridge : null;
     }
 
-
     function getAutoCountry($availableCountries) {
         if ($this->plugin->aksoUser) {
-            // TODO: use signed-in user's address country
             $id = $this->plugin->aksoUser['id'];
             $res = $this->bridge->get("/codeholders/$id", array('fields' => ['address.country']));
             if ($res['k']) {
@@ -81,7 +79,8 @@ class CountryLists {
         $countryEmoji = [];
         $countryLinks = [];
         foreach ($countryCodes as $code) {
-            $countryLinks[$code] = $this->plugin->getGrav()['uri']->path() . '?' . self::COUNTRY_NAME . '=' . $code;
+            $countryLinks[$code] = $this->plugin->getGrav()['uri']->path() . '?' . self::COUNTRY_NAME . '=' . $code
+                . '#landoj';
             $countryEmoji[$code] = MarkdownExt::getEmojiForFlag($code);
         }
 

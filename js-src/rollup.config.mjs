@@ -111,6 +111,16 @@ export default [
             format: 'amd',
         },
     },
+    {
+        input: 'src/delegates.js',
+        preserveEntrySignatures: false,
+        plugins: plugins(path.join(__dirname, '../js/dist/delegates.css')),
+        output: {
+            dir: path.join(__dirname, '../js/dist/'),
+            chunkFileNames: 'del_[name].js',
+            format: 'amd',
+        },
+    },
 ];
 
 function iniPlugin() {
