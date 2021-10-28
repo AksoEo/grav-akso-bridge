@@ -1,5 +1,69 @@
 @import '../prelude';
 
+.delegate-item {
+    background: var(--bg);
+    border-radius: var(--radius);
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    padding-top: 0;
+    box-shadow: @shade-both;
+
+    &[data-has-picture='true'] {
+        margin-top: 1.5em;
+    }
+
+    .delegate-picture {
+        display: inline-block;
+        position: relative;
+        width: 64px;
+        height: 64px;
+        margin-top: -32px;
+        margin-right: 0.7em;
+        border-radius: 50%;
+        overflow: hidden;
+        vertical-align: -18px;
+        box-sizing: border-box;
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-shadow: @shade-both;
+        }
+    }
+
+    .delegate-name {
+        display: inline-block;
+        margin: 0;
+        margin-top: 0.5em;
+    }
+}
+
+.country-levels {
+    padding: 0;
+    list-style: none;
+
+    .country-level {
+        margin: 1em 0;
+
+        .level-info {
+            .level-label {
+                margin: 0;
+            }
+        }
+
+        .level-delegates {
+            padding: 0;
+            list-style: none;
+        }
+    }
+
+    & + .delegation-cities {
+        border-top: 1px solid var(--light-separator);
+    }
+}
+
 .delegation-cities {
     padding: 0;
     list-style: none;
@@ -28,42 +92,6 @@
             margin: 0;
             padding: 0;
             list-style: none;
-
-            .delegate-item {
-                background: var(--bg);
-                border-radius: var(--radius);
-                margin: 1em 0;
-                padding: 0.5em 1em;
-                padding-top: 0;
-                box-shadow: @shade-both;
-
-                .delegate-picture {
-                    display: inline-block;
-                    position: relative;
-                    width: 64px;
-                    height: 64px;
-                    margin-top: -32px;
-                    margin-right: 0.7em;
-                    border-radius: 50%;
-                    overflow: hidden;
-                    vertical-align: -18px;
-                    box-sizing: border-box;
-
-                    &::before {
-                        content: '';
-                        position: absolute;
-                        inset: 0;
-                        border-radius: inherit;
-                        box-shadow: @shade-both;
-                    }
-                }
-
-                .delegate-name {
-                    display: inline-block;
-                    margin: 0;
-                    margin-top: 0.5em;
-                }
-            }
         }
     }
 }

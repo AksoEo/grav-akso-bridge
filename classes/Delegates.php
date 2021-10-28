@@ -53,7 +53,7 @@ class Delegates {
         $org = $this->plugin->getGrav()['page']->header()->org;
         $page = 0;
         if (isset($_GET[self::PAGE]) && gettype($_GET[self::PAGE]) == 'string') {
-            $page = (int) $_GET[self::PAGE] - 1;
+            $page = ((int) $_GET[self::PAGE]) - 1;
         }
 
         $countryNames = $this->getCountryNames();
@@ -65,17 +65,36 @@ class Delegates {
             return $collator->compare($ca, $cb);
         });
 
-        $view = isset($_GET[self::COUNTRY_NAME]) ? $_GET[self::COUNTRY_NAME] : null;
-        if (!in_array($view, $countryCodes)) {
-            $view = $this->getAutoCountry($countryCodes);
+        $viewCountry = isset($_GET[self::COUNTRY_NAME]) ? $_GET[self::COUNTRY_NAME] : null;
+        if (!in_array($viewCountry, $countryCodes)) {
+            $viewCountry = $this->getAutoCountry($countryCodes);
         }
 
-        $totalDelegates = 0;
-        $delegates = [];
-        if ($view != self::VIEW_ALL) {
+        $countryEmoji = [];
+        $countryLinks = [];
+        foreach ($countryCodes as $code) {
+            $countryLinks[$code] = $this->plugin->getGrav()['uri']->path() . '?' . self::COUNTRY_NAME . '=' . $code
+                . '#landoj';
+            $countryEmoji[$code] = MarkdownExt::getEmojiForFlag($code);
+        }
+
+        if ($viewCountry == self::VIEW_ALL) {
+            return array(
+                'country_names' => $countryNames,
+                'country_emoji' => $countryEmoji,
+                'view_mode' => 'overview',
+                'list_country_codes' => $countryCodes,
+                'list_country_links' => $countryLinks,
+            );
+        } else if ($viewCountry != self::VIEW_ALL) {
+            $itemsPerPage = 100;
+
             $filter = array(
                 'org' => $org,
-                'cityCountries' => array('$hasAny' => $view),
+                '$or' => [
+                    array('cityCountries' => array('$hasAny' => $viewCountry)),
+                    array('$countries' => array('country' => $viewCountry)),
+                ],
             );
             $res = $this->bridge->get("/delegations/delegates", array(
                 'fields' => [
@@ -90,8 +109,8 @@ class Delegates {
                     'hosting.psProfileURL',
                 ],
                 'filter' => $filter,
-                'offset' => $page,
-                'limit' => 100,
+                'offset' => $page * $itemsPerPage,
+                'limit' => $itemsPerPage,
             ), 60);
             if (!$res['k']) {
                 if ($res['sc'] === 404) {
@@ -102,64 +121,98 @@ class Delegates {
                 }
             }
             $totalDelegates = $res['h']['x-total-items'];
-            $delegates = $res['b'];
-        }
-
-        $countryEmoji = [];
-        $countryLinks = [];
-        foreach ($countryCodes as $code) {
-            $countryLinks[$code] = $this->plugin->getGrav()['uri']->path() . '?' . self::COUNTRY_NAME . '=' . $code
-                . '#landoj';
-            $countryEmoji[$code] = MarkdownExt::getEmojiForFlag($code);
-        }
-
-        if ($view !== self::VIEW_ALL && !in_array($view, $countryCodes)) {
-            $this->plugin->getGrav()->fireEvent('onPageNotFound');
-            return;
-        }
-
-        $subjectIds = [];
-        foreach ($delegates as $item) {
-            foreach ($item['subjects'] as $subjectId) {
-                if (!in_array($subjectId, $subjectIds)) $subjectIds[] = $subjectId;
+            $delegates = [];
+            foreach ($res['b'] as $delegate) {
+                $delegates[$delegate['codeholderId']] = $delegate;
             }
-        }
-        $subjects = $this->getSubjects($subjectIds);
 
-        $codeholderIds = [];
-        foreach ($delegates as $item) {
-            $codeholderId = $item['codeholderId'];
-            if (!in_array($codeholderId, $codeholderIds)) $codeholderIds[] = $codeholderId;
-        }
-        $codeholders = $this->getCodeholders($codeholderIds);
-
-        $delegatesByCity = [];
-        foreach ($delegates as $delegate) {
-            foreach ($delegate['cities'] as $city) {
-                if (!isset($delegatesByCity[$city])) $delegatesByCity[$city] = [];
-                $delegatesByCity[$city][] = $delegate;
+            $countryDelegates = [];
+            $cityDelegates = [];
+            foreach ($delegates as $k => $delegate) {
+                $countries = array_map(function ($c) { return $c['country']; }, $delegate['countries']);
+                if (in_array($viewCountry, $countries)) {
+                    $countryDelegates[] = $delegate['codeholderId'];
+                    $countryLevel = -1;
+                    foreach ($delegate['countries'] as $country) {
+                        if ($country['country'] == $viewCountry) {
+                            $countryLevel = $country['level'];
+                            break;
+                        }
+                    }
+                    $delegate['country_level'] = $countryLevel;
+                    $delegates[$k] = $delegate;
+                }
+                if (in_array($viewCountry, $delegate['cityCountries'])) {
+                    $cityDelegates[] = $delegate['codeholderId'];
+                }
             }
-        }
-        $cities = $this->getCities(array_keys($delegatesByCity), $view);
-        usort($cities, function ($a, $b) {
-            return strcmp($a['eoLabel'], $b['eoLabel']);
-        });
 
-        return array(
-            'country_names' => $countryNames,
-            'country_emoji' => $countryEmoji,
-            'view_mode' => 'country',
-            'view' => $view,
-            'list_country_codes' => $countryCodes,
-            'list_country_links' => $countryLinks,
-            'page' => $page,
-            'codeholders' => $codeholders,
-            'subjects' => $subjects,
-            'cities' => $cities,
-            'total_delegates' => $totalDelegates,
-            'delegates' => $delegates,
-            'delegates_by_city' => $delegatesByCity,
-        );
+            if (!in_array($viewCountry, $countryCodes)) {
+                $this->plugin->getGrav()->fireEvent('onPageNotFound');
+                return;
+            }
+
+            $subjectIds = [];
+            foreach ($delegates as $item) {
+                foreach ($item['subjects'] as $subjectId) {
+                    if (!in_array($subjectId, $subjectIds)) $subjectIds[] = $subjectId;
+                }
+            }
+            $subjects = $this->getSubjects($subjectIds);
+
+            $codeholderIds = [];
+            foreach ($delegates as $item) {
+                $codeholderId = $item['codeholderId'];
+                if (!in_array($codeholderId, $codeholderIds)) $codeholderIds[] = $codeholderId;
+            }
+            $codeholders = $this->getCodeholders($codeholderIds);
+
+            $delegatesByLevel = [];
+            foreach ($countryDelegates as $delegateId) {
+                $delegate = $delegates[$delegateId];
+                $level = $delegate['country_level'];
+                if (!isset($delegatesByLevel[$level])) $delegatesByLevel[$level] = [];
+                $delegatesByLevel[$level][] = $delegate;
+            }
+
+            $delegatesByCity = [];
+            foreach ($cityDelegates as $delegateId) {
+                $delegate = $delegates[$delegateId];
+                foreach ($delegate['cities'] as $city) {
+                    if (!isset($delegatesByCity[$city])) $delegatesByCity[$city] = [];
+                    $delegatesByCity[$city][] = $delegate;
+                }
+            }
+            $cities = $this->getCities(array_keys($delegatesByCity), $viewCountry);
+            usort($cities, function ($a, $b) {
+                return strcmp($a['eoLabel'], $b['eoLabel']);
+            });
+
+            $pageLinkFirst = $this->plugin->getGrav()['uri']->path() . '?'
+                . self::COUNTRY_NAME . '=' . $viewCountry;
+            $pageLinkStub = $pageLinkFirst . '&' . self::PAGE . '=';
+
+            return array(
+                'country_names' => $countryNames,
+                'country_emoji' => $countryEmoji,
+                'view_mode' => 'country',
+                'view' => $viewCountry,
+                'list_country_codes' => $countryCodes,
+                'list_country_links' => $countryLinks,
+                'page' => $page,
+                'codeholders' => $codeholders,
+                'subjects' => $subjects,
+                'cities' => $cities,
+                'total_delegates' => $totalDelegates,
+                'delegates' => $delegates,
+                'delegates_by_city' => $delegatesByCity,
+                'delegates_by_level' => $delegatesByLevel,
+                'should_paginate' => $totalDelegates > $itemsPerPage,
+                'max_page' => ceil((float) $totalDelegates / $itemsPerPage),
+                'page_link_first' => $pageLinkFirst,
+                'page_link_stub' => $pageLinkStub,
+            );
+        }
     }
 
     function getCities($cityIds, $country) {
