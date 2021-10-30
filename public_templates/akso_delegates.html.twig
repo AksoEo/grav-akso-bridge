@@ -2,7 +2,28 @@
 {% block content %}
     {{page.content}}
 
-    {% if akso_delegates.view_mode == 'country' or akso_delegates.view_mode == 'overview' %}
+    <ul class="delegates-filter-picker" role="radiogroup" aria-label="{{akso_locale.delegates.view_mode_label}}">
+        {% set selected = akso_delegates.common.view_mode == 'country' %}
+        <li class="picker-item{{selected ? ' selected' : ''}}">
+            <a href="{{akso_delegates.common.view_mode_links.country}}" role="radio" aria-checked="{{selected ? 'true' : 'false'}}">
+                {{akso_locale.delegates.view_mode_country}}
+            </a>
+        </li>
+        {% set selected = akso_delegates.common.view_mode == 'subject' %}
+        <li class="picker-item{{selected ? ' selected' : ''}}">
+            <a href="{{akso_delegates.common.view_mode_links.subject}}" role="radio" aria-checked="{{selected ? 'true' : 'false'}}">
+                {{akso_locale.delegates.view_mode_subject}}
+            </a>
+        </li>
+        {% set selected = akso_delegates.common.view_mode == 'codeholder' %}
+        <li class="picker-item{{selected ? ' selected' : ''}}">
+            <a href="{{akso_delegates.common.view_mode_links.codeholder}}" role="radio" aria-checked="{{selected ? 'true' : 'false'}}">
+                {{akso_locale.delegates.view_mode_codeholder}}
+            </a>
+        </li>
+    </ul>
+
+    {% if akso_delegates.common.view_mode == 'country' %}
         {% set should_collapse = '' %}
         {% if akso_delegates.view_mode == 'country' %}
             {% set should_collapse = 'init-collapsed' %}
@@ -16,11 +37,34 @@
             country_emoji: akso_delegates.country_emoji,
         } %}
         {% include 'partials/akso_country_selector.html.twig' %}
+    {% elseif akso_delegates.common.view_mode == 'subject' %}
+        subject selector
+    {% elseif akso_delegates.common.view_mode == 'codeholder' %}
+        <form class="delegate-search-form inline-search-form" action="{{akso_delegates.form_target}}">
+            <input
+                class="search-query"
+                type="text"
+                name="nomo"
+                placeholder="{{akso_locale.delegates.codeholder_search_placeholder}}"
+                value="{{akso_delegates.search_query}}" />
+            <button type="submit" class="search-submit">
+                <img
+                    class="search-icon"
+                    role="presentation"
+                    aria-label="{{akso_locale.delegate.codeholder_search_label}}"
+                    src="/user/themes/uea/images/search.svg" />
+            </button>
+        </form>
     {% endif %}
 
     {% macro delegate_item(akso_locale, akso_delegates, delegation) %}
         {% set codeholder = akso_delegates.codeholders[delegation.codeholderId] %}
         <li class="delegate-item" data-has-picture="{{ codeholder.profilePictureHash ? 'true' : 'false' }}">
+            {% if delegation.hosting and (delegation.hosting.maxDays or delegation.hosting.maxPersons) %}
+                <div class="delegate-hosting-stub">
+                    {{akso_locale.delegates.delegate_offers_hosting}}
+                </div>
+            {% endif %}
             {% if codeholder.profilePictureHash %}
             <div class="delegate-picture">
                 <img
@@ -31,27 +75,20 @@
             <h3 class="delegate-name">
                 {{codeholder.fmt_name}}
             </h3>
+            <div class="delegate-subjects-title">
+                {{akso_locale.delegates.delegate_subjects_title}}
+            </div>
             <ul class="delegate-subjects">
             {% for subjectId in delegation.subjects %}
                 {% set subject = akso_delegates.subjects[subjectId] %}
                 <li class="subject-item">
-                    {{subject.name}}
-                    {{subject.description}}
+                    <div class="subject-name">{{subject.name}}</div>
+                    <div class="subject-description">
+                        {{subject.description}}
+                    </div>
                 </li>
             {% endfor %}
             </ul>
-            <ul class="delegate-cities">
-            {% for city in delegation.cities %}
-                <li class="city-item">
-                    city {{city}}
-                </li>
-            {% endfor %}
-            </ul>
-            {% if delegation.hosting and (delegation.hosting.maxDays or delegation.hosting.maxPersons) %}
-                <div class="delegate-hosting-stub">
-                    {{akso_locale.delegates.delegate_offers_hosting}}
-                </div>
-            {% endif %}
         </li>
     {% endmacro %}
 
@@ -66,7 +103,6 @@
             {{akso_delegates.country_names[code]}}
         </h1>
 
-        <div>TODO js widget for jumping to letter A-Z</div>
         <ul class="country-levels">
             {% for level, level_delegates in akso_delegates.delegates_by_level %}
                 <li class="country-level" data-level="{{level}}">
@@ -106,22 +142,29 @@
                 </li>
             {% endfor %}
         </ul>
-        {% if akso_delegates.should_paginate %}
-            {% if akso_delegates.page == 1 %}
-                <a class="link-button" href="{{akso_delegates.page_link_first}}#landoj">
-                    {{akso_locale.delegates.prev_page}}
-                </a>
-            {% elseif akso_delegates.page > 0 %}
-                {# page is zero indexed but pages are one-indexed #}
-                <a class="link-button" href="{{akso_delegates.page_link_stub}}{{akso_delegates.page}}#landoj">
-                    {{akso_locale.delegates.prev_page}}
-                </a>
-            {% endif %}
-            {% if akso_delegates.page < akso_delegates.max_page %}
-                <a class="link-button" href="{{akso_delegates.page_link_stub}}{{akso_delegates.page + 2}}#landoj">
-                    {{akso_locale.delegates.next_page}}
-                </a>
-            {% endif %}
+    {% elseif akso_delegates.common.view_mode == 'codeholder' %}
+        <ul class="delegates-list">
+            {% for delegation in akso_delegates.delegations %}
+                {{_self.delegate_item(akso_locale, akso_delegates, delegation)}}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if akso_delegates.should_paginate %}
+        {% if akso_delegates.page == 1 %}
+            <a class="link-button" href="{{akso_delegates.page_link_first}}#landoj">
+                {{akso_locale.delegates.prev_page}}
+            </a>
+        {% elseif akso_delegates.page > 0 %}
+            {# page is zero indexed but pages are one-indexed #}
+            <a class="link-button" href="{{akso_delegates.page_link_stub}}{{akso_delegates.page}}#landoj">
+                {{akso_locale.delegates.prev_page}}
+            </a>
+        {% endif %}
+        {% if akso_delegates.page < akso_delegates.max_page %}
+            <a class="link-button" href="{{akso_delegates.page_link_stub}}{{akso_delegates.page + 2}}#landoj">
+                {{akso_locale.delegates.next_page}}
+            </a>
         {% endif %}
     {% endif %}
 {% endblock %}
