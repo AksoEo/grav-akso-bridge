@@ -8,6 +8,7 @@ use Grav\Plugin\AksoBridge\Utils;
 class Delegates {
     const COUNTRY_NAME = 'lando';
     const SUBJECT_ID = 'fako';
+    const SUBJECT_NAME = 'q';
     const CODEHOLDER_NAME = 'nomo';
     const VIEW_ALL = '*';
     const PAGE = 'p';
@@ -95,6 +96,7 @@ class Delegates {
         $common = array(
             'view_mode' => $viewMode,
             'view_mode_links' => $viewModeLinks,
+            'filter_subject_link' => $this->plugin->getGrav()['uri']->path() . '?' . self::SUBJECT_ID . '=',
         );
         $itemsPerPage = 100;
 
@@ -238,7 +240,64 @@ class Delegates {
                 );
             }
         } else if ($viewMode == 'subject') {
-            return array('common' => $common);
+            $form_target = $this->plugin->getGrav()['uri']->path();
+            $subjectId = gettype($_GET[self::SUBJECT_ID]) == 'string' ? $_GET[self::SUBJECT_ID] : self::VIEW_ALL;
+            $search_query = isset($_GET[self::SUBJECT_NAME]) && gettype($_GET[self::SUBJECT_NAME]) == 'string'
+                ? $_GET[self::SUBJECT_NAME]
+                : '';
+
+            $subjectFilter = null;
+            if (!empty($search_query)) {
+                // TODO: sort by popularity
+                $res = $this->bridge->get('/delegations/subjects', array(
+                    'fields' => ['id', 'name', 'description'],
+                    'search' => array('cols' => ['name'], 'str' => $search_query),
+                    'limit' => $itemsPerPage,
+                ));
+                if (!$res['k']) throw new \Exception('failed to search subjects');
+                $subjectResults = $res['b'];
+                $subjectFilter = array_map(function ($sub) { return $sub['id']; }, $subjectResults);
+            } else if ($subjectId != self::VIEW_ALL) {
+                $subjectFilter = array_map(function ($id) { return (int) $id; }, explode(',', $subjectId));
+            }
+
+            $shouldPaginate = false;
+            $maxPage = 0;
+            $delegations = [];
+            $subjects = [];
+            $codeholders = [];
+
+            if ($subjectFilter) {
+                $res = $this->bridge->get('/delegations/delegates', array(
+                    'fields' => self::DELEGATE_FIELDS,
+                    'filter' => array('subjects' => array('$hasAny' => $subjectFilter)),
+                    'offset' => $page * $itemsPerPage,
+                    'limit' => $itemsPerPage,
+                ));
+                if (!$res['k']) throw new \Exception('failed to load delegates');
+                $shouldPaginate = $res['h']['x-total-items'] > $itemsPerPage;
+                $maxPage = ceil((float) $res['h']['x-total-items'] / $itemsPerPage);
+                $delegations = [];
+                $subjectIds = [];
+                foreach ($res['b'] as $delegation) {
+                    $delegations[] = $delegation;
+                    foreach ($delegation['subjects'] as $id) if (!in_array($id, $subjectIds)) $subjectIds[] = $id;
+                }
+                $subjects = $this->getSubjects($subjectIds);
+                $codeholders = $this->getCodeholders(array_map(function ($d) { return $d['codeholderId']; }, $delegations));
+            }
+
+            return array(
+                'common' => $common,
+                'form_target' => $form_target,
+                'search_query' => $search_query,
+                'delegations' => $delegations,
+                'codeholders' => $codeholders,
+                'subjects' => $subjects,
+                'page' => $page,
+                'max_page' => $maxPage,
+                'should_paginate' => $shouldPaginate,
+            );
         } else if ($viewMode == 'codeholder') {
             $form_target = $this->plugin->getGrav()['uri']->path();
             $search_query = gettype($_GET[self::CODEHOLDER_NAME]) == 'string'

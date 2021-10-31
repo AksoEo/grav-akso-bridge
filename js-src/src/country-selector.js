@@ -6,6 +6,17 @@ export default function init() {
     const overviews = document.querySelectorAll('.country-overview-selector');
     for (let i = 0; i < overviews.length; i++) {
         const overview = overviews[i];
+
+        // scroll currently selected item into view
+        {
+            const selected = overview.querySelector('.country-item.is-current');
+            if (selected) {
+                // FIXME: this math is probably bad
+                const selectedY = selected.getBoundingClientRect().top - overview.getBoundingClientRect().top;
+                overview.scrollTop = selectedY - overview.offsetHeight / 3;
+            }
+        }
+
         // country search
         {
             const searchBox = document.createElement('div');

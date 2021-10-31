@@ -38,7 +38,22 @@
         } %}
         {% include 'partials/akso_country_selector.html.twig' %}
     {% elseif akso_delegates.common.view_mode == 'subject' %}
-        subject selector
+        <form class="delegate-subject-search-form inline-search-form" action="{{akso_delegates.form_target}}">
+            <input type="hidden" name="fako" value="*">
+            <input
+                class="search-query"
+                type="text"
+                name="q"
+                placeholder="{{akso_locale.delegates.subject_search_placeholder}}"
+                value="{{akso_delegates.search_query}}" />
+            <button type="submit" class="search-submit">
+                <img
+                    class="search-icon"
+                    role="presentation"
+                    aria-label="{{akso_locale.delegate.subject_search_label}}"
+                    src="/user/themes/uea/images/search.svg" />
+            </button>
+        </form>
     {% elseif akso_delegates.common.view_mode == 'codeholder' %}
         <form class="delegate-search-form inline-search-form" action="{{akso_delegates.form_target}}">
             <input
@@ -56,6 +71,14 @@
             </button>
         </form>
     {% endif %}
+
+    <div class="delegates-additional-filters">
+        FIXME this needs to be in a form somehow
+        <div class="hosting-filter">
+            <input id="hosting-filter-enable" type="checkbox">
+            <label for="hosting-filter-enable">{{akso_locale.delegates.filter_hosting_label}}</label>
+        </div>
+    </div>
 
     {% macro delegate_item(akso_locale, akso_delegates, delegation) %}
         {% set codeholder = akso_delegates.codeholders[delegation.codeholderId] %}
@@ -82,7 +105,11 @@
             {% for subjectId in delegation.subjects %}
                 {% set subject = akso_delegates.subjects[subjectId] %}
                 <li class="subject-item">
-                    <div class="subject-name">{{subject.name}}</div>
+                    <div class="subject-name">
+                        <a href="{{akso_delegates.common.filter_subject_link}}{{subjectId}}">
+                            {{subject.name}}
+                        </a>
+                    </div>
                     <div class="subject-description">
                         {{subject.description}}
                     </div>
@@ -142,8 +169,10 @@
                 </li>
             {% endfor %}
         </ul>
-    {% elseif akso_delegates.common.view_mode == 'codeholder' %}
-        <ul class="delegates-list">
+    {% endif %}
+
+    {% if akso_delegates.common.view_mode == 'codeholder' or akso_delegates.common.view_mode == 'subject' %}
+        <ul class="delegate-list">
             {% for delegation in akso_delegates.delegations %}
                 {{_self.delegate_item(akso_locale, akso_delegates, delegation)}}
             {% endfor %}
