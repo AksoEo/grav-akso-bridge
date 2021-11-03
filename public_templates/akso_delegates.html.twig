@@ -37,48 +37,126 @@
             country_emoji: akso_delegates.country_emoji,
         } %}
         {% include 'partials/akso_country_selector.html.twig' %}
-    {% elseif akso_delegates.common.view_mode == 'subject' %}
-        <form class="delegate-subject-search-form inline-search-form" action="{{akso_delegates.form_target}}">
-            <input type="hidden" name="fako" value="*">
-            <input
-                class="search-query"
-                type="text"
-                name="q"
-                placeholder="{{akso_locale.delegates.subject_search_placeholder}}"
-                value="{{akso_delegates.search_query}}" />
-            <button type="submit" class="search-submit">
-                <img
-                    class="search-icon"
-                    role="presentation"
-                    aria-label="{{akso_locale.delegate.subject_search_label}}"
-                    src="/user/themes/uea/images/search.svg" />
-            </button>
-        </form>
-    {% elseif akso_delegates.common.view_mode == 'codeholder' %}
-        <form class="delegate-search-form inline-search-form" action="{{akso_delegates.form_target}}">
-            <input
-                class="search-query"
-                type="text"
-                name="nomo"
-                placeholder="{{akso_locale.delegates.codeholder_search_placeholder}}"
-                value="{{akso_delegates.search_query}}" />
-            <button type="submit" class="search-submit">
-                <img
-                    class="search-icon"
-                    role="presentation"
-                    aria-label="{{akso_locale.delegate.codeholder_search_label}}"
-                    src="/user/themes/uea/images/search.svg" />
-            </button>
-        </form>
     {% endif %}
 
-    <div class="delegates-additional-filters">
-        FIXME this needs to be in a form somehow
-        <div class="hosting-filter">
-            <input id="hosting-filter-enable" type="checkbox">
-            <label for="hosting-filter-enable">{{akso_locale.delegates.filter_hosting_label}}</label>
-        </div>
-    </div>
+    {% if akso_delegates.has_filters %}
+        {% if akso_delegates.common.view_mode == 'country' %}
+            {% set code = akso_delegates.view %}
+            <h1 class="country-title">
+                <img
+                    class="inline-flag-icon"
+                    draggable="false"
+                    src="{{akso_delegates.country_emoji[code].src|e('html_attr')}}"
+                    alt="{{akso_delegates.country_emoji[code].alt|e('html_attr')}}" />
+                {{akso_delegates.country_names[code]}}
+            </h1>
+
+            <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
+                <input type="hidden" name="lando" value="{{akso_delegates.view}}">
+        {% elseif akso_delegates.common.view_mode == 'subject' %}
+            {% if akso_delegates.search_mode == 'subject' %}
+                <input type="checkbox" id="subject-search-item" checked />
+            {% endif %}
+            <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
+                <input type="hidden" name="fako" value="*">
+                {% if akso_delegates.search_mode == 'subject' %}
+                    <div class="subject-search">
+                        <div class="search-header">
+                            <label
+                                for="subject-search-item"
+                                class="search-cancel"
+                                aria-label="{{akso_locale.delegates.search_subjects_cancel}}"
+                                role="button">
+                            </label>
+                            <h2 class="search-title">
+                                {% if akso_delegates.search_subjects|count == 1 %}
+                                    {{akso_locale.delegates.search_subject_one}}
+                                {% else %}
+                                    {{akso_locale.delegates.search_subjects}}
+                                {% endif %}
+                            </h2>
+                        </div>
+                        <ul class="subject-search-items">
+                            {% for subjectId in akso_delegates.search_subjects %}
+                                {{_self.subject_item(akso_delegates.subjects[subjectId], akso_delegates)}}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                <div class="inner-search inline-search-form">
+                    <input
+                        class="search-query"
+                        type="text"
+                        name="q"
+                        placeholder="{{akso_locale.delegates.subject_search_placeholder}}"
+                        value="{{akso_delegates.search_query}}" />
+                    <button type="submit" class="search-submit">
+                        <img
+                            class="search-icon"
+                            role="presentation"
+                            aria-label="{{akso_locale.delegate.subject_search_label}}"
+                            src="/user/themes/uea/images/search.svg" />
+                    </button>
+                </div>
+        {% elseif akso_delegates.common.view_mode == 'codeholder' %}
+            <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
+                <div class="inner-search inline-search-form">
+                    <input
+                        class="search-query"
+                        type="text"
+                        name="nomo"
+                        placeholder="{{akso_locale.delegates.codeholder_search_placeholder}}"
+                        value="{{akso_delegates.search_query}}" />
+                    <button type="submit" class="search-submit">
+                        <img
+                            class="search-icon"
+                            role="presentation"
+                            aria-label="{{akso_locale.delegate.codeholder_search_label}}"
+                            src="/user/themes/uea/images/search.svg" />
+                    </button>
+                </div>
+        {% endif %}
+
+                <div class="delegates-additional-filters">
+                    <div class="hosting-filter">
+                        <input
+                            name="f[h][s]"
+                            class="filter-enable"
+                            id="hosting-filter-enable"
+                            {% if akso_delegates.common.filters.hosting %}
+                            checked
+                            {% endif %}
+                            type="checkbox">
+                        <label for="hosting-filter-enable">{{akso_locale.delegates.filter_hosting_label}}</label>
+                        <div class="filter-contents">
+                            <div class="filter-field">
+                                <label for="hosting-persons">{{akso_locale.delegates.filter_hosting_persons}}</label>
+                                <input
+                                    id="hosting-persons"
+                                    type="number"
+                                    name="f[h][p]"
+                                    value="{{akso_delegates.common.filters.hosting.persons}}"
+                                    placeholder="{{akso_locale.delegates.filter_hosting_field_empty}}" />
+                            </div>
+                            <div class="filter-field">
+                                <label for="hosting-days">{{akso_locale.delegates.filter_hosting_days}}</label>
+                                <input
+                                    id="hosting-days"
+                                    type="number"
+                                    name="f[h][d]"
+                                    value="{{akso_delegates.common.filters.hosting.days}}"
+                                    placeholder="{{akso_locale.delegates.filter_hosting_field_empty}}" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-button-container">
+                        <button type="submit" class="filter-button">
+                            {{akso_locale.delegates.filter_apply}}
+                        </button>
+                    </div>
+                </div>
+            </form>
+    {% endif %}
 
     {% macro delegate_item(akso_locale, akso_delegates, delegation) %}
         {% set codeholder = akso_delegates.codeholders[delegation.codeholderId] %}
@@ -104,32 +182,25 @@
             <ul class="delegate-subjects">
             {% for subjectId in delegation.subjects %}
                 {% set subject = akso_delegates.subjects[subjectId] %}
-                <li class="subject-item">
-                    <div class="subject-name">
-                        <a href="{{akso_delegates.common.filter_subject_link}}{{subjectId}}">
-                            {{subject.name}}
-                        </a>
-                    </div>
-                    <div class="subject-description">
-                        {{subject.description}}
-                    </div>
-                </li>
+                {{_self.subject_item(subject, akso_delegates)}}
             {% endfor %}
             </ul>
         </li>
     {% endmacro %}
+    {% macro subject_item(subject, akso_delegates) %}
+        <li class="subject-item">
+            <div class="subject-name">
+                <a href="{{akso_delegates.common.filter_subject_link}}{{subject.id}}">
+                    {{subject.name}}
+                </a>
+            </div>
+            <div class="subject-description">
+                {{subject.description}}
+            </div>
+        </li>
+    {% endmacro %}
 
     {% if akso_delegates.view_mode == 'country' %}
-        {% set code = akso_delegates.view %}
-        <h1 class="country-title">
-            <img
-                class="inline-flag-icon"
-                draggable="false"
-                src="{{akso_delegates.country_emoji[code].src|e('html_attr')}}"
-                alt="{{akso_delegates.country_emoji[code].alt|e('html_attr')}}" />
-            {{akso_delegates.country_names[code]}}
-        </h1>
-
         <ul class="country-levels">
             {% for level, level_delegates in akso_delegates.delegates_by_level %}
                 <li class="country-level" data-level="{{level}}">
@@ -169,6 +240,29 @@
                 </li>
             {% endfor %}
         </ul>
+        {% if akso_delegates.delegates|count == 0 %}
+            <div class="no-results">
+                {{akso_locale.delegates.no_results}}
+            </div>
+        {% endif %}
+    {% endif %}
+
+    {% if akso_delegates.common.view_mode == 'subject' and akso_delegates.search_mode == 'search' %}
+        <h2>{{akso_locale.delegates.subject_results}}</h2>
+        <ul class="subject-list">
+            {% for subject in akso_delegates.subjects %}
+                {{_self.subject_item(subject, akso_delegates)}}
+            {% endfor %}
+        </ul>
+        {% if akso_delegates.no_subject_results %}
+            <div class="no-results">
+                {{akso_locale.delegates.no_results}}
+            </div>
+        {% else %}
+            <h2>
+                {{akso_locale.delegates.subject_matching_delegates}}
+            </h2>
+        {% endif %}
     {% endif %}
 
     {% if akso_delegates.common.view_mode == 'codeholder' or akso_delegates.common.view_mode == 'subject' %}
@@ -177,6 +271,11 @@
                 {{_self.delegate_item(akso_locale, akso_delegates, delegation)}}
             {% endfor %}
         </ul>
+        {% if akso_delegates.no_delegate_results %}
+            <div class="no-results">
+                {{akso_locale.delegates.no_results}}
+            </div>
+        {% endif %}
     {% endif %}
 
     {% if akso_delegates.should_paginate %}

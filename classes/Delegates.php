@@ -13,6 +13,10 @@ class Delegates {
     const VIEW_ALL = '*';
     const PAGE = 'p';
 
+    const FILTERS = 'f';
+    const FILTER_HOSTING = 'h';
+    const FILTER_ENABLE = 's';
+
     private $plugin, $bridge, $user;
 
     public function __construct($plugin, $bridge) {
@@ -93,10 +97,30 @@ class Delegates {
             'codeholder' => $this->plugin->getGrav()['uri']->path() . '?' . self::CODEHOLDER_NAME . '=' . self::VIEW_ALL,
         );
 
+        $filters = array();
+        $apiFilters = [];
+        if (isset($_GET[self::FILTERS][self::FILTER_HOSTING][self::FILTER_ENABLE])
+                && $_GET[self::FILTERS][self::FILTER_HOSTING][self::FILTER_ENABLE]) {
+            $hosting = $_GET[self::FILTERS][self::FILTER_HOSTING];
+            $persons = $hosting['p'] ? (int) $hosting['p'] : null;
+            $days = $hosting['d'] ? (int) $hosting['d'] : null;
+            $filters['hosting'] = array('persons' => $persons, 'days' => $days);
+            if ($persons) {
+                $apiFilters[] = array('hosting.maxPersons' => array('$gte' => $persons));
+            }
+            if ($days) {
+                $apiFilters[] = array('hosting.maxDays' => array('$gte' => $days));
+            }
+            if (!$persons && !$days) {
+                $apiFilters[] = array('$not' => array('hosting' => null));
+            }
+        }
+
         $common = array(
             'view_mode' => $viewMode,
             'view_mode_links' => $viewModeLinks,
             'filter_subject_link' => $this->plugin->getGrav()['uri']->path() . '?' . self::SUBJECT_ID . '=',
+            'filters' => $filters,
         );
         $itemsPerPage = 100;
 
@@ -124,8 +148,8 @@ class Delegates {
                     'list_country_links' => $countryLinks,
                 );
             } else if ($viewCountry != self::VIEW_ALL) {
-                $filter = array(
-                    'org' => $org,
+                $apiFilters[] = array('org' => $org);
+                $apiFilters[] = array(
                     '$or' => [
                         array('cityCountries' => array('$hasAny' => $viewCountry)),
                         array('$countries' => array('country' => $viewCountry)),
@@ -133,7 +157,7 @@ class Delegates {
                 );
                 $res = $this->bridge->get("/delegations/delegates", array(
                     'fields' => self::DELEGATE_FIELDS,
-                    'filter' => $filter,
+                    'filter' => array('$and' => $apiFilters),
                     'offset' => $page * $itemsPerPage,
                     'limit' => $itemsPerPage,
                 ), 60);
@@ -217,6 +241,8 @@ class Delegates {
                     . self::COUNTRY_NAME . '=' . $viewCountry;
                 $pageLinkStub = $pageLinkFirst . '&' . self::PAGE . '=';
 
+                $formTarget = $this->plugin->getGrav()['uri']->path();
+
                 return array(
                     'common' => $common,
                     'country_names' => $countryNames,
@@ -225,6 +251,7 @@ class Delegates {
                     'view' => $viewCountry,
                     'list_country_codes' => $countryCodes,
                     'list_country_links' => $countryLinks,
+                    'form_target' => $formTarget,
                     'page' => $page,
                     'codeholders' => $codeholders,
                     'subjects' => $subjects,
@@ -237,16 +264,18 @@ class Delegates {
                     'max_page' => ceil((float) $totalDelegates / $itemsPerPage),
                     'page_link_first' => $pageLinkFirst,
                     'page_link_stub' => $pageLinkStub,
+                    'has_filters' => true,
                 );
             }
         } else if ($viewMode == 'subject') {
-            $form_target = $this->plugin->getGrav()['uri']->path();
+            $formTarget = $this->plugin->getGrav()['uri']->path();
             $subjectId = gettype($_GET[self::SUBJECT_ID]) == 'string' ? $_GET[self::SUBJECT_ID] : self::VIEW_ALL;
             $search_query = isset($_GET[self::SUBJECT_NAME]) && gettype($_GET[self::SUBJECT_NAME]) == 'string'
                 ? $_GET[self::SUBJECT_NAME]
                 : '';
 
             $subjectFilter = null;
+            $searchMode = null;
             if (!empty($search_query)) {
                 // TODO: sort by popularity
                 $res = $this->bridge->get('/delegations/subjects', array(
@@ -254,10 +283,17 @@ class Delegates {
                     'search' => array('cols' => ['name'], 'str' => $search_query),
                     'limit' => $itemsPerPage,
                 ));
-                if (!$res['k']) throw new \Exception('failed to search subjects');
+                // FIXME: we need to validate the search query
+                if (!$res['k']) {
+                    // throw new \Exception('failed to search subjects');
+                    // HACK: we'll pretend nothing happened (the search query is probably invalid)
+                    $res = array('h' => array('x-total-items' => 0), 'b' => []);
+                }
                 $subjectResults = $res['b'];
                 $subjectFilter = array_map(function ($sub) { return $sub['id']; }, $subjectResults);
+                $searchMode = 'search';
             } else if ($subjectId != self::VIEW_ALL) {
+                $searchMode = 'subject';
                 $subjectFilter = array_map(function ($id) { return (int) $id; }, explode(',', $subjectId));
             }
 
@@ -266,11 +302,14 @@ class Delegates {
             $delegations = [];
             $subjects = [];
             $codeholders = [];
+            $noSubjectResults = false;
+            $noDelegateResults = false;
 
             if ($subjectFilter) {
+                $apiFilters[] = array('subjects' => array('$hasAny' => $subjectFilter));
                 $res = $this->bridge->get('/delegations/delegates', array(
                     'fields' => self::DELEGATE_FIELDS,
-                    'filter' => array('subjects' => array('$hasAny' => $subjectFilter)),
+                    'filter' => array('$and' => $apiFilters),
                     'offset' => $page * $itemsPerPage,
                     'limit' => $itemsPerPage,
                 ));
@@ -285,11 +324,14 @@ class Delegates {
                 }
                 $subjects = $this->getSubjects($subjectIds);
                 $codeholders = $this->getCodeholders(array_map(function ($d) { return $d['codeholderId']; }, $delegations));
+
+                $noSubjectResults = count($subjects) == 0;
+                $noDelegateResults = !$noSubjectResults && $maxPage == 0;
             }
 
             return array(
                 'common' => $common,
-                'form_target' => $form_target,
+                'form_target' => $formTarget,
                 'search_query' => $search_query,
                 'delegations' => $delegations,
                 'codeholders' => $codeholders,
@@ -297,17 +339,22 @@ class Delegates {
                 'page' => $page,
                 'max_page' => $maxPage,
                 'should_paginate' => $shouldPaginate,
+                'has_filters' => true,
+                'no_delegate_results' => $noDelegateResults,
+                'search_mode' => $searchMode,
+                'search_subjects' => $subjectFilter,
             );
         } else if ($viewMode == 'codeholder') {
-            $form_target = $this->plugin->getGrav()['uri']->path();
+            $formTarget = $this->plugin->getGrav()['uri']->path();
             $search_query = gettype($_GET[self::CODEHOLDER_NAME]) == 'string'
                 ? $_GET[self::CODEHOLDER_NAME]
                 : self::VIEW_ALL;
             if (empty($search_query) || $search_query == self::VIEW_ALL) {
                 return array(
                     'common' => $common,
-                    'form_target' => $form_target,
+                    'form_target' => $formTarget,
                     'search_query' => '',
+                    'has_filters' => true,
                 );
             }
 
@@ -350,7 +397,7 @@ class Delegates {
 
             return array(
                 'common' => $common,
-                'form_target' => $form_target,
+                'form_target' => $formTarget,
                 'search_query' => $search_query,
                 'delegations' => $orderedDelegations,
                 'codeholders' => $codeholdersById,
@@ -358,6 +405,8 @@ class Delegates {
                 'page' => $page,
                 'max_page' => $maxPage,
                 'should_paginate' => $shouldPaginate,
+                'has_filters' => true,
+                'no_delegate_results' => $maxPage == 0,
             );
         }
     }
