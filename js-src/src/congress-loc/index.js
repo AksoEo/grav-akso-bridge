@@ -1,16 +1,12 @@
 if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || (r => setTimeout(r, 16));
 
 import L from 'leaflet';
-import { Marker } from './map-marker';
+import { createMap, Marker } from '../common/map';
 import { SearchFilters } from './search-filters';
 import { initGlobals } from './globals';
 import { renderRating } from './rating';
 import { fuzzyScore } from '../util/fuzzy';
 import './index.less';
-import 'leaflet/dist/leaflet.css';
-
-const TILE_LAYER_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const TILE_LAYER_ATTRIB = '&copy <a href="https://osm.org/copyright">OpenStreetMap</a> contributors';
 
 function init() {
     const container = document.querySelector('.congress-location-container');
@@ -20,9 +16,7 @@ function init() {
     const mapContainer = document.createElement('div');
     mapContainer.className = 'map-container';
     container.appendChild(mapContainer);
-    const mapView = L.map(mapContainer);
-    mapView.setView([0, 0], 1);
-    L.tileLayer(TILE_LAYER_URL, { attribution: TILE_LAYER_ATTRIB }).addTo(mapView);
+    const mapView = createMap(mapContainer);
 
     window.mapView = mapView;
 
@@ -31,6 +25,7 @@ function init() {
     const iconsPathPrefix = initialRender.dataset.iconsPathPrefix;
     const iconsPathSuffix = initialRender.dataset.iconsPathSuffix;
     initGlobals(iconsPathPrefix, iconsPathSuffix);
+    const makeIconSrc = icon => iconsPathPrefix + icon + iconsPathSuffix;
 
     const fetchPartial = (locationId) => {
         let path = basePath + '?partial=true';
@@ -146,7 +141,7 @@ function init() {
 
             item.classList.add('is-interactive');
 
-            const marker = new Marker();
+            const marker = new Marker(makeIconSrc);
             marker.icon = item.dataset.icon;
             marker.didMutate();
 
@@ -203,7 +198,12 @@ function init() {
             });
         }
 
-        mapView.fitBounds(L.latLngBounds(lls).pad(0.3), getMapAnimation());
+        try {
+            mapView.fitBounds(L.latLngBounds(lls).pad(0.3), getMapAnimation());
+        } catch (e) {
+            // fit bounds may fail if the list is empty
+            console.warn(e);
+        }
 
         const isLocationOpenAtTime = (loc, time) => {
             if (!loc.openHours) return false;
@@ -330,7 +330,7 @@ function init() {
                 // first render, probably
                 mapView.setView(ll, 12, getMapAnimation());
 
-                const marker = new Marker();
+                const marker = new Marker(makeIconSrc);
                 marker.icon = node.dataset.icon;
                 marker.didMutate();
                 addLayer(L.marker(ll, { icon: marker.portalIcon }));

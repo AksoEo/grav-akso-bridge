@@ -10,11 +10,13 @@ class Delegates {
     const SUBJECT_ID = 'fako';
     const SUBJECT_NAME = 'q';
     const CODEHOLDER_NAME = 'nomo';
+    const DELEGATION = 'delegito';
     const VIEW_ALL = '*';
     const PAGE = 'p';
 
     const FILTERS = 'f';
     const FILTER_HOSTING = 'h';
+    const FILTER_AGE = 'a';
     const FILTER_ENABLE = 's';
 
     private $plugin, $bridge, $user;
@@ -89,16 +91,20 @@ class Delegates {
             $viewMode = 'codeholder';
         } else if (isset($_GET[self::SUBJECT_ID])) {
             $viewMode = 'subject';
+        } else if (isset($_GET[self::DELEGATION])) {
+            $viewMode = 'delegation';
         }
 
         $viewModeLinks = array(
             'country' => $this->plugin->getGrav()['uri']->path() . '?' . self::COUNTRY_NAME . '=' . self::VIEW_ALL,
             'subject' => $this->plugin->getGrav()['uri']->path() . '?' . self::SUBJECT_ID . '=' . self::VIEW_ALL,
             'codeholder' => $this->plugin->getGrav()['uri']->path() . '?' . self::CODEHOLDER_NAME . '=' . self::VIEW_ALL,
+            'delegation_stub' => $this->plugin->getGrav()['uri']->path() . '?' . self::DELEGATION . '=',
         );
 
         $filters = array();
         $apiFilters = [];
+        $codeholderFilters = [];
         if (isset($_GET[self::FILTERS][self::FILTER_HOSTING][self::FILTER_ENABLE])
                 && $_GET[self::FILTERS][self::FILTER_HOSTING][self::FILTER_ENABLE]) {
             $hosting = $_GET[self::FILTERS][self::FILTER_HOSTING];
@@ -114,6 +120,11 @@ class Delegates {
             if (!$persons && !$days) {
                 $apiFilters[] = array('$not' => array('hosting' => null));
             }
+        }
+        if (isset($_GET[self::FILTERS][self::FILTER_AGE][self::FILTER_ENABLE])
+            && $_GET[self::FILTERS][self::FILTER_AGE][self::FILTER_ENABLE]) {
+            $filters['age'] = true;
+            $codeholderFilters[] = array('agePrimo' => array('$lte' => 35));
         }
 
         $common = array(
@@ -155,24 +166,41 @@ class Delegates {
                         array('$countries' => array('country' => $viewCountry)),
                     ],
                 );
-                $res = $this->bridge->get("/delegations/delegates", array(
-                    'fields' => self::DELEGATE_FIELDS,
-                    'filter' => array('$and' => $apiFilters),
-                    'offset' => $page * $itemsPerPage,
-                    'limit' => $itemsPerPage,
-                ), 60);
-                if (!$res['k']) {
-                    if ($res['sc'] === 404) {
-                        $this->plugin->getGrav()->fireEvent('onPageNotFound');
-                        return;
-                    } else {
-                        throw new \Exception("Failed to load delegates" . $res['b']);
+
+                $itemsPerPage = 9999999; // we need to fetch all of em for the map! (yes this is hacky)
+
+                $codeholderFilters[] = array('$delegations' => array('$and' => $apiFilters));
+                $totalDelegates = 1; // some initial value for the first loop
+                $codeholders = [];
+                $delegationChIds = [];
+                for ($i = 0; $i < $totalDelegates; $i += 100) {
+                    $res = $this->bridge->get("/codeholders", array(
+                        'fields' => self::CODEHOLDER_FIELDS,
+                        'filter' => array('$and' => $codeholderFilters),
+                        'offset' => $i,
+                        'limit' => 100,
+                    ));
+                    if (!$res['k']) throw new \Exception('failed to fetch codeholders' . $res['b']);
+                    $totalDelegates = $res['h']['x-total-items'];
+                    foreach ($res['b'] as $codeholder) {
+                        $codeholders[$codeholder['id']] = $codeholder;
+                        $delegationChIds[] = $codeholder['id'];
                     }
                 }
-                $totalDelegates = $res['h']['x-total-items'];
+
                 $delegates = [];
-                foreach ($res['b'] as $delegate) {
-                    $delegates[$delegate['codeholderId']] = $delegate;
+                for ($i = 0; $i < count($delegationChIds); $i += 100) {
+                    $batch = array_slice($delegationChIds, $i, 100);
+                    $res = $this->bridge->get("/delegations/delegates", array(
+                        'fields' => self::DELEGATE_FIELDS,
+                        'filter' => array('codeholderId' => array('$in' => $batch)),
+                        'offset' => $i,
+                        'limit' => 100,
+                    ), 60);
+                    if (!$res['k']) throw new \Exception('failed to load delegates');
+                    foreach ($res['b'] as $delegate) {
+                        $delegates[$delegate['codeholderId']] = $delegate;
+                    }
                 }
 
                 $countryDelegates = [];
@@ -408,17 +436,69 @@ class Delegates {
                 'has_filters' => true,
                 'no_delegate_results' => $maxPage == 0,
             );
+        } else if ($viewMode === 'delegation') {
+            $codeholderId = (int) $_GET[self::DELEGATION];
+            $res = $this->bridge->get("/codeholders/$codeholderId/delegations/$org", array(
+                'fields' => array_values(array_diff(self::DELEGATE_FIELDS, ['codeholderId'])),
+            ));
+            if (!$res['k']) {
+                if ($res['sc'] == 404) {
+                    return $this->plugin->getGrav()->fireEvent('onPageNotFound');
+                } else {
+                    throw new \Exception('failed to load delegation');
+                }
+            }
+            $delegation = $res['b'];
+            $delegation['codeholderId'] = $codeholderId;
+            $codeholders = $this->getCodeholders([$codeholderId]);
+            $subjects = $this->getSubjects($delegation['subjects']);
+            $cities = $this->getCities($delegation['cities']);
+
+            $cityLinkStub = $this->plugin->getGrav()['uri']->path() . '?' . self::COUNTRY_NAME . '=';
+
+            $countryEmoji = [];
+            $countryLinks = [];
+            foreach (array_merge(
+                array_map(function ($c) { return $c['country']; }, $delegation['countries']),
+                $delegation['cityCountries'],
+            ) as $code) {
+                $countryLinks[$code] = $this->plugin->getGrav()['uri']->path() . '?' . self::COUNTRY_NAME . '=' . $code
+                    . '#landoj';
+                $countryEmoji[$code] = MarkdownExt::getEmojiForFlag($code);
+            }
+
+            return array(
+                'common' => $common,
+                'back_link' => $this->plugin->getGrav()['uri']->path(),
+                'delegation' => $delegation,
+                'codeholders' => $codeholders,
+                'subjects' => $subjects,
+                'cities' => $cities,
+                'city_link_stub' => $cityLinkStub,
+                'country_names' => $countryNames,
+                'country_emoji' => $countryEmoji,
+                'country_links' => $countryLinks,
+            );
         }
     }
 
-    function getCities($cityIds, $country) {
+    function getCities($cityIds, $country = null) {
         $cities = [];
         for ($i = 0; $i < count($cityIds); $i += 100) {
             $batch = array_map(function ($id) { return (int) substr($id, 1); }, array_slice($cityIds, $i, 100));
 
+            $fields = ['id', 'nativeLabel', 'eoLabel', 'subdivision_nativeLabel', 'subdivision_eoLabel', 'population', 'll'];
+            $filter = array('id' => array('$in' => $batch));
+
+            if ($country) {
+                $filter['country'] = $country;
+            } else {
+                $fields[] = 'country';
+            }
+
             $res = $this->bridge->get("/geodb/cities", array(
-                'fields' => ['id', 'nativeLabel', 'eoLabel', 'subdivision_nativeLabel', 'subdivision_eoLabel', 'population'],
-                'filter' => ['id' => ['$in' => $batch], 'country' => $country],
+                'fields' => $fields,
+                'filter' => $filter,
                 'offset' => 0,
                 'limit' => 100,
             ), 120);
@@ -428,6 +508,7 @@ class Delegates {
             }
             foreach ($res['b'] as $city) {
                 $city['label'] = $city['eoLabel'] ?: $city['nativeLabel'];
+                $city['urlId'] = Utils::escapeFileNameLossy($city['label']);
                 $city['subdivision'] = $city['subdivision_eoLabel'] ?: $city['subdivision_nativeLabel'];
                 $cities[$city['id']] = $city;
             }

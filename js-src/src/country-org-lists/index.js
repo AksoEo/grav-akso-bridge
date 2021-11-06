@@ -1,5 +1,5 @@
 import './index.less';
-import countrySelector from '../country-selector';
+import countrySelector from '../common/country-selector';
 
 function init() {
     countrySelector();

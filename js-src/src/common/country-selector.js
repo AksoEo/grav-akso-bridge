@@ -1,5 +1,5 @@
-import locale from '../../locale.ini';
-import { fuzzyScore } from './util/fuzzy';
+import locale from '../../../locale.ini';
+import { fuzzyScore } from '../util/fuzzy';
 import './country-selector.less';
 
 export default function init() {

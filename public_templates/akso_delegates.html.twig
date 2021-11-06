@@ -2,297 +2,357 @@
 {% block content %}
     {{page.content}}
 
-    <ul class="delegates-filter-picker" role="radiogroup" aria-label="{{akso_locale.delegates.view_mode_label}}">
-        {% set selected = akso_delegates.common.view_mode == 'country' %}
-        <li class="picker-item{{selected ? ' selected' : ''}}">
-            <a href="{{akso_delegates.common.view_mode_links.country}}" role="radio" aria-checked="{{selected ? 'true' : 'false'}}">
-                {{akso_locale.delegates.view_mode_country}}
-            </a>
-        </li>
-        {% set selected = akso_delegates.common.view_mode == 'subject' %}
-        <li class="picker-item{{selected ? ' selected' : ''}}">
-            <a href="{{akso_delegates.common.view_mode_links.subject}}" role="radio" aria-checked="{{selected ? 'true' : 'false'}}">
-                {{akso_locale.delegates.view_mode_subject}}
-            </a>
-        </li>
-        {% set selected = akso_delegates.common.view_mode == 'codeholder' %}
-        <li class="picker-item{{selected ? ' selected' : ''}}">
-            <a href="{{akso_delegates.common.view_mode_links.codeholder}}" role="radio" aria-checked="{{selected ? 'true' : 'false'}}">
-                {{akso_locale.delegates.view_mode_codeholder}}
-            </a>
-        </li>
-    </ul>
+    {% macro country_label(akso_delegates, code) %}
+        <img
+            class="inline-flag-icon"
+            draggable="false"
+            src="{{akso_delegates.country_emoji[code].src|e('html_attr')}}"
+            alt="{{akso_delegates.country_emoji[code].alt|e('html_attr')}}" />
+        {{akso_delegates.country_names[code]}}
+    {% endmacro %}
 
-    {% if akso_delegates.common.view_mode == 'country' %}
-        {% set should_collapse = '' %}
-        {% if akso_delegates.view_mode == 'country' %}
-            {% set should_collapse = 'init-collapsed' %}
-        {% endif %}
-        {% set country_selector = {
-            should_collapse: should_collapse,
-            view: akso_delegates.view,
-            list_country_codes: akso_delegates.list_country_codes,
-            list_country_links: akso_delegates.list_country_links,
-            country_names: akso_delegates.country_names,
-            country_emoji: akso_delegates.country_emoji,
-        } %}
-        {% include 'partials/akso_country_selector.html.twig' %}
-    {% endif %}
-
-    {% if akso_delegates.has_filters %}
-        {% if akso_delegates.common.view_mode == 'country' %}
-            {% set code = akso_delegates.view %}
-            <h1 class="country-title">
-                <img
-                    class="inline-flag-icon"
-                    draggable="false"
-                    src="{{akso_delegates.country_emoji[code].src|e('html_attr')}}"
-                    alt="{{akso_delegates.country_emoji[code].alt|e('html_attr')}}" />
-                {{akso_delegates.country_names[code]}}
-            </h1>
-
-            <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
-                <input type="hidden" name="lando" value="{{akso_delegates.view}}">
-        {% elseif akso_delegates.common.view_mode == 'subject' %}
-            {% if akso_delegates.search_mode == 'subject' %}
-                <input type="checkbox" id="subject-search-item" checked />
+    {% if akso_delegates.common.view_mode == 'delegation' %}
+        <a id="delegate-detail-back-button" class="back-button link-button" href="{{akso_delegates.back_link}}">
+            <span class="back-icon"></span>
+            {{akso_locale.delegates.detail_back}}
+        </a>
+        <ul class="delegate-details-container">
+            {{_self.delegate_item(akso_locale, akso_delegates, akso_delegates.delegation)}}
+        </ul>
+        <div class="delegate-additional-details">
+            {% if akso_delegates.delegation.countries is not empty %}
+                <h3>{{akso_locale.delegates.detail_countries}}</h3>
+                <ul class="delegate-countries">
+                    {% for countryDelegation in akso_delegates.delegation.countries %}
+                        {% set code = countryDelegation.country %}
+                        <li class="country-item" data-country="{{code}}">
+                            <a href="{{akso_delegates.country_links[code]}}">
+                                {{_self.country_label(akso_delegates, code)}}
+                            </a>
+                            {{akso_locale.delegates['detail_country_level_' ~ countryDelegation.level]}}
+                        </li>
+                    {% endfor %}
+                </ul>
             {% endif %}
-            <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
-                <input type="hidden" name="fako" value="*">
-                {% if akso_delegates.search_mode == 'subject' %}
-                    <div class="subject-search">
-                        <div class="search-header">
-                            <label
-                                for="subject-search-item"
-                                class="search-cancel"
-                                aria-label="{{akso_locale.delegates.search_subjects_cancel}}"
-                                role="button">
-                            </label>
-                            <h2 class="search-title">
-                                {% if akso_delegates.search_subjects|count == 1 %}
-                                    {{akso_locale.delegates.search_subject_one}}
-                                {% else %}
-                                    {{akso_locale.delegates.search_subjects}}
-                                {% endif %}
-                            </h2>
-                        </div>
-                        <ul class="subject-search-items">
-                            {% for subjectId in akso_delegates.search_subjects %}
-                                {{_self.subject_item(akso_delegates.subjects[subjectId], akso_delegates)}}
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
-                <div class="inner-search inline-search-form">
-                    <input
-                        class="search-query"
-                        type="text"
-                        name="q"
-                        placeholder="{{akso_locale.delegates.subject_search_placeholder}}"
-                        value="{{akso_delegates.search_query}}" />
-                    <button type="submit" class="search-submit">
-                        <img
-                            class="search-icon"
-                            role="presentation"
-                            aria-label="{{akso_locale.delegate.subject_search_label}}"
-                            src="/user/themes/uea/images/search.svg" />
-                    </button>
-                </div>
-        {% elseif akso_delegates.common.view_mode == 'codeholder' %}
-            <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
-                <div class="inner-search inline-search-form">
-                    <input
-                        class="search-query"
-                        type="text"
-                        name="nomo"
-                        placeholder="{{akso_locale.delegates.codeholder_search_placeholder}}"
-                        value="{{akso_delegates.search_query}}" />
-                    <button type="submit" class="search-submit">
-                        <img
-                            class="search-icon"
-                            role="presentation"
-                            aria-label="{{akso_locale.delegate.codeholder_search_label}}"
-                            src="/user/themes/uea/images/search.svg" />
-                    </button>
-                </div>
+            {% if akso_delegates.delegation.cities is not empty %}
+                <h3>{{akso_locale.delegates.detail_cities}}</h3>
+                <ul class="delegate-cities">
+                    {% for cityId in akso_delegates.delegation.cities %}
+                        {% set city = akso_delegates.cities[cityId] %}
+                        <li class="city-item" data-geo-id="{{city.id}}">
+                            <a href="{{akso_delegates.city_link_stub}}{{city.country}}#{{city.urlId}}">
+                                {{city.label}}
+                            </a>,
+                            <a href="{{akso_delegates.country_links[city.country]}}">
+                                {{_self.country_label(akso_delegates, city.country)}}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% else %}
+        <ul class="delegates-filter-picker" role="radiogroup" aria-label="{{akso_locale.delegates.view_mode_label}}">
+            {% set selected = akso_delegates.common.view_mode == 'country' %}
+            <li class="picker-item{{selected ? ' selected' : ''}}">
+                <a href="{{akso_delegates.common.view_mode_links.country}}" role="radio" aria-checked="{{selected ? 'true' : 'false'}}">
+                    {{akso_locale.delegates.view_mode_country}}
+                </a>
+            </li>
+            {% set selected = akso_delegates.common.view_mode == 'subject' %}
+            <li class="picker-item{{selected ? ' selected' : ''}}">
+                <a href="{{akso_delegates.common.view_mode_links.subject}}" role="radio" aria-checked="{{selected ? 'true' : 'false'}}">
+                    {{akso_locale.delegates.view_mode_subject}}
+                </a>
+            </li>
+            {% set selected = akso_delegates.common.view_mode == 'codeholder' %}
+            <li class="picker-item{{selected ? ' selected' : ''}}">
+                <a href="{{akso_delegates.common.view_mode_links.codeholder}}" role="radio" aria-checked="{{selected ? 'true' : 'false'}}">
+                    {{akso_locale.delegates.view_mode_codeholder}}
+                </a>
+            </li>
+        </ul>
+
+        {% if akso_delegates.common.view_mode == 'country' %}
+            {% set should_collapse = '' %}
+            {% if akso_delegates.view_mode == 'country' %}
+                {% set should_collapse = 'init-collapsed' %}
+            {% endif %}
+            {% set country_selector = {
+                should_collapse: should_collapse,
+                view: akso_delegates.view,
+                list_country_codes: akso_delegates.list_country_codes,
+                list_country_links: akso_delegates.list_country_links,
+                country_names: akso_delegates.country_names,
+                country_emoji: akso_delegates.country_emoji,
+            } %}
+            {% include 'partials/akso_country_selector.html.twig' %}
         {% endif %}
 
-                <div class="delegates-additional-filters">
-                    <div class="hosting-filter">
-                        <input
-                            name="f[h][s]"
-                            class="filter-enable"
-                            id="hosting-filter-enable"
-                            {% if akso_delegates.common.filters.hosting %}
-                            checked
-                            {% endif %}
-                            type="checkbox">
-                        <label for="hosting-filter-enable">{{akso_locale.delegates.filter_hosting_label}}</label>
-                        <div class="filter-contents">
-                            <div class="filter-field">
-                                <label for="hosting-persons">{{akso_locale.delegates.filter_hosting_persons}}</label>
-                                <input
-                                    id="hosting-persons"
-                                    type="number"
-                                    name="f[h][p]"
-                                    value="{{akso_delegates.common.filters.hosting.persons}}"
-                                    placeholder="{{akso_locale.delegates.filter_hosting_field_empty}}" />
+        {% if akso_delegates.has_filters %}
+            {% if akso_delegates.common.view_mode == 'country' %}
+                {% set code = akso_delegates.view %}
+                <h1 class="country-title">
+                    {{_self.country_label(akso_delegates, code)}}
+                </h1>
+
+                <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
+                    <input type="hidden" name="lando" value="{{akso_delegates.view}}">
+            {% elseif akso_delegates.common.view_mode == 'subject' %}
+                {% if akso_delegates.search_mode == 'subject' %}
+                    <input type="checkbox" id="subject-search-item" checked />
+                {% endif %}
+                <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
+                    <input type="hidden" name="fako" value="*">
+                    {% if akso_delegates.search_mode == 'subject' %}
+                        <div class="subject-search">
+                            <div class="search-header">
+                                <label
+                                    for="subject-search-item"
+                                    class="search-cancel"
+                                    aria-label="{{akso_locale.delegates.search_subjects_cancel}}"
+                                    role="button">
+                                </label>
+                                <h2 class="search-title">
+                                    {% if akso_delegates.search_subjects|count == 1 %}
+                                        {{akso_locale.delegates.search_subject_one}}
+                                    {% else %}
+                                        {{akso_locale.delegates.search_subjects}}
+                                    {% endif %}
+                                </h2>
                             </div>
-                            <div class="filter-field">
-                                <label for="hosting-days">{{akso_locale.delegates.filter_hosting_days}}</label>
-                                <input
-                                    id="hosting-days"
-                                    type="number"
-                                    name="f[h][d]"
-                                    value="{{akso_delegates.common.filters.hosting.days}}"
-                                    placeholder="{{akso_locale.delegates.filter_hosting_field_empty}}" />
-                            </div>
+                            <ul class="subject-search-items">
+                                {% for subjectId in akso_delegates.search_subjects %}
+                                    {{_self.subject_item(akso_delegates.subjects[subjectId], akso_delegates)}}
+                                {% endfor %}
+                            </ul>
                         </div>
-                    </div>
-                    <div class="filter-button-container">
-                        <button type="submit" class="filter-button">
-                            {{akso_locale.delegates.filter_apply}}
+                    {% endif %}
+                    <div class="inner-search inline-search-form">
+                        <input
+                            class="search-query"
+                            type="text"
+                            name="q"
+                            placeholder="{{akso_locale.delegates.subject_search_placeholder}}"
+                            value="{{akso_delegates.search_query}}" />
+                        <button type="submit" class="search-submit">
+                            <img
+                                class="search-icon"
+                                role="presentation"
+                                aria-label="{{akso_locale.delegate.subject_search_label}}"
+                                src="/user/themes/uea/images/search.svg" />
                         </button>
                     </div>
-                </div>
-            </form>
-    {% endif %}
-
-    {% macro delegate_item(akso_locale, akso_delegates, delegation) %}
-        {% set codeholder = akso_delegates.codeholders[delegation.codeholderId] %}
-        <li class="delegate-item" data-has-picture="{{ codeholder.profilePictureHash ? 'true' : 'false' }}">
-            {% if delegation.hosting and (delegation.hosting.maxDays or delegation.hosting.maxPersons) %}
-                <div class="delegate-hosting-stub">
-                    {{akso_locale.delegates.delegate_offers_hosting}}
-                </div>
-            {% endif %}
-            {% if codeholder.profilePictureHash %}
-            <div class="delegate-picture">
-                <img
-                    src="{{codeholder.icon_src|e('html_attr')}}"
-                    srcset="{{codeholder.icon_srcset|e('html_attr')}}">
-            </div>
-            {% endif %}
-            <h3 class="delegate-name">
-                {{codeholder.fmt_name}}
-            </h3>
-            <div class="delegate-subjects-title">
-                {{akso_locale.delegates.delegate_subjects_title}}
-            </div>
-            <ul class="delegate-subjects">
-            {% for subjectId in delegation.subjects %}
-                {% set subject = akso_delegates.subjects[subjectId] %}
-                {{_self.subject_item(subject, akso_delegates)}}
-            {% endfor %}
-            </ul>
-        </li>
-    {% endmacro %}
-    {% macro subject_item(subject, akso_delegates) %}
-        <li class="subject-item">
-            <div class="subject-name">
-                <a href="{{akso_delegates.common.filter_subject_link}}{{subject.id}}">
-                    {{subject.name}}
-                </a>
-            </div>
-            <div class="subject-description">
-                {{subject.description}}
-            </div>
-        </li>
-    {% endmacro %}
-
-    {% if akso_delegates.view_mode == 'country' %}
-        <ul class="country-levels">
-            {% for level, level_delegates in akso_delegates.delegates_by_level %}
-                <li class="country-level" data-level="{{level}}">
-                    <div class="level-info">
-                        <h2 class="level-label">
-                            {{akso_locale.delegates['country_level_' ~ level]}}
-                        </h2>
+            {% elseif akso_delegates.common.view_mode == 'codeholder' %}
+                <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
+                    <div class="inner-search inline-search-form">
+                        <input
+                            class="search-query"
+                            type="text"
+                            name="nomo"
+                            placeholder="{{akso_locale.delegates.codeholder_search_placeholder}}"
+                            value="{{akso_delegates.search_query}}" />
+                        <button type="submit" class="search-submit">
+                            <img
+                                class="search-icon"
+                                role="presentation"
+                                aria-label="{{akso_locale.delegate.codeholder_search_label}}"
+                                src="/user/themes/uea/images/search.svg" />
+                        </button>
                     </div>
-                    <ul class="level-delegates">
-                        {% for delegation in level_delegates %}
-                            {{_self.delegate_item(akso_locale, akso_delegates, delegation)}}
-                        {% endfor %}
-                    </ul>
-                </li>
-            {% endfor %}
-        </ul>
-        <ul class="delegation-cities">
-            {% for city in akso_delegates.cities %}
-                {% set city_delegates = akso_delegates.delegates_by_city[city.id] %}
-                <li class="delegation-city" data-geo-id="{{city.id}}" data-label="{{city.label}}">
-                    <div class="city-info">
-                        <h2 class="city-label">{{city.label}}</h2>
-                        <div class="city-meta">
-                            <div class="city-subdivision">{{city.subdivision}}</div>
-                            <div class="city-population">
-                                {{akso_locale.delegates.population_0}}
-                                {{city.population}}
-                                {{akso_locale.delegates.population_1}}
+            {% endif %}
+
+                    <div class="delegates-additional-filters">
+                        <div class="hosting-filter filter-item">
+                            <input
+                                name="f[h][s]"
+                                class="filter-enable"
+                                id="hosting-filter-enable"
+                                {% if akso_delegates.common.filters.hosting %}
+                                checked
+                                {% endif %}
+                                type="checkbox">
+                            <label for="hosting-filter-enable">{{akso_locale.delegates.filter_hosting_label}}</label>
+                            <div class="filter-contents">
+                                <div class="filter-field">
+                                    <label for="hosting-persons">{{akso_locale.delegates.filter_hosting_persons}}</label>
+                                    <input
+                                        id="hosting-persons"
+                                        type="number"
+                                        name="f[h][p]"
+                                        value="{{akso_delegates.common.filters.hosting.persons}}"
+                                        placeholder="{{akso_locale.delegates.filter_hosting_field_empty}}" />
+                                </div>
+                                <div class="filter-field">
+                                    <label for="hosting-days">{{akso_locale.delegates.filter_hosting_days}}</label>
+                                    <input
+                                        id="hosting-days"
+                                        type="number"
+                                        name="f[h][d]"
+                                        value="{{akso_delegates.common.filters.hosting.days}}"
+                                        placeholder="{{akso_locale.delegates.filter_hosting_field_empty}}" />
+                                </div>
                             </div>
                         </div>
+                        <div class="age-filter filter-item">
+                            <input
+                                name="f[a][s]"
+                                class="filter-enable"
+                                id="age-filter-enable"
+                                {% if akso_delegates.common.filters.age %}
+                                checked
+                                {% endif %}
+                                type="checkbox">
+                            <label for="age-filter-enable">{{akso_locale.delegates.filter_age_label}}</label>
+                        </div>
+                        <div class="filter-button-container">
+                            <button type="submit" class="filter-button">
+                                {{akso_locale.delegates.filter_apply}}
+                            </button>
+                        </div>
                     </div>
-                    <ul class="city-delegates">
-                        {% for delegation in city_delegates %}
-                            {{_self.delegate_item(akso_locale, akso_delegates, delegation)}}
-                        {% endfor %}
-                    </ul>
-                </li>
-            {% endfor %}
-        </ul>
-        {% if akso_delegates.delegates|count == 0 %}
-            <div class="no-results">
-                {{akso_locale.delegates.no_results}}
-            </div>
+                </form>
         {% endif %}
-    {% endif %}
 
-    {% if akso_delegates.common.view_mode == 'subject' and akso_delegates.search_mode == 'search' %}
-        <h2>{{akso_locale.delegates.subject_results}}</h2>
-        <ul class="subject-list">
-            {% for subject in akso_delegates.subjects %}
-                {{_self.subject_item(subject, akso_delegates)}}
-            {% endfor %}
-        </ul>
-        {% if akso_delegates.no_subject_results %}
-            <div class="no-results">
-                {{akso_locale.delegates.no_results}}
-            </div>
-        {% else %}
-            <h2>
-                {{akso_locale.delegates.subject_matching_delegates}}
-            </h2>
-        {% endif %}
-    {% endif %}
+        {% macro delegate_item(akso_locale, akso_delegates, delegation) %}
+            {% set codeholder = akso_delegates.codeholders[delegation.codeholderId] %}
+            <li class="delegate-item" data-has-picture="{{ codeholder.profilePictureHash ? 'true' : 'false' }}">
+                {% if delegation.hosting and (delegation.hosting.maxDays or delegation.hosting.maxPersons) %}
+                    <div class="delegate-hosting-stub">
+                        {{akso_locale.delegates.delegate_offers_hosting}}
+                    </div>
+                {% endif %}
+                {% if codeholder.profilePictureHash %}
+                <div class="delegate-picture">
+                    <img
+                        src="{{codeholder.icon_src|e('html_attr')}}"
+                        srcset="{{codeholder.icon_srcset|e('html_attr')}}">
+                </div>
+                {% endif %}
+                <h3 class="delegate-name">
+                    <a href="{{akso_delegates.common.view_mode_links.delegation_stub}}{{delegation.codeholderId}}">
+                        {{codeholder.fmt_name}}
+                    </a>
+                </h3>
+                <div class="delegate-subjects-title">
+                    {{akso_locale.delegates.delegate_subjects_title}}
+                </div>
+                <ul class="delegate-subjects">
+                {% for subjectId in delegation.subjects %}
+                    {% set subject = akso_delegates.subjects[subjectId] %}
+                    {{_self.subject_item(subject, akso_delegates)}}
+                {% endfor %}
+                </ul>
+            </li>
+        {% endmacro %}
+        {% macro subject_item(subject, akso_delegates) %}
+            <li class="subject-item">
+                <div class="subject-name">
+                    <a href="{{akso_delegates.common.filter_subject_link}}{{subject.id}}">
+                        {{subject.name}}
+                    </a>
+                </div>
+                <div class="subject-description">
+                    {{subject.description}}
+                </div>
+            </li>
+        {% endmacro %}
 
-    {% if akso_delegates.common.view_mode == 'codeholder' or akso_delegates.common.view_mode == 'subject' %}
-        <ul class="delegate-list">
-            {% for delegation in akso_delegates.delegations %}
-                {{_self.delegate_item(akso_locale, akso_delegates, delegation)}}
-            {% endfor %}
-        </ul>
-        {% if akso_delegates.no_delegate_results %}
-            <div class="no-results">
-                {{akso_locale.delegates.no_results}}
-            </div>
+        {% if akso_delegates.view_mode == 'country' %}
+            <ul class="country-levels">
+                {% for level, level_delegates in akso_delegates.delegates_by_level %}
+                    <li class="country-level" data-level="{{level}}">
+                        <div class="level-info">
+                            <h2 class="level-label">
+                                {{akso_locale.delegates['country_level_' ~ level]}}
+                            </h2>
+                        </div>
+                        <ul class="level-delegates">
+                            {% for delegation in level_delegates %}
+                                {{_self.delegate_item(akso_locale, akso_delegates, delegation)}}
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+            <div class="delegations-country-map-container"></div>
+            <ul class="delegation-cities">
+                {% for city in akso_delegates.cities %}
+                    {% set city_delegates = akso_delegates.delegates_by_city[city.id] %}
+                    <li class="delegation-city" data-geo-id="{{city.id}}" data-label="{{city.label}}" id="{{city.urlId}}" data-loc="{{city.ll|default([])|join(',')}}">
+                        <div class="city-info">
+                            <h2 class="city-label">{{city.label}}</h2>
+                            <div class="city-meta">
+                                <div class="city-subdivision">{{city.subdivision}}</div>
+                                <div class="city-population">
+                                    {{akso_locale.delegates.population_0}}
+                                    {{city.population}}
+                                    {{akso_locale.delegates.population_1}}
+                                </div>
+                            </div>
+                        </div>
+                        <ul class="city-delegates">
+                            {% for delegation in city_delegates %}
+                                {{_self.delegate_item(akso_locale, akso_delegates, delegation)}}
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if akso_delegates.delegates|count == 0 %}
+                <div class="no-results">
+                    {{akso_locale.delegates.no_results}}
+                </div>
+            {% endif %}
         {% endif %}
-    {% endif %}
 
-    {% if akso_delegates.should_paginate %}
-        {% if akso_delegates.page == 1 %}
-            <a class="link-button" href="{{akso_delegates.page_link_first}}#landoj">
-                {{akso_locale.delegates.prev_page}}
-            </a>
-        {% elseif akso_delegates.page > 0 %}
-            {# page is zero indexed but pages are one-indexed #}
-            <a class="link-button" href="{{akso_delegates.page_link_stub}}{{akso_delegates.page}}#landoj">
-                {{akso_locale.delegates.prev_page}}
-            </a>
+        {% if akso_delegates.common.view_mode == 'subject' and akso_delegates.search_mode == 'search' %}
+            <h2>{{akso_locale.delegates.subject_results}}</h2>
+            <ul class="subject-list">
+                {% for subject in akso_delegates.subjects %}
+                    {{_self.subject_item(subject, akso_delegates)}}
+                {% endfor %}
+            </ul>
+            {% if akso_delegates.no_subject_results %}
+                <div class="no-results">
+                    {{akso_locale.delegates.no_results}}
+                </div>
+            {% else %}
+                <h2>
+                    {{akso_locale.delegates.subject_matching_delegates}}
+                </h2>
+            {% endif %}
         {% endif %}
-        {% if akso_delegates.page < akso_delegates.max_page %}
-            <a class="link-button" href="{{akso_delegates.page_link_stub}}{{akso_delegates.page + 2}}#landoj">
-                {{akso_locale.delegates.next_page}}
-            </a>
+
+        {% if akso_delegates.common.view_mode == 'codeholder' or akso_delegates.common.view_mode == 'subject' %}
+            <ul class="delegate-list">
+                {% for delegation in akso_delegates.delegations %}
+                    {{_self.delegate_item(akso_locale, akso_delegates, delegation)}}
+                {% endfor %}
+            </ul>
+            {% if akso_delegates.no_delegate_results %}
+                <div class="no-results">
+                    {{akso_locale.delegates.no_results}}
+                </div>
+            {% endif %}
+        {% endif %}
+
+        {% if akso_delegates.should_paginate %}
+            {% if akso_delegates.page == 1 %}
+                <a class="link-button" href="{{akso_delegates.page_link_first}}#landoj">
+                    {{akso_locale.delegates.prev_page}}
+                </a>
+            {% elseif akso_delegates.page > 0 %}
+                {# page is zero indexed but pages are one-indexed #}
+                <a class="link-button" href="{{akso_delegates.page_link_stub}}{{akso_delegates.page}}#landoj">
+                    {{akso_locale.delegates.prev_page}}
+                </a>
+            {% endif %}
+            {% if akso_delegates.page < akso_delegates.max_page %}
+                <a class="link-button" href="{{akso_delegates.page_link_stub}}{{akso_delegates.page + 2}}#landoj">
+                    {{akso_locale.delegates.next_page}}
+                </a>
+            {% endif %}
         {% endif %}
     {% endif %}
 {% endblock %}

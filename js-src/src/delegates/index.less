@@ -102,10 +102,11 @@
     }
 
     .delegates-additional-filters {
-        .hosting-filter {
+        .filter-item {
             background: var(--bg);
             border-radius: var(--radius);
             box-shadow: @shade-both;
+            margin: 0.1em 0;
 
             .filter-enable {
                 display: inline-block;
@@ -269,6 +270,15 @@
     .delegation-city {
         margin: 1em 0;
 
+        &.is-highlighted {
+            animation: delegation-city-highlight 1.5s;
+            @keyframes delegation-city-highlight {
+                60% {
+                    background: var(--accent);
+                }
+            }
+        }
+
         .city-info {
             .city-label {
                 margin: 0;
@@ -284,6 +294,11 @@
                     }
                 }
             }
+
+            .city-map-button {
+                float: right;
+                margin-left: 1em;
+            }
         }
 
         .city-delegates {
@@ -292,4 +307,9 @@
             list-style: none;
         }
     }
+}
+
+.delegations-country-map-container.leaflet-container {
+    height: 400px;
+    max-height: 90vh;
 }
