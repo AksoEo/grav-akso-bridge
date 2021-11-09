@@ -418,7 +418,7 @@ class Delegates {
             foreach ($codeholders as $codeholder) {
                 // use "relevance" sorting returned by codeholder search
                 $orderedDelegations[] = $delegations[$codeholder['id']];
-                $codeholdersById[$codeholder['id']] = $this->postProcessCodeholder($codeholder);
+                $codeholdersById[$codeholder['id']] = $this->postProcessCodeholder($codeholder, false);
             }
 
             $subjects = $this->getSubjects($subjectIds);
@@ -440,7 +440,7 @@ class Delegates {
             $codeholderId = (int) $_GET[self::DELEGATION];
             $res = $this->bridge->get("/codeholders/$codeholderId/delegations/$org", array(
                 'fields' => array_values(array_diff(self::DELEGATE_FIELDS, ['codeholderId'])),
-            ));
+            ), 60);
             if (!$res['k']) {
                 if ($res['sc'] == 404) {
                     return $this->plugin->getGrav()->fireEvent('onPageNotFound');
@@ -450,7 +450,7 @@ class Delegates {
             }
             $delegation = $res['b'];
             $delegation['codeholderId'] = $codeholderId;
-            $codeholders = $this->getCodeholders([$codeholderId]);
+            $codeholders = $this->getCodeholders([$codeholderId], true);
             $subjects = $this->getSubjects($delegation['subjects']);
             $cities = $this->getCities($delegation['cities']);
 
@@ -543,21 +543,26 @@ class Delegates {
         'codeholderType',
         'firstNameLegal', 'lastNameLegal', 'firstName', 'lastName', 'honorific',
         'lastNamePublicity',
+        'profilePictureHash', 'profilePicturePublicity',
+    ];
+    const CODEHOLDER_FIELDS_EXTRA = [
         'mainDescriptor', 'website', 'factoids', 'biography', 'publicEmail',
         'email', 'emailPublicity', 'officePhone', 'officePhonePublicity',
         'address.country', 'address.countryArea', 'address.city', 'address.cityArea',
         'address.postalCode', 'address.sortingCode', 'address.streetAddress',
         'addressPublicity',
-        'profilePictureHash', 'profilePicturePublicity',
     ];
 
-    function getCodeholders($codeholderIds) {
+    function getCodeholders($codeholderIds, $detailed = false) {
         $codeholders = [];
         for ($i = 0; $i < count($codeholderIds); $i += 100) {
             $batch = array_slice($codeholderIds, $i, 100);
 
+            $fields = array_merge([], self::CODEHOLDER_FIELDS);
+            if ($detailed) $fields = array_merge($fields, self::CODEHOLDER_FIELDS_EXTRA);
+
             $res = $this->bridge->get("/codeholders", array(
-                'fields' => self::CODEHOLDER_FIELDS,
+                'fields' => $fields,
                 'filter' => ['id' => ['$in' => $batch]],
                 'offset' => 0,
                 'limit' => 100,
@@ -568,14 +573,14 @@ class Delegates {
             }
             $isMember = $this->plugin->aksoUser ? $this->plugin->aksoUser['member'] : false;
             foreach ($res['b'] as $codeholder) {
-                $codeholders[$codeholder['id']] = $this->postProcessCodeholder($codeholder);
+                $codeholders[$codeholder['id']] = $this->postProcessCodeholder($codeholder, $detailed);
             }
         }
         return $codeholders;
     }
 
     // FIXME: deduplicate code with countrylists
-    private function postProcessCodeholder($codeholder) {
+    private function postProcessCodeholder($codeholder, $detailed) {
         // TODO: deduplicate this code too..
         if ($codeholder['codeholderType'] === 'human') {
             $canSeeLastName = $codeholder['lastNamePublicity'] === 'public'
@@ -601,61 +606,63 @@ class Delegates {
             $codeholder['icon_srcset'] = $picPrefix . '64px 1x, ' . $picPrefix . '128px 2x, ' . $picPrefix . '256px 3x';
         }
 
-        if (!is_array($codeholder['factoids'])) $codeholder['factoids'] = [];
+        if ($detailed) {
+            if (!is_array($codeholder['factoids'])) $codeholder['factoids'] = [];
 
-        $codeholder['data_factoids'] = [];
+            $codeholder['data_factoids'] = [];
 
-        if ($codeholder['publicEmail'] || $codeholder['email']) {
-            $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['public_email_field']] = array(
-                'type' => 'email',
-                'publicity' => $codeholder['publicEmail'] ? 'public' : $codeholder['emailPublicity'],
-                'val' => $codeholder['publicEmail'] ?: $codeholder['email'],
-            );
-        }
-
-        if ($codeholder['website']) {
-            $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['website_field']] = array(
-                'type' => 'url',
-                'publicity' => 'public',
-                'val' => $codeholder['website'],
-            );
-        }
-
-        if ($codeholder['officePhone']) {
-            $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['office_phone_field']] = array(
-                'type' => 'tel',
-                'publicity' => $codeholder['officePhonePublicity'],
-                'val' => $codeholder['officePhone'],
-            );
-        }
-
-        if ($codeholder['address'] && isset($codeholder['address']['country'])) {
-            $addr = $codeholder['address'];
-            $countryName = $this->getCountryNames()[$addr['country']];
-            $rendered = $this->bridge->renderAddress(array(
-                'countryCode' => $addr['country'],
-                'countryArea' => $addr['countryArea'],
-                'city' => $addr['city'],
-                'cityArea' => $addr['cityArea'],
-                'streetAddress' => $addr['streetAddress'],
-                'postalCode' => $addr['postalCode'],
-                'sortingCode' => $addr['sortingCode'],
-            ), $countryName)['c'];
-            $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['address_field']] = array(
-                'type' => 'text',
-                'show_plain' => true,
-                'publicity' => $codeholder['addressPublicity'],
-                'val' => $rendered,
-            );
-        }
-
-        {
-            foreach ($codeholder['factoids'] as &$fact) {
-                $fact['publicity'] = 'public';
-                $this->renderFactoid($fact);
+            if ($codeholder['publicEmail'] || $codeholder['email']) {
+                $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['public_email_field']] = array(
+                    'type' => 'email',
+                    'publicity' => $codeholder['publicEmail'] ? 'public' : $codeholder['emailPublicity'],
+                    'val' => $codeholder['publicEmail'] ?: $codeholder['email'],
+                );
             }
-            foreach ($codeholder['data_factoids'] as &$fact) {
-                $this->renderFactoid($fact);
+
+            if ($codeholder['website']) {
+                $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['website_field']] = array(
+                    'type' => 'url',
+                    'publicity' => 'public',
+                    'val' => $codeholder['website'],
+                );
+            }
+
+            if ($codeholder['officePhone']) {
+                $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['office_phone_field']] = array(
+                    'type' => 'tel',
+                    'publicity' => $codeholder['officePhonePublicity'],
+                    'val' => $codeholder['officePhone'],
+                );
+            }
+
+            if ($codeholder['address'] && isset($codeholder['address']['country'])) {
+                $addr = $codeholder['address'];
+                $countryName = $this->getCountryNames()[$addr['country']];
+                $rendered = $this->bridge->renderAddress(array(
+                    'countryCode' => $addr['country'],
+                    'countryArea' => $addr['countryArea'],
+                    'city' => $addr['city'],
+                    'cityArea' => $addr['cityArea'],
+                    'streetAddress' => $addr['streetAddress'],
+                    'postalCode' => $addr['postalCode'],
+                    'sortingCode' => $addr['sortingCode'],
+                ), $countryName)['c'];
+                $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['address_field']] = array(
+                    'type' => 'text',
+                    'show_plain' => true,
+                    'publicity' => $codeholder['addressPublicity'],
+                    'val' => $rendered,
+                );
+            }
+
+            {
+                foreach ($codeholder['factoids'] as &$fact) {
+                    $fact['publicity'] = 'public';
+                    $this->renderFactoid($fact);
+                }
+                foreach ($codeholder['data_factoids'] as &$fact) {
+                    $this->renderFactoid($fact);
+                }
             }
         }
         return $codeholder;

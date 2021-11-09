@@ -49,56 +49,11 @@
                     <details class="org-details">
                         <summary>
                             {{akso_locale.country_org_lists.country_item_summary_title}}
+                            {% set factoids = {
+                                factoids: org.factoids|merge(org.data_factoids),
+                            } %}
+                            {% include 'partials/akso_codeholder_factoids.html.twig' %}
                         </summary>
-                        <table class="org-factoids">
-                            <tbody>
-                                {% for factKey, fact in org.factoids|merge(org.data_factoids) %}
-                                {% if fact.publicity != 'private' %}
-                                <tr class="org-factoid" data-type="{{fact.type}}">
-                                    <th class="factoid-label">{{factKey|e}}</th>
-                                    <td class="factoid-contents">
-                                        {% if fact.publicity == 'members' %}
-                                        <span class='akso-members-only-content'>
-                                            <span class='akso-members-only-content-if-clause'>
-                                        {% endif %}
-
-                                        {% if fact.type == 'tel' %}
-                                        <a href="tel:{{fact.val|e('html_attr')}}">
-                                            {{fact.val_rendered|e}}
-                                        </a>
-                                        {% elseif fact.type == 'text' %}
-                                        {% if fact.show_plain %}
-                                        <div class="factoid-text">
-                                            {% for line in fact.val|split('\n') %}
-                                            <div>{{line|e}}</div>
-                                            {% endfor %}
-                                        </div>
-                                        {% else %}
-                                        <div class="factoid-text">
-                                            {{fact.val_rendered|raw}}
-                                        </div>
-                                        {% endif %}
-                                        {% elseif fact.type == 'number' %}
-                                        {{fact.val|e}}
-                                        {% elseif fact.type == 'email' %}
-                                        {{fact.val_rendered|raw}}
-                                        {% elseif fact.type == 'url' %}
-                                        <a class="factoid-url" href="{{fact.val|e('html_attr')}}">
-                                            {{fact.val|e}}
-                                        {% endif %}
-
-                                        {% if fact.publicity == 'members' %}
-                                            <span class='akso-members-only-content-else-clause'>
-                                                <span class="akso-members-only-notice-inline"></span>
-                                            </span>
-                                        </span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
                         <div class="org-post-info">
                             <div class="org-biography">
                                 {% set is_first = true %}

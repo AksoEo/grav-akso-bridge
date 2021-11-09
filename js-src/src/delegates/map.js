@@ -3,11 +3,11 @@ import { createMap, Marker } from '../common/map';
 import { delegates as locale } from '../../../locale.ini';
 
 export default function init() {
-    const mapContainer = document.querySelector('.delegations-country-map-container');
+    const mapContainer = document.querySelector('.delegations-city-map-container');
     if (!mapContainer) return;
 
     const cities = {};
-    const cityNodes = document.querySelectorAll('.delegation-cities .delegation-city[data-loc]');
+    const cityNodes = document.querySelectorAll('.map-cities .map-city[data-loc]');
     for (let i = 0; i < cityNodes.length; i++) {
         const node = cityNodes[i];
         const id = node.dataset.geoId;
@@ -91,4 +91,5 @@ export default function init() {
     }
 
     mapView.fitBounds(L.latLngBounds(Object.values(cities).map(c => c.loc)).pad(0.3));
+    if (mapView.getZoom() > 9) mapView.setZoom(9);
 }

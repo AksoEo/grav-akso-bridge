@@ -20,32 +20,109 @@
             {{_self.delegate_item(akso_locale, akso_delegates, akso_delegates.delegation)}}
         </ul>
         <div class="delegate-additional-details">
+            {% set codeholder = akso_delegates.codeholders[akso_delegates.delegation.codeholderId] %}
+            <div class="codeholder-details">
+                {% set factoids = { factoids: codeholder.factoids|merge(codeholder.data_factoids) } %}
+                {% include 'partials/akso_codeholder_factoids.html.twig' %}
+            </div>
+            {% if akso_delegates.delegation.hosting %}
+                <h3 class="delegate-hosting-title">{{akso_locale.delegates.detail_hosting}}</h3>
+                <div class="delegate-hosting">
+                    {% if akso_delegates.delegation.hosting.maxPersons and akso_delegates.delegation.hosting.maxDays %}
+                        <div class="hosting-limits">
+                            {{akso_locale.delegates.detail_hosting_limits_0}}
+                            <span class="limit-value">{{akso_delegates.delegation.hosting.maxPersons}}</span>
+                            {% if akso_delegates.hosting.maxPersons == 1 %}
+                                {{akso_locale.delegates.detail_hosting_limits_1s}}
+                            {% else %}
+                                {{akso_locale.delegates.detail_hosting_limits_1}}
+                            {% endif %}
+                            <span class="limit-value">{{akso_delegates.delegation.hosting.maxDays}}</span>
+                            {% if akso_delegates.hosting.maxDays == 1 %}
+                                {{akso_locale.delegates.detail_hosting_limits_2s}}
+                            {% else %}
+                                {{akso_locale.delegates.detail_hosting_limits_2}}
+                            {% endif %}
+                        </div>
+                    {% elseif akso_delegates.delegation.hosting.maxDays %}
+                        <div class="hosting-limits">
+                            {{akso_locale.delegates.detail_hosting_max_days_0}}
+                            <span class="limit-value">{{akso_delegates.delegation.hosting.maxDays}}</span>
+                            {% if akso_delegates.delegation.hosting.maxDays == 1 %}
+                                {{akso_locale.delegates.detail_hosting_max_days_1s}}
+                            {% else %}
+                                {{akso_locale.delegates.detail_hosting_max_days_1}}
+                            {% endif %}
+                        </div>
+                    {% elseif akso_delegates.delegation.hosting.maxPersons %}
+                        <div class="hosting-limits">
+                            {{akso_locale.delegates.detail_hosting_max_persons_0}}
+                            <span class="limit-value">{{akso_delegates.delegation.hosting.maxPersons}}</span>
+                            {% if akso_delegates.delegation.hosting.maxPersons == 1 %}
+                                {{akso_locale.delegates.detail_hosting_max_persons_1s}}
+                            {% else %}
+                                {{akso_locale.delegates.detail_hosting_max_persons_1}}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    {% if akso_delegates.delegation.hosting.description %}
+                        <div class="hosting-description">
+                            {% for line in akso_delegates.delegation.hosting.description|split('\n') %}
+                                <div>{{line|e}}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if akso_delegates.delegation.hosting.psProfileURL %}
+                        <a class="hosting-ps-profile" target="_blank" rel="nofollow noopener" href="{{akso_delegates.delegation.hosting.psProfileURL}}">
+                            <span class="ps-pre">{{akso_locale.delegates.detail_hosting_open_ps_0}}</span>
+                            <img
+                                class="ps-icon"
+                                alt="{{akso_locale.delegates.detail_hosting_open_ps_1}}"
+                                src="/user/plugins/akso-bridge/assets/ps.png"
+                                srcsrc="/user/plugins/akso-bridge/assets/ps.png 2x, /user/plugins/akso-bridge/assets/ps@4x.png 4x" />
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
             {% if akso_delegates.delegation.countries is not empty %}
                 <h3>{{akso_locale.delegates.detail_countries}}</h3>
                 <ul class="delegate-countries">
                     {% for countryDelegation in akso_delegates.delegation.countries %}
                         {% set code = countryDelegation.country %}
                         <li class="country-item" data-country="{{code}}">
-                            <a href="{{akso_delegates.country_links[code]}}">
+                            <a class="country-label delegates-filter-link" href="{{akso_delegates.country_links[code]}}">
                                 {{_self.country_label(akso_delegates, code)}}
                             </a>
-                            {{akso_locale.delegates['detail_country_level_' ~ countryDelegation.level]}}
+                            <span class="country-level">
+                                {{akso_locale.delegates['detail_country_level_' ~ countryDelegation.level]}}
+                            </span>
                         </li>
                     {% endfor %}
                 </ul>
             {% endif %}
             {% if akso_delegates.delegation.cities is not empty %}
                 <h3>{{akso_locale.delegates.detail_cities}}</h3>
-                <ul class="delegate-cities">
+                <div class="delegations-city-map-container"></div>
+                <ul class="delegate-cities map-cities">
                     {% for cityId in akso_delegates.delegation.cities %}
                         {% set city = akso_delegates.cities[cityId] %}
-                        <li class="city-item" data-geo-id="{{city.id}}">
-                            <a href="{{akso_delegates.city_link_stub}}{{city.country}}#{{city.urlId}}">
-                                {{city.label}}
-                            </a>,
-                            <a href="{{akso_delegates.country_links[city.country]}}">
-                                {{_self.country_label(akso_delegates, city.country)}}
-                            </a>
+                        <li class="city-item map-city" data-geo-id="{{city.id}}" data-loc="{{city.ll|default([])|join(',')}}">
+                            <div class="city-info">
+                                <a class="city-label delegates-filter-link" href="{{akso_delegates.city_link_stub}}{{city.country}}#{{city.urlId}}">
+                                    {{city.label}}
+                                </a>
+                                <div class="city-subdivision">
+                                    {{city.subdivision}}
+                                </div>
+                                <div class="city-population">
+                                    {{akso_locale.delegates.population_0}}
+                                    {{city.population}}
+                                    {{akso_locale.delegates.population_1}}
+                                </div>
+                                <a class="city-country delegates-filter-link" href="{{akso_delegates.country_links[city.country]}}">
+                                    {{_self.country_label(akso_delegates, city.country)}}
+                                </a>
+                            </div>
                         </li>
                     {% endfor %}
                 </ul>
@@ -248,7 +325,7 @@
         {% macro subject_item(subject, akso_delegates) %}
             <li class="subject-item">
                 <div class="subject-name">
-                    <a href="{{akso_delegates.common.filter_subject_link}}{{subject.id}}">
+                    <a class="delegates-filter-link" href="{{akso_delegates.common.filter_subject_link}}{{subject.id}}">
                         {{subject.name}}
                     </a>
                 </div>
@@ -275,11 +352,11 @@
                     </li>
                 {% endfor %}
             </ul>
-            <div class="delegations-country-map-container"></div>
-            <ul class="delegation-cities">
+            <div class="delegations-city-map-container"></div>
+            <ul class="delegation-cities map-cities">
                 {% for city in akso_delegates.cities %}
                     {% set city_delegates = akso_delegates.delegates_by_city[city.id] %}
-                    <li class="delegation-city" data-geo-id="{{city.id}}" data-label="{{city.label}}" id="{{city.urlId}}" data-loc="{{city.ll|default([])|join(',')}}">
+                    <li class="delegation-city map-city" data-geo-id="{{city.id}}" data-label="{{city.label}}" id="{{city.urlId}}" data-loc="{{city.ll|default([])|join(',')}}">
                         <div class="city-info">
                             <h2 class="city-label">{{city.label}}</h2>
                             <div class="city-meta">
