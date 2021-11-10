@@ -1,16 +1,16 @@
 en:
   PLUGIN_AKSO_BRIDGE:
     SETTINGS:
-      LOGIN_PATH: Login Page Path
-      LOGOUT_PATH: Logout Page Path
-      ACCOUNT_PATH: Account Page Path
-      REGISTRATION_PATH: Registration Path
-      ACCOUNT_LOGINS_PATH: Account Logins Path
-      ACCOUNT_VOTES_PATH: Account Votes Path
-      API_HOST: API host
-      API_KEY: API key
-      API_SECRET: API secret
-      PAYMENTS_HOST: Payments host
+      LOGIN_PATH: Adreso de ensaluta paĝo
+      LOGOUT_PATH: Adreso de elsaluta paĝo
+      ACCOUNT_PATH: Adreso de kontopaĝo
+      REGISTRATION_PATH: Adreso de registriĝpaĝo
+      ACCOUNT_LOGINS_PATH: Adreso de paĝo kun superrigardo de ensalutoj
+      ACCOUNT_VOTES_PATH: Adreso de paĝo kun superrigardo de voĉdonoj
+      API_HOST: API-adreso
+      API_KEY: API-ŝlosilo
+      API_SECRET: API-sekreto
+      PAYMENTS_HOST: Adreso de AKSO-Pago-kliento
       CSP:
         TITLE: Content Security Policy
         IMG: Image Sources
