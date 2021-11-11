@@ -68,11 +68,13 @@
                     {{ akso_locale.login.btn_send_reset_email }}
                 </button>
             </footer>
+        {% elseif akso_login_totp_setup %}
+            <h1 class="title">{{akso_locale.login.totp_title}}</h1>
+            <div class="totp-setup-alert">{{akso_locale.login.totp_setup_message}}</div>
+            <p>{{akso_locale.login.totp_setup_setup_0}}<a target="_blank" rel="nofollow noreferrer" href="{{akso_locale.login.totp_setup_setup_1_link}}">{{akso_locale.login.totp_setup_setup_1}}</a>{{akso_locale.login.totp_setup_setup_2}}</p>
         {% elseif akso_login_totp %}
-            <h1 class="title">Sekurkodo</h1>
-            <p>
-                {{ akso_locale.login.totp_message }}
-            </p>
+            <h1 class="title">{{akso_locale.login.totp_title}}</h1>
+            <p>{{akso_locale.login.totp_message}}</p>
             <div class="form-field">
                 <input
                     id="akso-login-totp"

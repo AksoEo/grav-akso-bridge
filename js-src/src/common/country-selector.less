@@ -21,11 +21,17 @@
         text-align: center;
         margin-top: 0;
         margin-bottom: 0.5em;
+        position: relative;
+        z-index: 1;
     }
 
-    .list-search-box {
+    .list-search-box-container {
         position: sticky;
         top: 0;
+        background: var(--bg);
+        box-shadow: 0 -0.5em 0 1em var(--bg);
+    }
+    .list-search-box {
         display: flex;
         align-items: center;
         background: linear-gradient(to bottom, var(--button1), var(--button));

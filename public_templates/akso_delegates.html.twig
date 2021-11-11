@@ -25,20 +25,21 @@
                 {% set factoids = { factoids: codeholder.factoids|merge(codeholder.data_factoids) } %}
                 {% include 'partials/akso_codeholder_factoids.html.twig' %}
             </div>
-            {% if akso_delegates.delegation.hosting %}
+            {# FIXME: bad heuristic? #}
+            {% if akso_delegates.delegation.hosting and (akso_delegates.delegation.hosting.maxDays or akso_delegates.delegation.hosting.maxPersons) %}
                 <h3 class="delegate-hosting-title">{{akso_locale.delegates.detail_hosting}}</h3>
                 <div class="delegate-hosting">
                     {% if akso_delegates.delegation.hosting.maxPersons and akso_delegates.delegation.hosting.maxDays %}
                         <div class="hosting-limits">
                             {{akso_locale.delegates.detail_hosting_limits_0}}
                             <span class="limit-value">{{akso_delegates.delegation.hosting.maxPersons}}</span>
-                            {% if akso_delegates.hosting.maxPersons == 1 %}
+                            {% if akso_delegates.delegation.hosting.maxPersons == 1 %}
                                 {{akso_locale.delegates.detail_hosting_limits_1s}}
                             {% else %}
                                 {{akso_locale.delegates.detail_hosting_limits_1}}
                             {% endif %}
                             <span class="limit-value">{{akso_delegates.delegation.hosting.maxDays}}</span>
-                            {% if akso_delegates.hosting.maxDays == 1 %}
+                            {% if akso_delegates.delegation.hosting.maxDays == 1 %}
                                 {{akso_locale.delegates.detail_hosting_limits_2s}}
                             {% else %}
                                 {{akso_locale.delegates.detail_hosting_limits_2}}
@@ -128,7 +129,7 @@
                 </ul>
             {% endif %}
         </div>
-    {% else %}
+    {% elseif not akso_delegates.empty %}
         <ul class="delegates-filter-picker" role="radiogroup" aria-label="{{akso_locale.delegates.view_mode_label}}">
             {% set selected = akso_delegates.common.view_mode == 'country' %}
             <li class="picker-item{{selected ? ' selected' : ''}}">
@@ -180,7 +181,7 @@
                     <input type="checkbox" id="subject-search-item" checked />
                 {% endif %}
                 <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
-                    <input type="hidden" name="fako" value="*">
+                    <input type="hidden" name="fako" id="subject-search-subjects" value="{{akso_delegates.search_subjects|default(['*'])|join(',')}}">
                     {% if akso_delegates.search_mode == 'subject' %}
                         <div class="subject-search">
                             <div class="search-header">
@@ -323,14 +324,16 @@
             </li>
         {% endmacro %}
         {% macro subject_item(subject, akso_delegates) %}
-            <li class="subject-item">
+        <li class="subject-item" data-id={{subject.id}}>
                 <div class="subject-name">
                     <a class="delegates-filter-link" href="{{akso_delegates.common.filter_subject_link}}{{subject.id}}">
                         {{subject.name}}
                     </a>
                 </div>
                 <div class="subject-description">
-                    {{subject.description}}
+                    {% for line in subject.description|default('')|split('\n') %}
+                        <div>{{line}}</div>
+                    {% endfor %}
                 </div>
             </li>
         {% endmacro %}
@@ -384,21 +387,19 @@
         {% endif %}
 
         {% if akso_delegates.common.view_mode == 'subject' and akso_delegates.search_mode == 'search' %}
-            <h2>{{akso_locale.delegates.subject_results}}</h2>
-            <ul class="subject-list">
-                {% for subject in akso_delegates.subjects %}
-                    {{_self.subject_item(subject, akso_delegates)}}
-                {% endfor %}
-            </ul>
-            {% if akso_delegates.no_subject_results %}
-                <div class="no-results">
-                    {{akso_locale.delegates.no_results}}
-                </div>
-            {% else %}
-                <h2>
-                    {{akso_locale.delegates.subject_matching_delegates}}
-                </h2>
-            {% endif %}
+            <div class="delegation-subject-results">
+                <h2>{{akso_locale.delegates.subject_results}}</h2>
+                <ul class="subject-list">
+                    {% for subject in akso_delegates.subjects %}
+                        {{_self.subject_item(subject, akso_delegates)}}
+                    {% endfor %}
+                </ul>
+                {% if akso_delegates.no_subject_results %}
+                    <div class="no-results">
+                        {{akso_locale.delegates.no_results}}
+                    </div>
+                {% endif %}
+            </div>
         {% endif %}
 
         {% if akso_delegates.common.view_mode == 'codeholder' or akso_delegates.common.view_mode == 'subject' %}

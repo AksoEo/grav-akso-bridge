@@ -1,5 +1,6 @@
 import countrySelector from '../common/country-selector';
 import initMap from './map';
+import initSubjectPicker from './subjects';
 import './index.less';
 
 function init() {
@@ -13,7 +14,20 @@ function init() {
         });
     }
 
+    // when closing the "Selected subjects" mode, we need to reset the url parameter to *
+    const subjectSearchToggle = document.querySelector('#subject-search-item');
+    if (subjectSearchToggle) {
+        subjectSearchToggle.addEventListener('change', () => {
+            if (!subjectSearchToggle.checked) {
+                const subjects = document.querySelector('#subject-search-subjects');
+                if (subjects) subjects.value = '*';
+            }
+        });
+    }
+
     initMap();
+    initSubjectPicker();
 }
 
 window.addEventListener('DOMContentLoaded', init);
+

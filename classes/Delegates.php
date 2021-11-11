@@ -77,6 +77,8 @@ class Delegates {
             $page = ((int) $_GET[self::PAGE]) - 1;
         }
 
+        if (!$org) return array('empty' => true);
+
         $countryNames = $this->getCountryNames();
         $countryCodes = array_keys($countryNames);
         $collator = new \Collator('fr_FR');
@@ -302,27 +304,33 @@ class Delegates {
                 ? $_GET[self::SUBJECT_NAME]
                 : '';
 
+            $subjectResults = [];
+            $subjectResultIds = [];
             $subjectFilter = null;
             $searchMode = null;
-            if (!empty($search_query)) {
+            if (!empty($search_query) || $subjectId == self::VIEW_ALL) {
                 // TODO: sort by popularity
-                $res = $this->bridge->get('/delegations/subjects', array(
+                $options = array(
                     'fields' => ['id', 'name', 'description'],
-                    'search' => array('cols' => ['name'], 'str' => $search_query),
                     'limit' => $itemsPerPage,
-                ));
-                // FIXME: we need to validate the search query
+                );
+                if (!empty($search_query)) {
+                    // FIXME: we need to validate the search query
+                    $options['search'] = array('cols' => ['name'], 'str' => $search_query);
+                }
+                $res = $this->bridge->get('/delegations/subjects', $options);
                 if (!$res['k']) {
                     // throw new \Exception('failed to search subjects');
                     // HACK: we'll pretend nothing happened (the search query is probably invalid)
                     $res = array('h' => array('x-total-items' => 0), 'b' => []);
                 }
                 $subjectResults = $res['b'];
-                $subjectFilter = array_map(function ($sub) { return $sub['id']; }, $subjectResults);
+                $subjectResultIds = array_map(function ($sub) { return $sub['id']; }, $subjectResults);
                 $searchMode = 'search';
             } else if ($subjectId != self::VIEW_ALL) {
                 $searchMode = 'subject';
                 $subjectFilter = array_map(function ($id) { return (int) $id; }, explode(',', $subjectId));
+                $subjectResultIds = $subjectFilter;
             }
 
             $shouldPaginate = false;
@@ -345,7 +353,7 @@ class Delegates {
                 $shouldPaginate = $res['h']['x-total-items'] > $itemsPerPage;
                 $maxPage = ceil((float) $res['h']['x-total-items'] / $itemsPerPage);
                 $delegations = [];
-                $subjectIds = [];
+                $subjectIds = $subjectFilter;
                 foreach ($res['b'] as $delegation) {
                     $delegations[] = $delegation;
                     foreach ($delegation['subjects'] as $id) if (!in_array($id, $subjectIds)) $subjectIds[] = $id;
@@ -355,6 +363,10 @@ class Delegates {
 
                 $noSubjectResults = count($subjects) == 0;
                 $noDelegateResults = !$noSubjectResults && $maxPage == 0;
+            } else if ($subjectResults) {
+                foreach ($subjectResults as $subject) {
+                    $subjects[$subject['id']] = $subject;
+                }
             }
 
             return array(
@@ -367,10 +379,10 @@ class Delegates {
                 'page' => $page,
                 'max_page' => $maxPage,
                 'should_paginate' => $shouldPaginate,
-                'has_filters' => true,
+                'has_filters' => $searchMode == 'subject',
                 'no_delegate_results' => $noDelegateResults,
                 'search_mode' => $searchMode,
-                'search_subjects' => $subjectFilter,
+                'search_subjects' => $subjectResultIds,
             );
         } else if ($viewMode == 'codeholder') {
             $formTarget = $this->plugin->getGrav()['uri']->path();

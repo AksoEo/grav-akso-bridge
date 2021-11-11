@@ -435,11 +435,14 @@ const messageHandlers = {
 
         const sesx = await conn.client.restoreSession();
         if (sesx === false) return { auth: false };
+        
+        const needsTotp = sesx.isAdmin && !sesx.totpSetUp;
         return {
             auth: true,
             uea: sesx.newCode,
             id: sesx.id,
-            totp: sesx.totpSetUp && !sesx.totpUsed,
+            totp: needsTotp || (sesx.totpSetUp && !sesx.totpUsed),
+            needs_totp: needsTotp,
             member: sesx.isActiveMember,
         };
     },

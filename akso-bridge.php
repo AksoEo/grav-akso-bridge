@@ -322,6 +322,10 @@ class AksoBridgePlugin extends Plugin {
             if ($this->aksoUser['totp']) {
                 // user still needs to log in with totp
                 $state['akso_login_totp'] = true;
+
+                if ($this->aksoUser['needs_totp']) {
+                    $state['akso_login_totp_setup'] = true;
+                }
             }
         }
 

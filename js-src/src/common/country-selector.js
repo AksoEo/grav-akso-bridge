@@ -19,6 +19,8 @@ export default function init() {
 
         // country search
         {
+            const searchBoxContainer = document.createElement('div');
+            searchBoxContainer.className = 'list-search-box-container';
             const searchBox = document.createElement('div');
             searchBox.className = 'list-search-box';
             const searchIcon = document.createElement('img');
@@ -31,7 +33,8 @@ export default function init() {
             searchInput.type = 'text';
             searchInput.placeholder = locale.country_org_lists.search_label;
             searchBox.appendChild(searchInput);
-            overview.insertBefore(searchBox, overview.firstElementChild.nextElementSibling); // after title
+            searchBoxContainer.appendChild(searchBox);
+            overview.insertBefore(searchBoxContainer, overview.firstElementChild.nextElementSibling); // after title
 
             searchInput.addEventListener('input', () => {
                 const query = searchInput.value;

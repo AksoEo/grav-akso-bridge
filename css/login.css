@@ -109,3 +109,11 @@
         width: 100%;
     }
 }
+
+/* totp setup */
+#akso-login .totp-setup-alert {
+    padding: 0.5em 1em;
+    background: var(--bg1);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--accent);
+}
