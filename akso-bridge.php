@@ -325,36 +325,46 @@ class AksoBridgePlugin extends Plugin {
 
                 if ($this->aksoUser['needs_totp']) {
                     $state['akso_login_totp_setup'] = true;
+                    if (isset($this->aksoUser['totp_setup_data'])) {
+                        $state['akso_login_totp_secrets'] = $this->aksoUser['totp_setup_data'];
+                    } else {
+                        $state['akso_login_totp_secrets'] = $this->bridge->generateTotp($this->aksoUser['uea']);
+                    }
+                    $secrets = $state['akso_login_totp_secrets'];
+                    $secrets['secret'] = base64_encode($secrets['secret']);
+                    $state['akso_login_totp_secrets_enc'] = base64_encode(json_encode($secrets));
                 }
             }
         }
 
-        if (isset($state['state'])) {
-            if ($state['state'] === 'login-error') {
+        if (isset($this->pageState['login_state'])) {
+            $istate = $this->pageState;
+            if ($istate['login_state'] === 'login-error') {
                 $state['akso_login_username'] = $state['username'];
-                if (isset($state['isBad'])) {
+                if (isset($istate['isBad'])) {
                     $state['akso_login_error'] = 'loginbad';
-                } else if ($state['noPassword']) {
+                } else if ($istate['noPassword']) {
                     $state['akso_login_error'] = 'nopw';
-                } else if ($state['isEmail']) {
+                } else if ($istate['isEmail']) {
                     $state['akso_login_error'] = 'authemail';
                 } else {
                     $state['akso_login_error'] = 'authuea';
                 }
-            } else if ($state['state'] === 'totp-error') {
-                if ($state['nosx']) {
+            } else if ($istate['login_state'] === 'totp-error') {
+                if ($istate['nosx']) {
                     $state['akso_login_error'] = 'totpnosx';
-                } else if ($state['bad']) {
+                } else if ($istate['bad']) {
                     $state['akso_login_error'] = 'totpbad';
                 } else {
                     $state['akso_login_error'] = 'totpauth';
                 }
-            } else if ($state['state'] === 'reset-error') {
+            } else if ($istate['login_state'] === 'reset-error') {
                 $state['akso_login_error'] = 'reset-error';
-            } else if ($state['state'] === 'reset-success') {
+            } else if ($istate['login_state'] === 'reset-success') {
                 $state['akso_login_pw_reset_success'] = true;
             }
         }
+
         $this->pageVars = $state;
     }
 
@@ -437,11 +447,11 @@ class AksoBridgePlugin extends Plugin {
                 $res = $this->bridge->forgotPassword($canonUsername);
                 if (!$res['k']) {
                     $this->pageState = array(
-                        'state' => 'reset-error',
+                        'login_state' => 'reset-error',
                     );
                 } else {
                     $this->pageState = array(
-                        'state' => 'reset-success',
+                        'login_state' => 'reset-success',
                     );
                 }
                 return;
@@ -457,7 +467,7 @@ class AksoBridgePlugin extends Plugin {
                 // these inputs were invisible and shouldn't've been triggered
                 // so this was probably a spam bot
                 $this->pageState = array(
-                    'state' => 'login-error',
+                    'login_state' => 'login-error',
                     'isBad' => true,
                     'isEmail' => false,
                     'username' => 'roboto',
@@ -468,14 +478,28 @@ class AksoBridgePlugin extends Plugin {
 
             if ($this->aksoUser !== null && $this->aksoUser['totp'] && isset($post['totp'])) {
                 $remember = isset($post['remember']);
-                $result = $this->bridge->totp($post['totp'], $remember);
+
+                $result = null;
+                if ($this->aksoUser['needs_totp'] && isset($post['totpSetup'])) {
+                    $setupData = null;
+                    try {
+                        $setupData = json_decode(base64_decode($post['totpSetup']), true);
+                        $setupData['secret'] = base64_decode($setupData['secret']);
+                    } catch (\Exception $e) {
+                        $result = array('s' => false, 'bad' => true, 'nosx' => false);
+                    }
+                    $result = $this->bridge->totpSetup($post['totp'], $setupData['secret'], $remember);
+                    $this->aksoUser['totp_setup_data'] = $setupData;
+                } else {
+                    $result = $this->bridge->totp($post['totp'], $remember);
+                }
 
                 if ($result['s']) {
                     $this->redirectTarget = $rpath;
                     $this->redirectStatus = 303;
                 } else {
                     $this->pageState = array(
-                        'state' => 'totp-error',
+                        'login_state' => 'totp-error',
                         'bad' => $result['bad'],
                         'nosx' => $result['nosx'],
                     );
@@ -497,7 +521,7 @@ class AksoBridgePlugin extends Plugin {
                     }
                 } else {
                     $this->pageState = array(
-                        'state' => 'login-error',
+                        'login_state' => 'login-error',
                         'isEmail' => strpos($post['username'], '@') !== false,
                         'username' => $post['username'],
                         'noPassword' => $result['nopw']

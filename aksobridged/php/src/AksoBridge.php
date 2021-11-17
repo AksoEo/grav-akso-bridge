@@ -339,4 +339,8 @@ class AksoBridge {
     public function parsePhoneLocal(string $number, string $code) {
         return $this->request('parse_phone_local', array('n' => $number, 'c' => $code));
     }
+
+    public function generateTotp(string $ueaCode) {
+        return $this->request('generate_totp', array('u' => $ueaCode));
+    }
 }

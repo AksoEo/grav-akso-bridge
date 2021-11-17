@@ -1,6 +1,6 @@
 #akso-login-error {
     margin: 1em auto;
-    padding: 0.3em 0;
+    padding: 0.3em 0.5em;
     text-align: center;
     background: var(--error-bg);
     color: var(--error-fg);
@@ -116,4 +116,27 @@
     background: var(--bg1);
     border-radius: var(--radius);
     border-left: 4px solid var(--accent);
+}
+#akso-login .totp-setup-description {
+    font-size: 0.9em;
+}
+#akso-login .totp-setup-code-container {
+    margin: 1em -0.5em;
+    padding: 1em;
+    border: 1px solid var(--light-separator);
+    border-radius: var(--radius);
+    --bg: #fff;
+    --fg: #000;
+    background: var(--bg);
+    color: var(--fg);
+}
+#akso-login .totp-setup-instruction {
+    text-align: center;
+    font-weight: 600;
+}
+#akso-login .totp-setup-qr-container {
+    text-align: center;
+}
+#akso-login .totp-setup-otpauth-link {
+    text-align: center;
 }

@@ -500,6 +500,85 @@ class MarkdownExt {
             }
         };
 
+        $markdown->addBlockType('[', 'IfAksoLoggedIn', true, true);
+        $markdown->blockIfAksoLoggedIn = function($line, $block) {
+            if (preg_match('/^\[\[se ensalutinta\]\]/', $line['text'], $matches)) {
+                return array(
+                    'char' => $line['text'][0],
+                    'element' => array(
+                        'name' => 'div',
+                        'attributes' => array(
+                            'class' => 'akso-logged-in-only-content',
+                        ),
+                        'handler' => 'elements',
+                        'text' => [
+                            array(
+                                'name' => 'script',
+                                'attributes' => array(
+                                    'class' => 'akso-logged-in-only-content-if-clause',
+                                ),
+                                'handler' => 'lines',
+                                'text' => [],
+                            ),
+                            array(
+                                'name' => 'div',
+                                'attributes' => array(
+                                    'class' => 'akso-logged-in-only-content-else-clause',
+                                ),
+                                'handler' => 'lines',
+                                'text' => [],
+                            ),
+                        ],
+                    ),
+                );
+            }
+        };
+        $markdown->blockIfAksoLoggedInContinue = function($line, $block) {
+            if (isset($block['complete'])) {
+                return;
+            }
+            // A blank newline has occurred.
+            if (isset($block['interrupted'])) {
+                array_push($block['element']['text'], "\n");
+                unset($block['interrupted']);
+            }
+            // Check for end of the block.
+            if (preg_match('/\[\[\/se ensalutinta\]\]/', $line['text'])) {
+                $block['complete'] = true;
+                return $block;
+            } else if (preg_match('/\[\[alie\]\]/', $line['text'])) {
+                $block['in_else_clause'] = true;
+                return $block;
+            }
+
+            if (isset($block['in_else_clause'])) {
+                array_push($block['element']['text'][1]['text'], $line['body']);
+            } else {
+                array_push($block['element']['text'][0]['text'], $line['body']);
+            }
+            return $block;
+        };
+        $markdown->blockIfAksoLoggedInComplete = function($block) {
+            return $block;
+        };
+
+        $markdown->addBlockType('[', 'AksoOnlyLoggedIn');
+        $markdown->blockAksoOnlyLoggedIn = function($line, $block) use ($self) {
+            if (preg_match('/^\[\[nurensalutintoj\]\]/', $line['text'], $matches)) {
+                $error = null;
+                $codeholders = [];
+
+                return array(
+                    'element' => array(
+                        'name' => 'div',
+                        'attributes' => array(
+                            'class' => 'akso-logged-in-only-box',
+                        ),
+                        'text' => '',
+                    ),
+                );
+            }
+        };
 
         // A MILDLY CURSED SOLUTION
         // due to grav's markdown handling being rather limited, this will not immediately
@@ -1306,6 +1385,7 @@ class MarkdownExt {
         $this->handleHTMLNews($document);
         $this->handleHTMLMagazines($document);
         $this->handleHTMLIfMembers($document);
+        $this->handleHTMLIfLoggedIn($document);
         $this->handleHTMLCongressPosters($document);
         $this->congressFields->handleHTMLCongressStuff($document);
 
@@ -1965,7 +2045,9 @@ class MarkdownExt {
         foreach ($ifMembers as $ifMember) {
             $contents = null;
             if ($isMember) {
-                $contents = $ifMember->find('.akso-members-only-content-if-clause')[0];
+                $contents = new Element('div');
+                $ifClause = $ifMember->find('.akso-members-only-content-if-clause')[0];
+                foreach ($ifClause->children() as $child) $contents->appendChild($child);
             } else {
                 $contents = $ifMember->find('.akso-members-only-content-else-clause')[0];
             }
@@ -2026,6 +2108,49 @@ class MarkdownExt {
                 $membersOnlyNotice->appendChild($signUpLink);
                 $membersOnlyNotice->appendChild(new Element('span', $this->plugin->locale['content']['members_only_inline_login_3']));
             }
+        }
+    }
+
+    protected function handleHTMLIfLoggedIn($doc) {
+        $isLoggedIn = false;
+        if ($this->plugin->aksoUser !== null) {
+            $isLoggedIn = true;
+        }
+
+        $ifLoggedIns = $doc->find('.akso-logged-in-only-content');
+        foreach ($ifLoggedIns as $ifLoggedIn) {
+            $contents = null;
+            if ($isLoggedIn) {
+                $contents = new Element('div');
+                $ifClause = $ifLoggedIn->find('.akso-logged-in-only-content-if-clause')[0];
+                foreach ($ifClause->children() as $child) $contents->appendChild($child);
+            } else {
+                $contents = $ifLoggedIn->find('.akso-logged-in-only-content-else-clause')[0];
+            }
+            $contents->class = 'akso-logged-in-only-content';
+            $ifLoggedIn->replace($contents);
+        }
+
+        $loggedInOnlyBoxes = $doc->find('.akso-logged-in-only-box');
+        foreach ($loggedInOnlyBoxes as $loggedInOnlyBox) {
+            if ($isLoggedIn) {
+                $loggedInOnlyBox->class .= ' user-is-logged-in';
+                continue;
+            }
+
+            $desc = new Element('div', $this->plugin->locale['content']['logged_in_only_desc']);
+            $loggedInOnlyBox->appendChild($desc);
+
+            $loginLink = new Element('a', $this->plugin->locale['content']['logged_in_only_login_0']);
+            $signUpLink = new Element('a', $this->plugin->locale['content']['logged_in_only_login_2']);
+
+            $loginLink->href = $this->plugin->loginPath;
+            $signUpLink->href = $this->plugin->registrationPath;
+
+            $loggedInOnlyBox->appendChild($loginLink);
+            $loggedInOnlyBox->appendChild(new Element('span', $this->plugin->locale['content']['logged_in_only_login_1']));
+            $loggedInOnlyBox->appendChild($signUpLink);
+            $loggedInOnlyBox->appendChild(new Element('span', $this->plugin->locale['content']['logged_in_only_login_3']));
         }
     }
 

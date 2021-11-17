@@ -13,7 +13,11 @@
                 {{ akso_login_username }}
                 {{ akso_locale.login.error_no_password_1 }}
             {% elseif akso_login_error == 'totpauth' %}
-                {{ akso_locale.login.error_invalid_totp }}
+                {% if akso_login_totp_setup %}
+                    {{ akso_locale.login.error_invalid_totp_setup }}
+                {% else %}
+                    {{ akso_locale.login.error_invalid_totp }}
+                {% endif %}
             {% elseif akso_login_error == 'totpbad' %}
                 {# user cannot use totp in their current state #}
                 {# possibly already used totp, did not set up totp, etc. #}
@@ -71,7 +75,57 @@
         {% elseif akso_login_totp_setup %}
             <h1 class="title">{{akso_locale.login.totp_title}}</h1>
             <div class="totp-setup-alert">{{akso_locale.login.totp_setup_message}}</div>
-            <p>{{akso_locale.login.totp_setup_setup_0}}<a target="_blank" rel="nofollow noreferrer" href="{{akso_locale.login.totp_setup_setup_1_link}}">{{akso_locale.login.totp_setup_setup_1}}</a>{{akso_locale.login.totp_setup_setup_2}}</p>
+            <p class="totp-setup-description">
+                {{akso_locale.login.totp_setup_setup_0}}<a target="_blank" rel="nofollow noreferrer" href="{{akso_locale.login.totp_setup_setup_1_link}}">{{akso_locale.login.totp_setup_setup_1}}</a>{{akso_locale.login.totp_setup_setup_2}}
+            </p>
+            <div class="totp-setup-code-container">
+                <div class="totp-setup-instruction">
+                    {{akso_locale.login.totp_setup_scan_code}}
+                </div>
+                <div class="totp-setup-qr-container">
+                    <img
+                        aria-hidden="true"
+                        src="{{akso_login_totp_secrets.qrCode}}" />
+                </div>
+                <div class="totp-setup-otpauth-link">
+                    {{akso_locale.login.totp_setup_open_app_0}}
+                    <a href="{{akso_login_totp_secrets.otpURL}}">
+                        {{akso_locale.login.totp_setup_open_app_1}}
+                    </a>
+                </div>
+            </div>
+            <div class="totp-setup-instruction">
+                {{akso_locale.login.totp_setup_enter_code}}
+            </div>
+            <input type="hidden" name="totpSetup" value="{{akso_login_totp_secrets_enc}}" />
+            <div class="form-field">
+                <input
+                    id="akso-login-totp"
+                    name="totp"
+                    type="text"
+                    placeholder="000000"
+                    {# \d* seems to be the only way to get a numpad input on iOS #}
+                    pattern="\d*"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    autofocus />
+            </div>
+            <div class="totp-remember">
+                <input type="checkbox" name="remember" id="akso-login-totp-remember" />
+                <label for="akso-login-totp-remember">
+                    {{ akso_locale.login.totp_remember }}
+                </label>
+                <div class="totp-remember-description">
+                    {{ akso_locale.login.totp_remember_description }}
+                </div>
+            </div>
+            <footer class="form-footer">
+                <div class="footer-help-links"></div>
+
+                <button type="submit" class="is-primary">
+                    {{ akso_locale.login.btn_login }}
+                </button>
+            </footer>
         {% elseif akso_login_totp %}
             <h1 class="title">{{akso_locale.login.totp_title}}</h1>
             <p>{{akso_locale.login.totp_message}}</p>
@@ -98,7 +152,9 @@
             </div>
             <footer class="form-footer">
                 <div class="footer-help-links">
-                    <a href="{{ akso_login_lost_code_path|e('html_attr') }}">Mi ne povas generi sekurkodon</a>
+                    <a href="{{ akso_login_lost_code_path|e('html_attr') }}">
+                        {{akso_locale.login.totp_cannot_generate}}
+                    </a>
                 </div>
 
                 <button type="submit" class="is-primary">

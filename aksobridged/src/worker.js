@@ -1,6 +1,6 @@
 const { Server } = require('net');
 const { workerData, parentPort } = require('worker_threads');
-const { AppClient, UserClient } = require('@tejo/akso-client');
+const { AppClient, UserClient, generateTotp } = require('@tejo/akso-client');
 const { evaluate, currencies } = require('@tejo/akso-script');
 require('@tejo/akso-script/country_fmt');
 require('@tejo/akso-script/phone_fmt');
@@ -435,7 +435,7 @@ const messageHandlers = {
 
         const sesx = await conn.client.restoreSession();
         if (sesx === false) return { auth: false };
-        
+
         const needsTotp = sesx.isAdmin && !sesx.totpSetUp;
         return {
             auth: true,
@@ -476,11 +476,13 @@ const messageHandlers = {
         assertType(pw, 'string', 'expected pw to be a string');
         try {
             const sesx = await conn.client.logIn(un, pw);
+            const needsTotp = sesx.isAdmin && !sesx.totpSetUp;
             return {
                 s: true,
                 uea: sesx.newCode,
                 id: sesx.id,
                 totp: sesx.totpSetUp && !sesx.totpUsed,
+                needs_totp: needsTotp,
                 member: sesx.isActiveMember,
             };
         } catch (err) {
@@ -510,7 +512,7 @@ const messageHandlers = {
         assertType(r, 'boolean', 'expected r to be a bool');
         try {
             if (se) {
-                await conn.client.totpSetUp(se, co, r);
+                await conn.client.totpSetup(se, co, r);
             } else {
                 await conn.client.totpLogIn(co, r);
             }
@@ -926,6 +928,10 @@ const messageHandlers = {
         } catch (err) {
             return { s: false, e: err.toString() };
         }
+    },
+    generate_totp: async (conn, { u }) => {
+        assertType(u, 'string', 'expected u to be a string');
+        return await generateTotp(u);
     },
     flush_cookies: async (conn) => {
         conn.flushSendCookies();
