@@ -14,6 +14,7 @@ use Grav\Plugin\AksoBridge\CongressPrograms;
 use Grav\Plugin\AksoBridge\CongressRegistration;
 use Grav\Plugin\AksoBridge\CountryLists;
 use Grav\Plugin\AksoBridge\Delegates;
+use Grav\Plugin\AksoBridge\DelegationApplications;
 use Grav\Plugin\AksoBridge\Magazines;
 use Grav\Plugin\AksoBridge\Registration;
 use Grav\Plugin\AksoBridge\UserAccount;
@@ -277,6 +278,14 @@ class AksoBridgePlugin extends Plugin {
             $delegates = new Delegates($this, $app->bridge);
             $state['akso_delegates'] = $delegates->run();
             $app->close();
+        } else if ($templateId === 'akso_delegation_application') {
+            $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegation-applications.css');
+            $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegation-applications.js');
+            $app = new AppBridge($this->grav);
+            $app->open();
+            $appl = new DelegationApplications($this, $app->bridge);
+            $state['akso_delegates'] = $appl->run();
+            $app->close();
         }
 
         if ($this->grav['uri']->path() === $this->loginPath) {
@@ -340,7 +349,7 @@ class AksoBridgePlugin extends Plugin {
         if (isset($this->pageState['login_state'])) {
             $istate = $this->pageState;
             if ($istate['login_state'] === 'login-error') {
-                $state['akso_login_username'] = $state['username'];
+                $state['akso_login_username'] = $istate['username'];
                 if (isset($istate['isBad'])) {
                     $state['akso_login_error'] = 'loginbad';
                 } else if ($istate['noPassword']) {

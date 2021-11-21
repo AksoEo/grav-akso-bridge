@@ -1,0 +1,304 @@
+{% extends 'partials/base.html.twig' %}
+{% block content %}
+
+    {% macro city_item(akso_delegates, item) %}
+        <div class="city-item">
+            <div class="city-label">{{item.eoLabel|default(item.nativeLabel)}}</div>
+            {% if item.nativeLabel != item.eoLabel %}
+                <div class="city-native-label">{{item.nativeLabel}}</div>
+            {% endif %}
+            <div class="city-subdiv-country">
+                <div class="city-subdivision">{{item.subdivision_eoLabel|default(item.subdivision_nativeLabel)}}</div>
+                <div class="city-country">{{akso_delegates.countries[item.country]}}</div>
+            </div>
+        </div>
+    {% endmacro %}
+
+    {% macro subject_item(akso_delegates, item) %}
+        <div class="subject-item">
+            <div class="subject-label">{{item.name}}</div>
+            <div class="subject-description">{{item.description}}</div>
+        </div>
+    {% endmacro %}
+
+    <div class="akso-delegates-application-form">
+        {{page.content}}
+        <div class="akso-logged-in-only-content">
+            <div class="akso-logged-in-only-content-if-clause">
+                <div class="pre-form">
+                    <a class="link-button">
+                        begin.....
+                    </a>
+                </div>
+
+                {% if akso_delegates.can_go_back %}
+                    <form method="POST">
+                        <input type="hidden" name="state" value="{{akso_delegates.state_serialized|e('html_attr')}}" />
+                        <input type="hidden" name="_back" value="1">
+                        <button class="back-button" type="submit">
+                            <span class="back-icon"></span>
+                            {{akso_locale.delegate_appl.back}}
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if akso_delegates.has_summary %}
+                    <div class="application-summary">
+                        <ul class="selected-cities">
+                            {% for cityId in akso_delegates.state.cities %}
+                                {% set city = akso_delegates.selected_cities[cityId] %}
+                                <li class="selected-city" data-geoid="{{city.id}}">
+                                    {{_self.city_item(akso_delegates, city)}}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        {% if akso_delegates.page != 'subjects' %}
+                        <ul class="selected-subjects">
+                            <li class="selected-subject">
+                                <div class="subject-item">
+                                    <div class="subject-label">Cat</div>
+                                    <div class="subject-description">cat</div>
+                                </div>
+                            </li>
+                        </ul>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if akso_delegates.page == 'cities' %}
+                    <div class="inner-form">
+                        <div class="object-selection">
+                            <h2>{{akso_locale.delegate_appl.select_cities}}</h2>
+                            <p>{{akso_locale.delegate_appl.select_cities_desc}}</p>
+                            {% if akso_delegates.state.cities is not empty %}
+                                <form class="selected-objects-container" method="POST">
+                                    <input type="hidden" name="state" value="{{akso_delegates.state_serialized|e('html_attr')}}">
+
+                                    <h3>{{akso_locale.delegate_appl.selected_cities}}</h3>
+                                    <ul class="selected-objects">
+                                        {% for cityId in akso_delegates.state.cities %}
+                                            {% set city = akso_delegates.selected_cities[cityId] %}
+                                            <li class="selected-object" data-geoid="{{city.id}}">
+                                                <div class="remove-container">
+                                                    <button
+                                                        class="remove-button"
+                                                        aria-label="{{akso_locale.delegate_appl.remove_city}}"
+                                                        type="submit"
+                                                        formaction="{{akso_delegates.remove_city_path}}{{city.id}}">
+                                                    </button>
+                                                </div>
+                                                {{_self.city_item(akso_delegates, city)}}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+
+                                    <div class="continue-button-container">
+                                        <button
+                                            class="continue-button is-primary"
+                                            type="submit"
+                                            formaction="{{akso_delegates.continue_path}}">
+                                            {{akso_locale.delegate_appl.cities_continue}}
+                                        </button>
+                                    </div>
+                                </form>
+                            {% endif %}
+                            <div class="object-search-container">
+                                <h3>{{akso_locale.delegate_appl.search_cities_title}}</h3>
+                                <div class="object-search">
+                                    <form class="inner-search inline-search-form" method="POST">
+                                        <input type="hidden" name="state" value="{{akso_delegates.state_serialized|e('html_attr')}}">
+
+                                        <input
+                                            class="search-query"
+                                            type="text"
+                                            name="q"
+                                            placeholder="{{akso_locale.delegate_appl.search_cities_placeholder}}"
+                                            value="{{akso_delegates.query}}" />
+                                        <button type="submit" class="search-submit">
+                                            <img
+                                                class="search-icon"
+                                                role="presentation"
+                                                aria-label="{{akso_locale.delegate_appl.search_cities}}"
+                                                src="/user/themes/uea/images/search.svg" />
+                                        </button>
+                                    </form>
+
+                                    <form class="search-results-container" method="POST">
+                                        <input type="hidden" name="state" value="{{akso_delegates.state_serialized|e('html_attr')}}">
+
+                                        <ul class="object-search-results">
+                                            {% for item in akso_delegates.results %}
+                                                <li class="search-result-item">
+                                                    {{_self.city_item(akso_delegates, item)}}
+                                                    {% if item.id in akso_delegates.state.cities %}
+                                                        <button type="button" disabled>
+                                                            {{akso_locale.delegate_appl.select_city_dup}}
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="submit" formaction="{{akso_delegates.add_city_path}}{{item.id}}">
+                                                            {{akso_locale.delegate_appl.select_city}}
+                                                        </button>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                            {% if akso_delegates.query is not empty and akso_delegates.results is empty %}
+                                            <div class="no-results">
+                                                {{akso_locale.delegate_appl.cities_no_results}}
+                                            </div>
+                                            {% elseif akso_delegates.results is empty %}
+                                            <div class="no-results">
+                                                {{akso_locale.delegate_appl.cities_no_results_no_query}}
+                                            </div>
+                                            {% endif %}
+                                        </ul>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% elseif akso_delegates.page == 'subjects' %}
+
+                    <div class="inner-form">
+                        <div class="object-selection">
+                            <h2>{{akso_locale.delegate_appl.select_subjects}}</h2>
+                            <p>{{akso_locale.delegate_appl.select_subjects_desc}}</p>
+                            {% if akso_delegates.state.subjects is not empty %}
+                                <form class="selected-objects-container" method="POST">
+                                    <input type="hidden" name="state" value="{{akso_delegates.state_serialized|e('html_attr')}}">
+
+                                    <h3>{{akso_locale.delegate_appl.selected_subjects}}</h3>
+                                    <ul class="selected-objects">
+                                        {% for subjectId in akso_delegates.state.subjects %}
+                                            {% set subject = akso_delegates.selected_subjects[subjectId] %}
+                                            <li class="selected-object">
+                                                <div class="remove-container">
+                                                    <button
+                                                        class="remove-button"
+                                                        aria-label="{{akso_locale.delegate_appl.remove_subject}}"
+                                                        type="submit"
+                                                        formaction="{{akso_delegates.remove_subject_path}}{{city.id}}">
+                                                    </button>
+                                                </div>
+                                                {{_self.subject_item(akso_delegates, subject)}}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+
+                                    <div class="continue-button-container">
+                                        <button
+                                            class="continue-button is-primary"
+                                            type="submit"
+                                            formaction="{{akso_delegates.continue_path}}">
+                                            {{akso_locale.delegate_appl.subjects_continue}}
+                                        </button>
+                                    </div>
+                                </form>
+                            {% endif %}
+                            <div class="object-search-container">
+                                <h3>{{akso_locale.delegate_appl.search_subjects_title}}</h3>
+                                <div class="object-search">
+                                    <form class="inner-search inline-search-form" method="POST">
+                                        <input type="hidden" name="state" value="{{akso_delegates.state_serialized|e('html_attr')}}">
+
+                                        <input
+                                            class="search-query"
+                                            type="text"
+                                            name="q"
+                                            placeholder="{{akso_locale.delegate_appl.search_subjects_placeholder}}"
+                                            value="{{akso_delegates.query}}" />
+                                        <button type="submit" class="search-submit">
+                                            <img
+                                                class="search-icon"
+                                                role="presentation"
+                                                aria-label="{{akso_locale.delegate_appl.search_subjects}}"
+                                                src="/user/themes/uea/images/search.svg" />
+                                        </button>
+                                    </form>
+
+                                    <form class="search-results-container" method="POST">
+                                        <input type="hidden" name="state" value="{{akso_delegates.state_serialized|e('html_attr')}}">
+
+                                        <ul class="object-search-results">
+                                            {% for item in akso_delegates.results %}
+                                                <li class="search-result-item">
+                                                    {{_self.subject_item(akso_delegates, item)}}
+                                                    {% if item.id in akso_delegates.state.subjects %}
+                                                        <button type="button" disabled>
+                                                            {{akso_locale.delegate_appl.select_subject_dup}}
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="submit" formaction="{{akso_delegates.add_subject_path}}{{item.id}}">
+                                                            {{akso_locale.delegate_appl.select_subject}}
+                                                        </button>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                            {% if akso_delegates.query is not empty and akso_delegates.results is empty %}
+                                            <div class="no-results">
+                                                {{akso_locale.delegate_appl.subjects_no_results}}
+                                            </div>
+                                            {% elseif akso_delegates.results is empty %}
+                                            <div class="no-results">
+                                                {{akso_locale.delegate_appl.subjects_no_results_no_query}}
+                                            </div>
+                                            {% endif %}
+                                        </ul>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% elseif akso_delegates.page == 'final' %}
+
+                <div class="inner-form">
+                    <div class="application-form">
+                        <input id="offer-hosting" type="checkbox" />
+                        <label for="offer-hosting">id like to offer hosting?</label>
+                        <div class="hosting-fields">
+                            <div class="form-field">
+                                <label for="hosting-max-days">maxDays</label>
+                                <input id="hosting-max-days" type="number" min="1" />
+                            </div>
+                            <div class="form-field">
+                                <label for="hosting-max-persons">maxPersons</label>
+                                <input id="hosting-max-persons" type="number" min="1" />
+                            </div>
+                            <div class="form-field">
+                                <label for="hosting-description">description</label>
+                                <textarea id="hosting-description"></textarea>
+                            </div>
+                            <div class="form-field">
+                                <label for="hosting-pasporta-servo">psProfileURL</label>
+                                <input
+                                    id="hosting-pasporta-servo"
+                                    type="url"
+                                    placeholder="https://www.pasportaservo.org/ejo/..."
+                                    pattern="https://www.pasportaservo.org/ejo/(\d+)/?" />
+                            </div>
+                        </div>
+                        <div class="tos">
+                            <div class="tos-field">
+                                <input id="tos-1" type="checkbox" required />
+                                <label for="tos-1">I agree to the cats</label>
+                            </div>
+                            <div class="tos-field">
+                                <input id="tos-2" type="checkbox" required />
+                                <label for="tos-2">I agree to the cats</label>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="application-notes">notes</label>
+                            <textarea id="application-notes"></textarea>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="akso-logged-in-only-content-else-clause">
+                <div class="akso-logged-in-only-box"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

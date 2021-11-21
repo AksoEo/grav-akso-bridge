@@ -121,6 +121,16 @@ export default [
             format: 'amd',
         },
     },
+    {
+        input: 'src/delegation-applications.js',
+        preserveEntrySignatures: false,
+        plugins: plugins(path.join(__dirname, '../js/dist/delegation-applications.css')),
+        output: {
+            dir: path.join(__dirname, '../js/dist/'),
+            chunkFileNames: 'dela_[name].js',
+            format: 'amd',
+        },
+    },
 ];
 
 function iniPlugin() {

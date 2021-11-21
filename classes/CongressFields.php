@@ -48,7 +48,7 @@ class CongressFields {
         $id = $congress . '/' . $instance;
         if (!isset($this->cache[$id])) {
             $res = $this->bridge->get('/congresses/' . $congress . '/instances/' . $instance, array(
-                'fields' => ['name', 'humanId', 'dateFrom', 'dateTo'],
+                'fields' => ['name', 'humanId', 'dateFrom', 'dateTo', 'locationName', 'locationNameLocal'],
             ), 60);
             if (!$res['k']) {
                 return [$this->createError()];
@@ -61,6 +61,8 @@ class CongressFields {
         if ($field === 'homaid') return [array('name' => 'span', 'text' => $data['humanId'])];
         if ($field === 'komenco') return [array('name' => 'span', 'text' => Utils::formatDate($data['dateFrom']))];
         if ($field === 'fino') return [array('name' => 'span', 'text' => Utils::formatDate($data['dateTo']))];
+        else if ($field === 'lokonomo') return [array('name' => 'span', 'text' => $data['locationName'])];
+        else if ($field === 'lokonomoloka') return [array('name' => 'span', 'text' => $data['locationNameLocal'])];
         if ($field === 'tempokalkulo' || $field === 'tempokalkulo!') {
             $firstEventRes = $this->bridge->get('/congresses/' . $congress . '/instances/' . $instance . '/programs', array(
                 'order' => ['timeFrom.asc'],
@@ -93,6 +95,8 @@ class CongressFields {
             )];
         } else if ($field === 'aliĝintoj') {
             return $this->renderCongressParticipants($congress, $instance, $data, $args);
+        } else if ($field === 'kvantoaliĝintoj' || $field === 'kvantounikajlandoj') {
+            return $this->renderCongressParticipantsMeta($congress, $instance, $field);
         }
         return [$this->createError()];
     }
@@ -540,5 +544,20 @@ class CongressFields {
                 ),
             ],
         )];
+    }
+
+    private function renderCongressParticipantsMeta($congressId, $instanceId, $field) {
+        if ($field === 'kvantoaliĝintoj') {
+            $res = $this->bridge->get("/congresses/$congressId/instances/$instanceId/participants", array(
+                'offset' => 0,
+                'limit' => 1,
+                'filter' => array('isValid' => true),
+            ), 60);
+            if (!$res['k']) return [$this->createError()];
+            return [array('name' => 'span', 'text' => $res['h']['x-total-items'])];
+        } else if ($field === 'kvantounikajlandoj') {
+            // TODO
+            throw new \Exception('unimplemented');
+        }
     }
 }

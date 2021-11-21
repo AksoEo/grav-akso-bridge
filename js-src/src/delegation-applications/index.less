@@ -1,0 +1,131 @@
+@import '../prelude';
+
+.akso-delegates-application-form {
+    margin-bottom: 4em;
+
+    .city-item {
+        .city-label {
+            font-weight: 500;
+        }
+        .city-native-label {
+            font-size: smaller;
+        }
+        .city-subdiv-country {
+            font-size: smaller;
+
+            .city-subdivision, .city-country {
+                display: inline-block;
+            }
+            .city-subdivision:not(:empty)::after {
+                content: ', ';
+            }
+        }
+    }
+
+    .object-selection {
+        .selected-objects-container {
+            background: var(--bg2);
+            border-radius: var(--radius);
+            padding: 0.5em;
+
+            h3 {
+                margin: 0;
+            }
+
+            .continue-button-container {
+                text-align: right;
+                margin-top: 0.5em;
+
+                .continue-button {
+                    margin-right: 0;
+                }
+            }
+        }
+        .selected-objects {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+
+            .selected-object {
+                margin: 0;
+                margin-top: 0.2em;
+                display: flex;
+                background: var(--bg);
+                border-radius: var(--radius);
+                box-shadow: @shade-both;
+
+                .remove-container {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 0 0.5em;
+
+                    .remove-button {
+                        position: relative;
+                        width: 2em;
+                        height: 2em;
+
+                        &::before, &::after {
+                            content: '';
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            background: currentColor;
+                            width: 1em;
+                            height: 0.1em;
+                            transform: translate(-50%, -50%) rotate(45deg);
+                        }
+                        &::after {
+                            transform: translate(-50%, -50%) rotate(-45deg);
+                        }
+                    }
+                }
+
+                .city-item {
+                    flex: 1;
+                    padding: 0.5em 1em;
+                    padding-left: 0;
+                }
+            }
+        }
+    }
+
+    .object-search-container {
+        .object-search {
+            .inner-search {
+                .search-query {
+                    flex: 1;
+                }
+            }
+        }
+
+        .object-search-results {
+            margin: 0;
+            margin-top: 1em;
+            list-style: none;
+            padding: 0;
+
+            .search-result-item {
+                margin-top: 0.2em;
+                background: var(--bg);
+                border-radius: var(--radius);
+                box-shadow: @shade-both;
+                padding: 0.5em;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+
+                .city-item {
+                    flex: 1;
+                    margin-right: 0.5em;
+                }
+            }
+
+            .no-results {
+                text-align: center;
+                opacity: 0.7;
+            }
+        }
+    }
+}
