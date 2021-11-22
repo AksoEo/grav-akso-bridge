@@ -17,7 +17,11 @@
     {% macro subject_item(akso_delegates, item) %}
         <div class="subject-item">
             <div class="subject-label">{{item.name}}</div>
-            <div class="subject-description">{{item.description}}</div>
+            <div class="subject-description">
+                {% for line in item.description|split('\n') %}
+                    <div>{{line}}</div>
+                {% endfor %}
+            </div>
         </div>
     {% endmacro %}
 
@@ -131,7 +135,7 @@
                                                 <li class="search-result-item">
                                                     {{_self.city_item(akso_delegates, item)}}
                                                     {% if item.id in akso_delegates.state.cities %}
-                                                        <button type="button" disabled>
+                                                        <button class="result-add-is-dup" type="button" disabled>
                                                             {{akso_locale.delegate_appl.select_city_dup}}
                                                         </button>
                                                     {% else %}
@@ -177,7 +181,7 @@
                                                         class="remove-button"
                                                         aria-label="{{akso_locale.delegate_appl.remove_subject}}"
                                                         type="submit"
-                                                        formaction="{{akso_delegates.remove_subject_path}}{{city.id}}">
+                                                        formaction="{{akso_delegates.remove_subject_path}}{{subject.id}}">
                                                     </button>
                                                 </div>
                                                 {{_self.subject_item(akso_delegates, subject)}}
@@ -224,7 +228,7 @@
                                                 <li class="search-result-item">
                                                     {{_self.subject_item(akso_delegates, item)}}
                                                     {% if item.id in akso_delegates.state.subjects %}
-                                                        <button type="button" disabled>
+                                                        <button class="result-add-is-dup" type="button" disabled>
                                                             {{akso_locale.delegate_appl.select_subject_dup}}
                                                         </button>
                                                     {% else %}
@@ -252,48 +256,127 @@
 
                 {% elseif akso_delegates.page == 'final' %}
 
-                <div class="inner-form">
-                    <div class="application-form">
-                        <input id="offer-hosting" type="checkbox" />
-                        <label for="offer-hosting">id like to offer hosting?</label>
-                        <div class="hosting-fields">
-                            <div class="form-field">
-                                <label for="hosting-max-days">maxDays</label>
-                                <input id="hosting-max-days" type="number" min="1" />
+                    <div class="inner-form">
+                        <form class="application-form" method="POST">
+                            <input type="hidden" name="state" value="{{akso_delegates.state_serialized|e('html_attr')}}" />
+                            <div class="hosting-container">
+                                <input id="offer-hosting" name="hosting[enabled]" type="checkbox" />
+                                <label class="hosting-label" for="offer-hosting">{{akso_locale.delegate_appl.offer_hosting_check}}</label>
+                                <div class="hosting-description">
+                                    {{akso_locale.delegate_appl.hosting_desc}}
+                                </div>
+                                <div class="hosting-fields">
+                                    <div class="form-field">
+                                        <div class="inner-field">
+                                            <label for="hosting-max-days">{{akso_locale.delegate_appl.hosting_max_days}}</label>
+                                            <input id="hosting-max-days" name="hosting[maxDays]" type="number" min="1" max="99" placeholder="0" />
+                                        </div>
+                                        <div class="field-description">
+                                            {{akso_locale.delegate_appl.hosting_max_days_desc}}
+                                        </div>
+                                    </div>
+                                    <div class="form-field">
+                                        <div class="inner-field">
+                                            <label for="hosting-max-persons">{{akso_locale.delegate_appl.hosting_max_persons}}</label>
+                                            <input id="hosting-max-persons" name="hosting[maxPersons]" type="number" min="1" max="99" placeholder="0" />
+                                        </div>
+                                        <div class="field-description">
+                                            {{akso_locale.delegate_appl.hosting_max_persons_desc}}
+                                        </div>
+                                    </div>
+                                    <div class="form-field is-stacked">
+                                        <div class="inner-field">
+                                            <label for="hosting-description">{{akso_locale.delegate_appl.hosting_description}}</label>
+                                            <textarea id="hosting-description" name="hosting[description]" placeholder="{{akso_locale.delegate_appl.hosting_description_placeholder}}"></textarea>
+                                        </div>
+                                        <div class="field-description">
+                                            {{akso_locale.delegate_appl.hosting_description_desc}}
+                                        </div>
+                                    </div>
+                                    <div class="form-field">
+                                        <div class="inner-field">
+                                            <label for="hosting-pasporta-servo">{{akso_locale.delegate_appl.hosting_ps_profile_url}}</label>
+                                            <input
+                                                id="hosting-pasporta-servo"
+                                                name="hosting[psProfileURL]"
+                                                type="url"
+                                                placeholder="https://www.pasportaservo.org/ejo/..."
+                                                pattern="https://www.pasportaservo.org/ejo/(\d+)/?" />
+                                        </div>
+                                        <div class="field-description">
+                                            {{akso_locale.delegate_appl.hosting_ps_profile_url_desc}}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-field">
-                                <label for="hosting-max-persons">maxPersons</label>
-                                <input id="hosting-max-persons" type="number" min="1" />
+                            <div class="tos">
+                                <div class="tos-field">
+                                    <input id="tos-1" type="checkbox" name="tos[docDataProtectionUEA]" required />
+                                    <label for="tos-1" class="tos-required">
+                                        {{
+                                            akso_locale.delegate_appl.tos_data_protection_uea_0
+                                        }}<a target="_blank" rel="nofollow noopener" href="{{akso_locale.delegate_appl.tos_data_protection_uea_1_link}}">{{
+                                            akso_locale.delegate_appl.tos_data_protection_uea_1
+                                        }}</a>{{
+                                            akso_locale.delegate_appl.tos_data_protection_uea_2
+                                        }}
+                                    </label>
+                                </div>
+                                <div class="tos-field">
+                                    <input id="tos-2" type="checkbox" name="tos[docDelegatesUEA]" required />
+                                    <label for="tos-2" class="tos-required">
+                                        {{
+                                            akso_locale.delegate_appl.tos_delegates_0
+                                        }}<a target="_blank" rel="nofollow noopener" href="{{akso_locale.delegate_appl.tos_delegates_1_link}}">{{
+                                            akso_locale.delegate_appl.tos_delegates_1
+                                        }}</a>{{
+                                            akso_locale.delegate_appl.tos_delegates_2
+                                        }}
+                                    </label>
+                                </div>
+                                <div class="tos-field">
+                                    <input id="tos-3" type="checkbox" name="tos[docDelegatesDataProtectionUEA]" required />
+                                    <label for="tos-3" class="tos-required">
+                                        {{
+                                            akso_locale.delegate_appl.tos_delegates_data_protection_uea_0
+                                        }}<a target="_blank" rel="nofollow noopener" href="{{akso_locale.delegate_appl.tos_delegates_data_protection_uea_1_link}}">{{
+                                            akso_locale.delegate_appl.tos_delegates_data_protection_uea_1
+                                        }}</a>{{
+                                            akso_locale.delegate_appl.tos_delegates_data_protection_uea_2
+                                        }}
+                                    </label>
+                                </div>
+                                <div class="tos-field">
+                                    <input id="tos-4" type="checkbox" name="tos[paperAnnualBook]" />
+                                    <label for="tos-4">
+                                        {{
+                                            akso_locale.delegate_appl.tos_paper_annual_book_0
+                                        }}<a target="_blank" rel="nofollow noopener" href="{{akso_locale.delegate_appl.tos_paper_annual_book_1_link}}">{{
+                                            akso_locale.delegate_appl.tos_paper_annual_book_1
+                                        }}</a>{{
+                                            akso_locale.delegate_appl.tos_paper_annual_book_2
+                                        }}
+                                    </label>
+                                    <div class="tos-field-desc">
+                                        {{akso_locale.delegate_appl.tos_paper_annual_book_desc}}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-field">
-                                <label for="hosting-description">description</label>
-                                <textarea id="hosting-description"></textarea>
+                            <div class="form-field is-stacked">
+                                <label for="application-notes">{{akso_locale.delegate_appl.notes}}</label>
+                                <textarea id="application-notes"></textarea>
+                                <div class="field-description">
+                                    {{akso_locale.delegate_appl.notes_desc}}
+                                </div>
                             </div>
-                            <div class="form-field">
-                                <label for="hosting-pasporta-servo">psProfileURL</label>
-                                <input
-                                    id="hosting-pasporta-servo"
-                                    type="url"
-                                    placeholder="https://www.pasportaservo.org/ejo/..."
-                                    pattern="https://www.pasportaservo.org/ejo/(\d+)/?" />
+                            <div class="form-footer">
+                                <button type="submit" class="is-primary">
+                                    {{akso_locale.delegate_appl.submit}}
+                                </button>
                             </div>
-                        </div>
-                        <div class="tos">
-                            <div class="tos-field">
-                                <input id="tos-1" type="checkbox" required />
-                                <label for="tos-1">I agree to the cats</label>
-                            </div>
-                            <div class="tos-field">
-                                <input id="tos-2" type="checkbox" required />
-                                <label for="tos-2">I agree to the cats</label>
-                            </div>
-                        </div>
-                        <div class="form-field">
-                            <label for="application-notes">notes</label>
-                            <textarea id="application-notes"></textarea>
-                        </div>
+                        </form>
                     </div>
-                </div>
+
                 {% endif %}
             </div>
             <div class="akso-logged-in-only-content-else-clause">

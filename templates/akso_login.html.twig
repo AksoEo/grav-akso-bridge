@@ -151,6 +151,7 @@
                 </div>
             </div>
             <footer class="form-footer">
+                <input type="hidden" name="return" value="{{ akso_login_return_path|e('html_attr') }}" />
                 <div class="footer-help-links">
                     <a href="{{ akso_login_lost_code_path|e('html_attr') }}">
                         {{akso_locale.login.totp_cannot_generate}}

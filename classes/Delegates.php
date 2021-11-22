@@ -120,7 +120,7 @@ class Delegates {
                 $apiFilters[] = array('hosting.maxDays' => array('$gte' => $days));
             }
             if (!$persons && !$days) {
-                $apiFilters[] = array('$not' => array('hosting' => null));
+                $apiFilters[] = array('$hasHosting' => true);
             }
         }
         if (isset($_GET[self::FILTERS][self::FILTER_AGE][self::FILTER_ENABLE])

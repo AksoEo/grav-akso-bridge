@@ -19,9 +19,10 @@ class DelegationApplications {
     private $state = [];
     private function deserializeState() {
         $this->state = array(
-            'page' => self::PAGE_ORDER[0],
-            'cities' => [],
-            'subjects' => [],
+            // FIXME: temp
+            'page' => self::PAGE_ORDER[2],
+            'cities' => [1022],
+            'subjects' => [1, 2],
         );
 
         $postData = null;
@@ -70,14 +71,16 @@ class DelegationApplications {
         );
         if (!empty($query)) {
             $options['search'] = array(
-                'str' => $query,
+                'str' => $query . '*',
                 'cols' => ['searchLabel'],
             );
-            $options['order'] = [['_relevance', 'desc']];
+            //$options['order'] = [['_relevance', 'desc']]; // makes it worse
         }
+        var_dump($options);
         $res = $this->bridge->get("/geodb/cities", $options, empty($query) ? 60 : 0);
         if (!$res['k']) throw new \Exception('failed to search cities');
         $cities = [];
+        var_dump($res);
         foreach ($res['b'] as $item) {
             $item['id'] = (int) substr($item['id'], 1);
             $cities[$item['id']] = $item;
@@ -230,6 +233,20 @@ class DelegationApplications {
         );
     }
 
+    private function runFinalPage() {
+        $selectedCities = $this->getCities($this->state['cities']);
+        $selectedSubjects = $this->getSubjects($this->state['subjects']);
+
+        return array(
+            'page' => 'final',
+            'has_summary' => true,
+            'can_go_back' => true,
+            'countries' => $this->getCountries(),
+            'selected_cities' => $selectedCities,
+            'selected_subjects' => $selectedSubjects,
+        );
+    }
+
     function run() {
         $this->deserializeState();
 
@@ -245,6 +262,8 @@ class DelegationApplications {
             $pageParams = $this->runCitiesPage();
         } else if ($this->state['page'] === 'subjects') {
             $pageParams = $this->runSubjectsPage();
+        } else if ($this->state['page'] === 'final') {
+            $pageParams = $this->runFinalPage();
         }
 
         $pageParams['state'] = $this->state;
