@@ -6,7 +6,7 @@ use Grav\Plugin\AksoBridge\Utils;
 
 class DelegationApplications {
     const SESX_KEY = 'delegationApplicationState';
-    const PAGE_ORDER = ['cities', 'subjects', 'final'];
+    const PAGE_ORDER = ['pre', 'cities', 'subjects', 'final'];
 
     private $plugin, $bridge, $user;
 
@@ -19,10 +19,9 @@ class DelegationApplications {
     private $state = [];
     private function deserializeState() {
         $this->state = array(
-            // FIXME: temp
-            'page' => self::PAGE_ORDER[2],
-            'cities' => [1022],
-            'subjects' => [1, 2],
+            'page' => self::PAGE_ORDER[0],
+            'cities' => [],
+            'subjects' => [],
         );
 
         $postData = null;
@@ -237,19 +236,94 @@ class DelegationApplications {
         $selectedCities = $this->getCities($this->state['cities']);
         $selectedSubjects = $this->getSubjects($this->state['subjects']);
 
+        $valid = true;
+        $error = null;
+
+        $hosting = null;
+        if (isset($_POST['hosting']) && gettype($_POST['hosting']) === 'array' && isset($_POST['hosting']['enabled'])) {
+            $data = $_POST['hosting'];
+            $maxDays = isset($data['maxDays']) ? (int) $data['maxDays'] : 0;
+            $maxPersons = isset($data['maxPersons']) ? (int) $data['maxPersons'] : 0;
+            $description = isset($data['description']) ? (string) $data['description'] : '';
+            $psProfileURL = isset($data['psProfileURL']) ? (string) $data['psProfileURL'] : '';
+
+            $hosting = array(
+                'maxDays' => $maxDays ?: null,
+                'maxPersons' => $maxPersons ?: null,
+                'description' => $description ?: null,
+                'psProfileURL' => $psProfileURL ?: null,
+            );
+        }
+
+        $tos = null;
+        if (isset($_POST['tos']) && gettype($_POST['tos']) === 'array') {
+            $tos = array();
+            $requiredFields = [
+                'docDataProtectionUEA',
+                'docDelegatesUEA',
+                'docDelegatesDataProtectionUEA',
+            ];
+            $optionalFields = [
+                'paperAnnualBook',
+            ];
+            $allFields = array_merge([], $requiredFields, $optionalFields);
+
+            foreach ($allFields as $field) {
+                $tos[$field] = isset($_POST['tos'][$field]);
+                if (in_array($field, $requiredFields) && !$tos[$field]) {
+                    $valid = false;
+                    $error = $this->plugin->locale['delegate_appl']['err_missing_tos_' . $field];
+                }
+            }
+        }
+
+        $userNotes = null;
+        if (isset($_POST['notes']) && gettype($_POST['notes']) === 'string' && !empty($_POST['notes'])) {
+            $userNotes = $_POST['notes'];
+        }
+
+        if ($valid && isset($_POST['action']) && $_POST['action'] === 'submit') {
+            $options = array(
+                'org' => 'uea',
+                'codeholderId' => $this->plugin->aksoUser['id'],
+                'applicantNotes' => $userNotes,
+                'cities' => array_map(function ($id) { return 'Q' . $id; }, $this->state['cities']),
+                'subjects' => $this->state['subjects'],
+                'hosting' => $hosting,
+                'tos' => $tos,
+            );
+
+            $res = $this->bridge->post("/delegations/applications", $options, [], []);
+            if ($res['k']) {
+                return array(
+                    'page' => 'success',
+                );
+            } else {
+                if ($res['sc'] === 400) $error = $this->plugin->locale['delegate_appl']['err_submit_bad_request'];
+                else $error = $this->plugin->locale['delegate_appl']['err_submit_unknown'];
+            }
+        }
+
         return array(
             'page' => 'final',
+            'error' => $error,
             'has_summary' => true,
             'can_go_back' => true,
             'countries' => $this->getCountries(),
             'selected_cities' => $selectedCities,
             'selected_subjects' => $selectedSubjects,
+            'hosting' => $hosting,
+            'tos' => $tos,
+            'notes' => $userNotes,
         );
     }
 
     function run() {
         $this->deserializeState();
 
+        if (isset($_POST['_begin'])) {
+            $this->state['page'] = self::PAGE_ORDER[1];
+        }
         if (isset($_POST['_back'])) {
             $index = array_search($this->state['page'], self::PAGE_ORDER);
             if ($index > 0) {
@@ -258,7 +332,9 @@ class DelegationApplications {
         }
 
         $pageParams = null;
-        if ($this->state['page'] === 'cities') {
+        if ($this->state['page'] === 'pre') {
+            $pageParams = array('is_pre_form' => true);
+        } else if ($this->state['page'] === 'cities') {
             $pageParams = $this->runCitiesPage();
         } else if ($this->state['page'] === 'subjects') {
             $pageParams = $this->runSubjectsPage();

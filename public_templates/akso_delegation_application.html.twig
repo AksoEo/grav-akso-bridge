@@ -26,14 +26,26 @@
     {% endmacro %}
 
     <div class="akso-delegates-application-form">
+        {% if akso_delegates.is_pre_form %}
         {{page.content}}
+        {% endif %}
+
         <div class="akso-logged-in-only-content">
             <div class="akso-logged-in-only-content-if-clause">
-                <div class="pre-form">
-                    <a class="link-button">
-                        begin.....
-                    </a>
-                </div>
+                {% if akso_delegates.error %}
+                    <div class="form-error">
+                        {{akso_delegates.error}}
+                    </div>
+                {% endif %}
+
+                {% if akso_delegates.is_pre_form %}
+                <form class="pre-form" method="POST">
+                    <input type="hidden" name="_begin" value="1">
+                    <button type="submit" class="link-button">
+                        {{akso_locale.delegate_appl.begin_button}}
+                    </button>
+                </form>
+                {% endif %}
 
                 {% if akso_delegates.can_go_back %}
                     <form method="POST">
@@ -259,8 +271,15 @@
                     <div class="inner-form">
                         <form class="application-form" method="POST">
                             <input type="hidden" name="state" value="{{akso_delegates.state_serialized|e('html_attr')}}" />
+                            <input type="hidden" name="action" value="submit" />
                             <div class="hosting-container">
-                                <input id="offer-hosting" name="hosting[enabled]" type="checkbox" />
+                                <input
+                                    id="offer-hosting"
+                                    name="hosting[enabled]"
+                                    type="checkbox"
+                                    {% if akso_delegates.hosting %}
+                                        checked
+                                    {% endif %} />
                                 <label class="hosting-label" for="offer-hosting">{{akso_locale.delegate_appl.offer_hosting_check}}</label>
                                 <div class="hosting-description">
                                     {{akso_locale.delegate_appl.hosting_desc}}
@@ -269,7 +288,7 @@
                                     <div class="form-field">
                                         <div class="inner-field">
                                             <label for="hosting-max-days">{{akso_locale.delegate_appl.hosting_max_days}}</label>
-                                            <input id="hosting-max-days" name="hosting[maxDays]" type="number" min="1" max="99" placeholder="0" />
+                                            <input id="hosting-max-days" name="hosting[maxDays]" type="number" min="1" max="99" placeholder="0" value="{{akso_delegates.hosting.maxDays}}" />
                                         </div>
                                         <div class="field-description">
                                             {{akso_locale.delegate_appl.hosting_max_days_desc}}
@@ -278,7 +297,7 @@
                                     <div class="form-field">
                                         <div class="inner-field">
                                             <label for="hosting-max-persons">{{akso_locale.delegate_appl.hosting_max_persons}}</label>
-                                            <input id="hosting-max-persons" name="hosting[maxPersons]" type="number" min="1" max="99" placeholder="0" />
+                                            <input id="hosting-max-persons" name="hosting[maxPersons]" type="number" min="1" max="99" placeholder="0" value="{{akso_delegates.hosting.maxPersons}}" />
                                         </div>
                                         <div class="field-description">
                                             {{akso_locale.delegate_appl.hosting_max_persons_desc}}
@@ -287,7 +306,7 @@
                                     <div class="form-field is-stacked">
                                         <div class="inner-field">
                                             <label for="hosting-description">{{akso_locale.delegate_appl.hosting_description}}</label>
-                                            <textarea id="hosting-description" name="hosting[description]" placeholder="{{akso_locale.delegate_appl.hosting_description_placeholder}}"></textarea>
+                                            <textarea id="hosting-description" name="hosting[description]" placeholder="{{akso_locale.delegate_appl.hosting_description_placeholder}}">{{akso_delegates.hosting.description}}</textarea>
                                         </div>
                                         <div class="field-description">
                                             {{akso_locale.delegate_appl.hosting_description_desc}}
@@ -301,7 +320,8 @@
                                                 name="hosting[psProfileURL]"
                                                 type="url"
                                                 placeholder="https://www.pasportaservo.org/ejo/..."
-                                                pattern="https://www.pasportaservo.org/ejo/(\d+)/?" />
+                                                pattern="https://www.pasportaservo.org/ejo/(\d+)/?"
+                                                value="{{akso_delegates.hosting.psProfileURL}}" />
                                         </div>
                                         <div class="field-description">
                                             {{akso_locale.delegate_appl.hosting_ps_profile_url_desc}}
@@ -311,7 +331,14 @@
                             </div>
                             <div class="tos">
                                 <div class="tos-field">
-                                    <input id="tos-1" type="checkbox" name="tos[docDataProtectionUEA]" required />
+                                    <input
+                                        id="tos-1"
+                                        type="checkbox"
+                                        name="tos[docDataProtectionUEA]"
+                                        {% if akso_delegates.tos.docDataProtectionUEA %}
+                                        checked
+                                        {% endif %}
+                                        required />
                                     <label for="tos-1" class="tos-required">
                                         {{
                                             akso_locale.delegate_appl.tos_data_protection_uea_0
@@ -323,7 +350,14 @@
                                     </label>
                                 </div>
                                 <div class="tos-field">
-                                    <input id="tos-2" type="checkbox" name="tos[docDelegatesUEA]" required />
+                                    <input
+                                        id="tos-2"
+                                        type="checkbox"
+                                        name="tos[docDelegatesUEA]"
+                                        {% if akso_delegates.tos.docDelegatesUEA %}
+                                        checked
+                                        {% endif %}
+                                        required />
                                     <label for="tos-2" class="tos-required">
                                         {{
                                             akso_locale.delegate_appl.tos_delegates_0
@@ -335,7 +369,14 @@
                                     </label>
                                 </div>
                                 <div class="tos-field">
-                                    <input id="tos-3" type="checkbox" name="tos[docDelegatesDataProtectionUEA]" required />
+                                    <input
+                                        id="tos-3"
+                                        type="checkbox"
+                                        name="tos[docDelegatesDataProtectionUEA]"
+                                        {% if akso_delegates.tos.docDelegatesDataProtectionUEA %}
+                                        checked
+                                        {% endif %}
+                                        required />
                                     <label for="tos-3" class="tos-required">
                                         {{
                                             akso_locale.delegate_appl.tos_delegates_data_protection_uea_0
@@ -347,7 +388,13 @@
                                     </label>
                                 </div>
                                 <div class="tos-field">
-                                    <input id="tos-4" type="checkbox" name="tos[paperAnnualBook]" />
+                                    <input
+                                        id="tos-4"
+                                        type="checkbox"
+                                        name="tos[paperAnnualBook]"
+                                        {% if akso_delegates.tos.paperAnnualBook %}
+                                        checked
+                                        {% endif %} />
                                     <label for="tos-4">
                                         {{
                                             akso_locale.delegate_appl.tos_paper_annual_book_0
@@ -364,7 +411,7 @@
                             </div>
                             <div class="form-field is-stacked">
                                 <label for="application-notes">{{akso_locale.delegate_appl.notes}}</label>
-                                <textarea id="application-notes"></textarea>
+                                <textarea name="notes" id="application-notes">{{akso_delegates.notes}}</textarea>
                                 <div class="field-description">
                                     {{akso_locale.delegate_appl.notes_desc}}
                                 </div>
@@ -377,6 +424,9 @@
                         </form>
                     </div>
 
+                {% elseif akso_delegates.page == 'success' %}
+                    <h2>{{akso_locale.delegate_appl.success_title}}</h2>
+                    <p>{{akso_locale.delegate_appl.success_description}}</p>
                 {% endif %}
             </div>
             <div class="akso-logged-in-only-content-else-clause">
