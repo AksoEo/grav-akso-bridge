@@ -26,18 +26,23 @@
     {% endmacro %}
 
     <div class="akso-delegates-application-form">
-        {% if akso_delegates.is_pre_form %}
+        {% if akso_delegates.message %}
+            <div class="form-message">
+                {{akso_delegates.message}}
+            </div>
+        {% endif %}
+        {% if akso_delegates.error %}
+            <div class="form-error">
+                {{akso_delegates.error}}
+            </div>
+        {% endif %}
+
+        {% if akso_delegates.has_page_contents %}
         {{page.content}}
         {% endif %}
 
         <div class="akso-logged-in-only-content">
             <div class="akso-logged-in-only-content-if-clause">
-                {% if akso_delegates.error %}
-                    <div class="form-error">
-                        {{akso_delegates.error}}
-                    </div>
-                {% endif %}
-
                 {% if akso_delegates.is_pre_form %}
                 <form class="pre-form" method="POST">
                     <input type="hidden" name="_begin" value="1">
@@ -58,8 +63,15 @@
                     </form>
                 {% endif %}
 
+                {% if akso_delegates.page == 'pending' %}
+                    <h2>{{akso_locale.delegate_appl.pending_title}}</h2>
+                    <p>{{akso_locale.delegate_appl.pending_description}}</p>
+                {% endif %}
+
                 {% if akso_delegates.has_summary %}
                     <div class="application-summary">
+                        <h3>{{akso_locale.delegate_appl.summary_title}}</h3>
+                        <h4>{{akso_locale.delegate_appl.summary_cities}}</h4>
                         <ul class="selected-cities">
                             {% for cityId in akso_delegates.state.cities %}
                                 {% set city = akso_delegates.selected_cities[cityId] %}
@@ -69,19 +81,84 @@
                             {% endfor %}
                         </ul>
                         {% if akso_delegates.page != 'subjects' %}
+                        <h4>{{akso_locale.delegate_appl.summary_subjects}}</h4>
                         <ul class="selected-subjects">
-                            <li class="selected-subject">
-                                <div class="subject-item">
-                                    <div class="subject-label">Cat</div>
-                                    <div class="subject-description">cat</div>
-                                </div>
-                            </li>
+                            {% for subjectId in akso_delegates.state.subjects %}
+                                {% set subject = akso_delegates.selected_subjects[subjectId] %}
+                                <li class="selected-subject">
+                                    {{_self.subject_item(akso_delegates, subject)}}
+                                </li>
+                            {% endfor %}
                         </ul>
+                        {% endif %}
+                        {% if akso_delegates.page == 'pending' %}
+                            {% if akso_delegates.hosting %}
+                                <h4>{{akso_locale.delegate_appl.summary_hosting}}</h4>
+                                <div class="hosting-summary">
+                                    <div class="hosting-field">
+                                        <label>{{akso_locale.delegate_appl.hosting_max_days}}</label>
+                                        <div class="field-value">{{akso_delegates.hosting.maxDays|default('—')}}</div>
+                                    </div>
+                                    <div class="hosting-field">
+                                        <label>{{akso_locale.delegate_appl.hosting_max_persons}}</label>
+                                        <div class="field-value">{{akso_delegates.hosting.maxPersons|default('—')}}</div>
+                                    </div>
+                                    <div class="hosting-field">
+                                        <label>{{akso_locale.delegate_appl.hosting_description}}</label>
+                                        <div class="field-value">{{akso_delegates.hosting.description|default('—')|e}}</div>
+                                    </div>
+                                    <div class="hosting-field">
+                                        <label>{{akso_locale.delegate_appl.hosting_ps_profile_url}}</label>
+                                        <div class="field-value">
+                                            {% if akso_delegates.hosting.psProfileURL %}
+                                                <a target="_blank" rel="nofollow noreferrer" href="{{akso_delegates.hosting.psProfileURL|e}}">
+                                                    {{akso_delegates.hosting.psProfileURL|e}}
+                                                </a>
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <h4>{{akso_locale.delegate_appl.summary_no_hosting}}</h4>
+                            {% endif %}
+                            {% if akso_delegates.tos.paperAnnualBook %}
+                                <h4>{{akso_locale.delegate_appl.summary_additional}}</h4>
+                                <div>{{akso_locale.delegate_appl.summary_tos_paper_annual_book}}</div>
+                            {% endif %}
                         {% endif %}
                     </div>
                 {% endif %}
 
-                {% if akso_delegates.page == 'cities' %}
+                {% if akso_delegates.page == 'pending' %}
+
+                    <form method="POST" class="pending-delete-footer">
+                        <input type="hidden" name="action" value="maybe_delete" />
+                        <button type="submit">
+                            {{akso_locale.delegate_appl.delete_pending_button}}
+                        </button>
+                    </form>
+
+                {% elseif akso_delegates.page == 'delete' %}
+
+                    <h2>{{akso_locale.delegate_appl.delete_pending_title}}</h2>
+                    <p>{{akso_locale.delegate_appl.delete_pending_description}}</p>
+
+                    <div class="delete-footer">
+                        <a class="link-button" href="{{akso_delegates.return}}">
+                            {{akso_locale.delegate_appl.delete_return}}
+                        </a>
+
+                        <form method="POST" class="delete-button-container">
+                            <input type="hidden" name="action" value="delete" />
+                            <button type="submit">
+                                {{akso_locale.delegate_appl.delete_button}}
+                            </button>
+                        </form>
+                    </div>
+
+                {% elseif akso_delegates.page == 'cities' %}
                     <div class="inner-form">
                         <div class="object-selection">
                             <h2>{{akso_locale.delegate_appl.select_cities}}</h2>
@@ -425,8 +502,10 @@
                     </div>
 
                 {% elseif akso_delegates.page == 'success' %}
+
                     <h2>{{akso_locale.delegate_appl.success_title}}</h2>
                     <p>{{akso_locale.delegate_appl.success_description}}</p>
+
                 {% endif %}
             </div>
             <div class="akso-logged-in-only-content-else-clause">

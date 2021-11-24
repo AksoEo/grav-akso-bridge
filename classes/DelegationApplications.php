@@ -19,10 +19,37 @@ class DelegationApplications {
     private $state = [];
     private function deserializeState() {
         $this->state = array(
+            'has_form' => true,
             'page' => self::PAGE_ORDER[0],
             'cities' => [],
             'subjects' => [],
         );
+
+        if ($this->plugin->aksoUser) {
+            $res = $this->bridge->get("/delegations/applications", array(
+                'fields' => [
+                    'id',
+                    'cities',
+                    'subjects',
+                    'hosting',
+                    'tos.docDataProtectionUEA',
+                    'tos.docDelegatesUEA',
+                    'tos.docDelegatesDataProtectionUEA',
+                ],
+                'filter' => array(
+                    'codeholderId' => $this->plugin->aksoUser['id'],
+                    'status' => 'pending',
+                ),
+                'limit' => 1,
+            ));
+            if (!$res['k']) throw new \Exception('failed to fetch applications');
+            if (!empty($res['b'])) {
+                $this->state['page'] = 'pending';
+                $this->state['has_form'] = false;
+                $this->state['pending_appl'] = $res['b'][0];
+                return;
+            }
+        }
 
         $postData = null;
         if (isset($_SESSION[self::SESX_KEY]) && gettype($_SESSION[self::SESX_KEY]) === 'string') {
@@ -75,11 +102,9 @@ class DelegationApplications {
             );
             //$options['order'] = [['_relevance', 'desc']]; // makes it worse
         }
-        var_dump($options);
         $res = $this->bridge->get("/geodb/cities", $options, empty($query) ? 60 : 0);
         if (!$res['k']) throw new \Exception('failed to search cities');
         $cities = [];
-        var_dump($res);
         foreach ($res['b'] as $item) {
             $item['id'] = (int) substr($item['id'], 1);
             $cities[$item['id']] = $item;
@@ -318,13 +343,56 @@ class DelegationApplications {
         );
     }
 
+    private function runPendingPage() {
+        $this->state['cities'] = array_map(function ($id) {
+            return (int) substr($id, 1); // remove Q
+        }, $this->state['pending_appl']['cities']);
+        $this->state['subjects'] = $this->state['pending_appl']['subjects'];
+
+        if (isset($_POST['action']) && $_POST['action'] === 'maybe_delete') {
+            return array(
+                'page' => 'delete',
+                'return' => $this->plugin->getGrav()['uri']->path(),
+            );
+        } else if (isset($_POST['action']) && $_POST['action'] === 'delete') {
+            $id = $this->state['pending_appl']['id'];
+            $res = $this->bridge->delete("/delegations/applications/$id", [], []);
+            if ($res['k']) {
+                return array(
+                    'is_pre_form' => true,
+                    'message' => $this->plugin->locale['delegate_appl']['delete_success'],
+                    'has_page_contents' => true,
+                );
+            } else {
+                return array(
+                    'page' => 'delete',
+                    'error' => $this->plugin->locale['delegate_appl']['delete_error'],
+                    'return' => $this->plugin->getGrav()['uri']->path(),
+                );
+            }
+        }
+
+        return array(
+            'page' => 'pending',
+            'has_page_contents' => true,
+            'has_summary' => true,
+            'countries' => $this->getCountries(),
+            'cities' => $this->state['subjects'],
+            'subjects' => $this->state['subjects'],
+            'selected_cities' => $this->getCities($this->state['cities']),
+            'selected_subjects' => $this->getSubjects($this->state['subjects']),
+            'hosting' => $this->state['pending_appl']['hosting'],
+            'tos' => $this->state['pending_appl']['tos'],
+        );
+    }
+
     function run() {
         $this->deserializeState();
 
-        if (isset($_POST['_begin'])) {
+        if ($this->state['has_form'] && isset($_POST['_begin'])) {
             $this->state['page'] = self::PAGE_ORDER[1];
         }
-        if (isset($_POST['_back'])) {
+        if ($this->state['has_form'] && isset($_POST['_back'])) {
             $index = array_search($this->state['page'], self::PAGE_ORDER);
             if ($index > 0) {
                 $this->state['page'] = self::PAGE_ORDER[$index - 1];
@@ -333,13 +401,15 @@ class DelegationApplications {
 
         $pageParams = null;
         if ($this->state['page'] === 'pre') {
-            $pageParams = array('is_pre_form' => true);
+            $pageParams = array('is_pre_form' => true, 'has_page_contents' => true);
         } else if ($this->state['page'] === 'cities') {
             $pageParams = $this->runCitiesPage();
         } else if ($this->state['page'] === 'subjects') {
             $pageParams = $this->runSubjectsPage();
         } else if ($this->state['page'] === 'final') {
             $pageParams = $this->runFinalPage();
+        } else if ($this->state['page'] === 'pending') {
+            $pageParams = $this->runPendingPage();
         }
 
         $pageParams['state'] = $this->state;

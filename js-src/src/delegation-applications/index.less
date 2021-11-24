@@ -4,6 +4,14 @@
     margin-bottom: 4em;
     text-align: left;
 
+    .form-message {
+        background: var(--light-accent);
+        color: var(--light-accent-fg);
+        border-radius: var(--radius);
+        padding: 0.5em 1em;
+        margin: 1em 0;
+    }
+
     .form-error {
         background: var(--error-bg);
         color: var(--error-fg);
@@ -35,6 +43,58 @@
         .subject-description {
             font-size: smaller;
         }
+    }
+
+    .application-summary {
+        margin: 1em 0;
+        padding: 0.5em;
+        border-radius: var(--radius);
+        background: var(--bg2);
+        box-shadow: @inset-both;
+
+        h3 {
+            margin: 0;
+        }
+        h4 {
+            margin-top: 1em;
+            margin-bottom: 0.2em;
+        }
+
+        .selected-cities, .selected-subjects {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .city-item, .subject-item, .hosting-summary {
+            margin: 0.2em 0;
+            padding: 0.5em 1em;
+            border-radius: var(--radius);
+            background: var(--bg);
+            box-shadow: @shade-both;
+        }
+
+        .hosting-summary {
+            .hosting-field {
+                & + .hosting-field {
+                    margin-top: 0.2em;
+                }
+
+                label {
+                    font-size: smaller;
+                }
+            }
+        }
+    }
+
+    .pending-delete-footer {
+        margin-top: 1em;
+        text-align: right;
+    }
+    .delete-footer {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
     }
 
     .object-selection {
