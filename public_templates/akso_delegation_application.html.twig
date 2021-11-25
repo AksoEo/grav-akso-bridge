@@ -89,6 +89,11 @@
                                     {{_self.subject_item(akso_delegates, subject)}}
                                 </li>
                             {% endfor %}
+                            {% if akso_delegates.state.subjects is empty %}
+                                <div class="subjects-empty">
+                                    {{akso_locale.delegate_appl.subjects_none_selected}}
+                                </div>
+                            {% endif %}
                         </ul>
                         {% endif %}
                         {% if akso_delegates.page == 'pending' %}
@@ -284,6 +289,21 @@
                                             type="submit"
                                             formaction="{{akso_delegates.continue_path}}">
                                             {{akso_locale.delegate_appl.subjects_continue}}
+                                        </button>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <form class="selected-objects-container" method="POST">
+                                    <input type="hidden" name="state" value="{{akso_delegates.state_serialized|e('html_attr')}}">
+                                    <div class="selected-objects-empty">
+                                        {{akso_locale.delegate_appl.subjects_none_selected}}
+                                    </div>
+                                    <div class="continue-button-container">
+                                        <button
+                                            class="continue-button without-selection"
+                                            type="submit"
+                                            formaction="{{akso_delegates.continue_path}}">
+                                            {{akso_locale.delegate_appl.subjects_continue_without}}
                                         </button>
                                     </div>
                                 </form>

@@ -66,6 +66,13 @@
             margin: 0;
         }
 
+        .subjects-empty {
+            font-size: smaller;
+            padding: 0.5em 1em;
+            text-align: center;
+            opacity: 0.7;
+        }
+
         .city-item, .subject-item, .hosting-summary {
             margin: 0.2em 0;
             padding: 0.5em 1em;
@@ -107,12 +114,22 @@
                 margin: 0;
             }
 
+            .selected-objects-empty {
+                text-align: center;
+                padding: 0.5em 1em;
+                opacity: 0.7;
+            }
+
             .continue-button-container {
                 text-align: right;
                 margin-top: 0.5em;
 
                 .continue-button {
                     margin-right: 0;
+
+                    &.without-selection {
+                        font-size: smaller;
+                    }
                 }
             }
         }
@@ -298,6 +315,7 @@
 
                 .tos-field-desc {
                     font-size: 0.9em;
+                    opacity: 0.8;
                 }
             }
         }

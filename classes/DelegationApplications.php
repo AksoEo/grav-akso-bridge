@@ -280,7 +280,7 @@ class DelegationApplications {
             );
         }
 
-        $tos = null;
+        $tos = array('paperAnnualBook' => true);
         if (isset($_POST['tos']) && gettype($_POST['tos']) === 'array') {
             $tos = array();
             $requiredFields = [
