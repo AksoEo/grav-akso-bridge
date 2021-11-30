@@ -1,6 +1,6 @@
 {% extends 'partials/base.html.twig' %}
 {% block content %}
-    {{page.content}}
+    {{page.content|raw}}
     {% set should_collapse = '' %}
     {% if not akso_clist.view_all %}
         {% set should_collapse = 'init-collapsed' %}

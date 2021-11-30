@@ -305,7 +305,7 @@
                     <div class="year-offer-group" role="group" aria-label="{{offerGroup.title|e}}">
                         <div class="offer-group-info">
                             <div class="group-title">{{offerGroup.title|e}}</div>
-                            <div class="group-description">{{offerGroup.description}}</div>
+                            <div class="group-description">{{offerGroup.description|raw}}</div>
                         </div>
                         {% for offerIndex, offer in offerGroup.offers %}
                         {% set id = 'offer-item-' ~ offerYear.year ~ '-' ~ groupIndex ~ '-' ~ offerIndex %}
@@ -373,7 +373,7 @@
                                         {{akso_registration.categories[offer.id].name|e}}
                                     </div>
                                     <div class="item-description">
-                                        {{akso_registration.categories[offer.id].description}}
+                                        {{akso_registration.categories[offer.id].description|raw}}
                                     </div>
                                 </div>
                                 {% if not duplicate %}
@@ -391,7 +391,7 @@
                                         {{akso_registration.addons[offerYear.paymentOrgId][offer.id].name|e}}
                                     </div>
                                     <div class="item-description">
-                                        {{akso_registration.addons[offerYear.paymentOrgId][offer.id].description}}
+                                        {{akso_registration.addons[offerYear.paymentOrgId][offer.id].description|raw}}
                                     </div>
                                 </div>
                                 <div class="item-price is-variable">

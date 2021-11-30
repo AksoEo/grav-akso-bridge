@@ -49,6 +49,7 @@ class MarkdownExt {
                     'element' => array(
                         'name' => 'h3',
                         'attributes' => $attrs,
+                        'handler' => 'line',
                         'text' => $text,
                     ),
                 );
@@ -1532,11 +1533,17 @@ class MarkdownExt {
     protected function handleHTMLSectionMarkers($doc) {
         $secMarkers = $doc->find('.section-marker');
         foreach ($secMarkers as $sm) {
-            $text = $sm->text();
+            $innerHtml = $sm->innerHtml();
             $newSM = new Element('h3');
             $newSM->class = $sm->class;
             if (isset($sm->id)) $newSM->id = $sm->id;
-            $contentSpan = new Element('span', $text);
+            $contentSpan = new Element('span');
+            {
+                $elements = new Document($innerHtml);
+                foreach ($elements->toElement()->children() as $el) {
+                    $contentSpan->appendChild($el);
+                }
+            }
             $contentSpan->class = 'section-marker-inner';
             $newSM->appendChild($contentSpan);
             $fillSpan = new Element('span');

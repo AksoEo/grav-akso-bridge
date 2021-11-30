@@ -38,7 +38,7 @@
         {% endif %}
 
         {% if akso_delegates.has_page_contents %}
-        {{page.content}}
+        {{page.content|raw}}
         {% endif %}
 
         <div class="akso-logged-in-only-content">

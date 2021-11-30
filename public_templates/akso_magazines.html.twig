@@ -1,6 +1,6 @@
 {% extends 'partials/base.html.twig' %}
 {% block content %}
-    {{page.content}}
+    {{page.content|raw}}
 <div class="akso-magazines">
     <ul class="magazines-cover-gallery">
         {% for magazine in akso_magazines.magazines %}
