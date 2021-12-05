@@ -1277,32 +1277,42 @@ class MarkdownExt {
             }
         }
 
+        // collect top level children into sections
         $rootNode = $mains[0];
         $topLevelChildren = $rootNode->children();
-        $containers = array();
+        $sections = array();
         $sidebarNews = null;
         foreach ($topLevelChildren as $child) {
             if ($child->isElementNode() and $child->class === 'news-sidebar') {
                 $sidebarNews = $child;
             } else if ($child->isElementNode() and $child->tag === 'figure' and strpos($child->class, 'full-width') !== false) {
                 // full-width figure!
-                $containers[] = array(
+                $sections[] = array(
                     'kind' => 'figure',
                     'contents' => $child,
                 );
+            } else if ($child->isTextNode() and trim($child->text()) === '') {
+                continue;
+            } else if ($child->isElementNode() && $child->tag === 'h3' && strpos($child->class, 'section-marker') !== false) {
+                $sections[] = array(
+                    'kind' => 'section',
+                    'contents' => [$child],
+                );
             } else {
-                if ($child->isTextNode() and trim($child->text()) === '') {
-                    continue;
-                }
+                $isSectionEndingNode = $child->isElementNode() && in_array($child->tag, ['h1', 'h2']);
+                $lastSection = count($sections) ? $sections[count($sections) - 1] : null;
+                $lastSectionIsSection = $lastSection ? $lastSection['kind'] === 'section' : false;
+                $lastSectionCanReceiveNode = $lastSection
+                    ? ($lastSectionIsSection ? !$isSectionEndingNode : false)
+                    : false;
 
-                if (count($containers) === 0 || $containers[count($containers) - 1]['kind'] !== 'container') {
-                    $containers[] = array(
-                        'kind' => 'container',
+                if (!$lastSectionCanReceiveNode) {
+                    $sections[] = array(
+                        'kind' => 'normal',
                         'contents' => array(),
                     );
                 }
-                // not a full-width figure
-                $containers[count($containers) - 1]['contents'][] = $child;
+                $sections[count($sections) - 1]['contents'][] = $child;
             }
             $child->remove();
         }
@@ -1316,12 +1326,11 @@ class MarkdownExt {
         $contentRootNode = new Element('div');
         $contentRootNode->class = 'page-contents';
 
-        $firstIsBigFigure = (count($containers) > 0) && ($containers[0]['kind'] === 'figure');
-
+        $firstIsBigFigure = (count($sections) > 0) && ($sections[0]['kind'] === 'figure');
         if ($firstIsBigFigure) {
-            $fig = $containers[0]['contents'];
+            $fig = $sections[0]['contents'];
             $fig->class .= ' is-top-figure';
-            array_splice($containers, 0, 1);
+            array_splice($sections, 0, 1);
             $newRootNode->appendChild($fig);
         }
 
@@ -1342,38 +1351,56 @@ class MarkdownExt {
 
         $isFirstContainer = true;
         $didAddBreadcrumbs = false;
-        foreach ($containers as $container) {
-            if ($container['kind'] === 'figure') {
-                $contentRootNode->appendChild($container['contents']);
+        $currentContainer = null;
+        $flushContainer = function()
+            use
+                (&$currentContainer, &$contentRootNode, &$contentSplitNode, &$isFirstContainer)
+        {
+            if (!$currentContainer) return;
+            if ($isFirstContainer) {
+                $contentSplitNode->appendChild($currentContainer);
             } else {
-                $containerNode = new Element('div');
-                $containerNode->class = 'md-container';
+                $containerContainerNode = new Element('div');
+                $containerContainerNode->class = 'content-split-container';
+                $layoutSpacer = new Element('div');
+                $layoutSpacer->class = 'layout-spacer';
+                $containerContainerNode->appendChild($layoutSpacer);
+                $containerContainerNode->appendChild($currentContainer);
+                $contentRootNode->appendChild($containerContainerNode);
+            }
+            $currentContainer = null;
+            $isFirstContainer = false;
+        };
+
+        foreach ($sections as $section) {
+            if ($section['kind'] === 'figure') {
+                $flushContainer();
+                $contentRootNode->appendChild($section['contents']);
+            } else {
+                if (!$currentContainer) {
+                    $currentContainer = new Element('div');
+                    $currentContainer->class = 'content-container';
+                }
+
+                $sectionNode = new Element('section');
+                $sectionNode->class = 'md-container';
 
                 if (!$didAddBreadcrumbs) {
-                    // add breadcrumbs to first md-container
+                    // add breadcrumbs to first section
                     $didAddBreadcrumbs = true;
                     if (count($breadcrumbs) > 0) {
-                        $containerNode->appendChild($breadcrumbs[0]);
+                        $currentContainer->appendChild($breadcrumbs[0]);
                     }
                 }
 
-                foreach ($container['contents'] as $contentNode) {
-                    $containerNode->appendChild($contentNode);
+                foreach ($section['contents'] as $contentNode) {
+                    $sectionNode->appendChild($contentNode);
                 }
-                if ($isFirstContainer) {
-                    $contentSplitNode->appendChild($containerNode);
-                } else {
-                    $containerContainerNode = new Element('div');
-                    $containerContainerNode->class = 'md-split-container';
-                    $layoutSpacer = new Element('div');
-                    $layoutSpacer->class = 'layout-spacer';
-                    $containerContainerNode->appendChild($layoutSpacer);
-                    $containerContainerNode->appendChild($containerNode);
-                    $contentRootNode->appendChild($containerContainerNode);
-                }
+
+                $currentContainer->appendChild($sectionNode);
             }
-            $isFirstContainer = false;
         }
+        $flushContainer();
 
         $newRootNode->appendChild($contentSplitNode);
         $newRootNode->appendChild($contentRootNode);
@@ -1540,8 +1567,13 @@ class MarkdownExt {
             $contentSpan = new Element('span');
             {
                 $elements = new Document($innerHtml);
-                foreach ($elements->toElement()->children() as $el) {
-                    $contentSpan->appendChild($el);
+                $elements = $elements->find('body')[0];
+                foreach ($elements->children() as $el) {
+                    if ($el->tag === 'p') {
+                        foreach ($el->children() as $child) $contentSpan->appendChild($child);
+                    } else {
+                        $contentSpan->appendChild($el);
+                    }
                 }
             }
             $contentSpan->class = 'section-marker-inner';
