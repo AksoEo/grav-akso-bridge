@@ -101,11 +101,15 @@
                     <div class="year-label">{{year|e}}</div>
                     {% for offer in yearItems %}
                     <div class="offer-item">
-                        {% if offer.type == 'membership' %}
+                        {% if offer.type == 'membership' or offer.type == 'magazine' %}
                         <div class="item-inner">
                             <div class="item-name">
-                                <span class="item-abbrev">{{akso_registration.categories[offer.id].nameAbbrev|e}}</span>
-                                {{akso_registration.categories[offer.id].name|e}}
+                                {% if offer.type == 'membership' %}
+                                    <span class="item-abbrev">{{akso_registration.categories[offer.id].nameAbbrev|e}}</span>
+                                    {{akso_registration.categories[offer.id].name|e}}
+                                {% else %}
+                                    {{akso_registration.magazines[offer.id].name|e}}
+                                {% endif %}
                             </div>
                             <div class="item-price">
                                 {{offer.amount_original_rendered|e}}
@@ -151,11 +155,15 @@
                         {% set groupIndex = offerKeyParts[0] %}
                         {% set offerIndex = offerKeyParts[1] %}
                         <div class="offer-item">
-                            {% if offer.type == 'membership' %}
+                            {% if offer.type == 'membership' or offer.type == 'magazine' %}
                             <div class="item-inner">
                                 <div class="item-name">
-                                    <span class="item-abbrev">{{akso_registration.categories[offer.id].nameAbbrev|e}}</span>
-                                    {{akso_registration.categories[offer.id].name|e}}
+                                    {% if offer.type == 'membership' %}
+                                        <span class="item-abbrev">{{akso_registration.categories[offer.id].nameAbbrev|e}}</span>
+                                        {{akso_registration.categories[offer.id].name|e}}
+                                    {% else %}
+                                        {{akso_registration.magazines[offer.id].name|e}}
+                                    {% endif %}
                                 </div>
                                 <div class="item-price">
                                     {{offer.amount_original_rendered|e}}
@@ -313,7 +321,7 @@
                         {% set available = true %}
                         {% set duplicate = false %}
                         {% set is_mem_duplicate = false %}
-                        {% if offer.type == 'membership' and not offer.price %}
+                        {% if (offer.type == 'membership' or offer.type == 'magazine') and not offer.price %}
                             {% set available = false %}
                             {% set classes = classes ~ ' not-available' %}
                         {% endif %}
@@ -334,6 +342,8 @@
                         {% set offerItemName = '' %}
                         {% if offer.type == 'membership' %}
                             {% set offerItemName = akso_registration.categories[offer.id].name %}
+                        {% elseif offer.type == 'magazine' %}
+                            {% set offerItemName = akso_registration.magazines[offer.id].name %}
                         {% elseif offer.type == 'addon' %}
                             {% set offerItemName = akso_registration.addons[offerYear.paymentOrgId][offer.id].name %}
                         {% endif %}
@@ -366,11 +376,15 @@
                                     <label tabindex="0" aria-hidden="true" class="selection-box" for="{{id|e('html_attr')}}"></label>
                                     {% endif %}
                                 </div>
-                                {% if offer.type == 'membership' %}
+                                {% if offer.type == 'membership' or offer.type == 'magazine' %}
                                 <div class="item-details">
                                     <div class="item-name">
-                                        <span class="item-abbrev">{{akso_registration.categories[offer.id].nameAbbrev|e}}</span>
-                                        {{akso_registration.categories[offer.id].name|e}}
+                                        {% if offer.type == 'membership' %}
+                                            <span class="item-abbrev">{{akso_registration.categories[offer.id].nameAbbrev|e}}</span>
+                                            {{akso_registration.categories[offer.id].name|e}}
+                                        {% else %}
+                                            {{akso_registration.magazines[offer.id].name|e}}
+                                        {% endif %}
                                     </div>
                                     <div class="item-description">
                                         {{akso_registration.categories[offer.id].description|raw}}
@@ -408,16 +422,16 @@
                                 </div>
                                 {% endif %}
                             </div>
-                            {% if offer.type == 'membership' and offer.price and offer.price.description %}
+                            {% if (offer.type == 'membership' or offer.type == 'magazine') and offer.price and offer.price.description %}
                             <div class="item-price-description">
                                 <div class="inner-padding"></div>
                                 <div class="inner-description">
                                     <div class="inner-title">{{akso_locale.registration.offer_price_desc_title}}</div>
-                                    {{offer.price.description}}
+                                    {{offer.price.description|raw}}
                                 </div>
                             </div>
                             {% endif %}
-                            {% if offer.type == 'membership' and offer.price %}
+                            {% if (offer.type == 'membership' or offer.type == 'magazine') and offer.price %}
                             <div class="item-price-addon">
                                 <input
                                     class="price-addon-checkbox"

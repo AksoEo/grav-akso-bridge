@@ -215,6 +215,28 @@ class Registration extends Form {
         }
         return $ids;
     }
+    private function getOfferMagazineIds($offerYears) {
+        $ids = new \Ds\Set();
+        foreach ($offerYears as $year) {
+            foreach ($year['offers'] as $group) {
+                foreach ($group['offers'] as $offer) {
+                    if ($offer['type'] === 'magazine') {
+                        $ids->add($offer['id']);
+                    }
+                }
+            }
+        }
+        return $ids;
+    }
+    private function getRegisteredOfferMagazineIds($offerYears) {
+        $ids = new \Ds\Set();
+        foreach ($offerYears as $yearItems)  {
+            foreach ($yearItems as $offer) {
+                if ($offer['type'] === 'magazine') $ids->add($offer['id']);
+            }
+        }
+        return $ids;
+    }
     private function getOfferAddonIds($offerYears) {
         $orgs = new \Ds\Map();
         foreach ($offerYears as $year) {
@@ -277,6 +299,28 @@ class Registration extends Form {
         }
 
         return $categories;
+    }
+    private function loadAllMagazines($ids) {
+        $magazines = [];
+        for ($i = 0; true; $i += 100) {
+            $res = $this->app->bridge->get("/magazines", array(
+                'fields' => ['id', 'org', 'name', 'description'],
+                'filter' => ['id' => ['$in' => $ids->slice(0, 100)->toArray()]],
+                'limit' => 100,
+                'offset' => $i,
+            ), 120);
+            if (!$res['k']) {
+                // TODO: emit error
+                break;
+            }
+            foreach ($res['b'] as $mag) {
+                $magazines[$mag['id']] = $mag;
+                $ids->remove($mag['id']);
+            }
+            if ($ids->isEmpty()) break;
+        }
+
+        return $magazines;
     }
     private function loadAllAddons($orgs) {
         $result = [];
@@ -400,7 +444,7 @@ class Registration extends Form {
                     $offer['amount_original'] = $offer['amount'];
                     $offer['amount_addon'] = null;
 
-                    if ($offer['type'] === 'membership') {
+                    if ($offer['type'] === 'membership' || $offer['type'] === 'magazine') {
                         if (isset($membershipAddons[$res['b']['year']][$offer['id']])) {
                             $addon = $membershipAddons[$res['b']['year']][$offer['id']];
                             $offer['amount_original'] = $offer['amount'] - $addon['amount'];
@@ -457,6 +501,7 @@ class Registration extends Form {
                 foreach ($addons as $addon) {
                     $addonsSerialized .= '+';
                     if ($addon['type'] === 'membership') $addonsSerialized .= 'm';
+                    else if ($addon['type'] === 'magazine') $addonsSerialized .= 'r';
                     else $addonsSerialized .= 'a';
                     $addonsSerialized .= $addon['id'] . '-' . $addon['amount'];
                 }
@@ -736,7 +781,7 @@ class Registration extends Form {
                         $type = $offerKeyParts[2];
                         $id = (int) $offerKeyParts[3];
 
-                        if ($type !== 'membership' && $type !== 'addon') continue;
+                        if ($type !== 'membership' && $type !== 'addon' && $type !== 'magazine') continue;
 
                         $amount = null;
                         $amountAddon = 0;
@@ -773,17 +818,17 @@ class Registration extends Form {
                         $type = $offerKeyParts[0];
                         $id = (int) $offerKeyParts[1];
 
-                        if ($type !== 'membership' && $type !== 'addon') continue;
+                        if ($type !== 'membership' && $type !== 'addon' && $type !== 'magazine') continue;
 
                         $amount = null;
                         $amountAddon = 0;
                         if (isset($_POST['offer_amount'])) {
                             $k = "$year-$groupIndex-$offerIndex";
                             if (isset($_POST['offer_amount'][$k])) {
-                                $amount = (int) (floatval($_POST['offer_amount'][$k]) * $this->state['currency_mult']);
+                                $amount = (int) (self::floatval($_POST['offer_amount'][$k]) * $this->state['currency_mult']);
                             }
                             if (isset($_POST['offer_amount_addon'][$k])) {
-                                $amountAddon = (int) (floatval($_POST['offer_amount_addon'][$k] * $this->state['currency_mult']));
+                                $amountAddon = (int) (self::floatval($_POST['offer_amount_addon'][$k]) * $this->state['currency_mult']);
                             }
                         }
 
@@ -862,10 +907,20 @@ class Registration extends Form {
                                 $offer['amount_addon'] = max(0, $offer['amount_addon']);
                                 $offer['amount_original'] = $apiOffer['price']['value'];
                                 $offer['amount'] = $apiOffer['price']['value'] + $offer['amount_addon'];
-                            } else $offer['amount'] = 2147483647; // FIXME
+                            } else $offer['amount'] = 2147483647; // FIXME: offer doesnt exist! what to do?
                         } else if ($offer['type'] === 'addon') {
                             $offer['amount'] = max(1, $offer['amount']);
                             $offer['amount_original'] = $offer['amount'];
+                        } else if ($offer['type'] === 'magazine') {
+                            $apiOffer = null;
+                            if (isset($this->offersByYear[$year]['offers'][$group]['offers'][$id])) {
+                                $apiOffer = $this->offersByYear[$year]['offers'][$group]['offers'][$id];
+                            }
+                            if ($apiOffer) {
+                                $offer['amount_addon'] = max(0, $offer['amount_addon']);
+                                $offer['amount_original'] = $apiOffer['price']['value'];
+                                $offer['amount'] = $apiOffer['price']['value'] + $offer['amount_addon'];
+                            } else $offer['amount'] = 2147483647; // FIXME: same deal as above
                         }
                     }
 
@@ -914,7 +969,7 @@ class Registration extends Form {
             }
         }
     }
-    
+
     private function updatePaymentsState() {
         if ($this->state['step'] >= 2) {
             $paymentOrgIds = new \Ds\Set();
@@ -1018,7 +1073,7 @@ class Registration extends Form {
 
                     if ($itemData['amount_addon']) {
                         $addons[] = array(
-                            'type' => 'membership',
+                            'type' => $itemData['type'],
                             'id' => $itemData['id'],
                             'amount' => $itemData['amount_addon'],
                         );
@@ -1086,6 +1141,7 @@ class Registration extends Form {
         $purposes = [];
         $addonPurposes = [];
         $categories = $this->loadAllCategories($this->getRegisteredOfferCategoryIds($this->state['offers']));
+        $magazines = $this->loadAllMagazines($this->getRegisteredOfferMagazineIds($this->state['offers']));
         foreach ($org['years'] as $year) {
             $purposeTitle = $this->locale['payment_purpose_title_singular'] . ' ' . $org['years'][0];
             $purposeDescription = '';
@@ -1096,14 +1152,22 @@ class Registration extends Form {
             $sum = 0;
             $originalAmountSum = 0;
             foreach ($yearItems as $offer) {
-                if ($offer['type'] === 'membership') {
+                if ($offer['type'] === 'membership' || $offer['type'] === 'magazine') {
                     if ($purposeDescription) $purposeDescription .= "\n";
                     $purposeDescription .= '- '; // render a list
-                    if (isset($categories[$offer['id']])) {
-                        $cat = $categories[$offer['id']];
-                        $purposeDescription .= $cat['nameAbbrev'] . ' ' . $cat['name'];
-                    } else {
-                        $purposeDescription .= '(Eraro)';
+                    if ($offer['type'] === 'membership') {
+                        if (isset($categories[$offer['id']])) {
+                            $cat = $categories[$offer['id']];
+                            $purposeDescription .= $cat['nameAbbrev'] . ' ' . $cat['name'];
+                        } else {
+                            $purposeDescription .= '(Eraro)';
+                        }
+                    } else if ($offer['type'] === 'magazine') {
+                        if (isset($magazines[$offer['id']])) {
+                            $purposeDescription .= $magazines[$offer['id']]['name'];
+                        } else {
+                            $purposeDescription .= '(Eraro)';
+                        }
                     }
                     $sum += $offer['amount'];
                     $originalAmountSum += $offer['amount_original'];
@@ -1213,6 +1277,8 @@ class Registration extends Form {
                             $yearItems[] = array('type' => 'addon', 'id' => $addonId, 'amount' => $addonAmount);
                         } else if ($addonType === 'm') {
                             $membershipYearItems[$addonId] = array('type' => 'membership', 'id' => $addonId, 'amount' => $addonAmount);
+                        } else if ($addonType === 'r') {
+                            $membershipYearItems[$addonId] = array('type' => 'magazine', 'id' => $addonId, 'amount' => $addonAmount);
                         }
                     }
                     $addons[$year] = $yearItems;
@@ -1338,6 +1404,7 @@ class Registration extends Form {
 
     private function getOfferError() {
         $categories = $this->loadAllCategories($this->getOfferCategoryIds($this->offers));
+        $magazines = $this->loadAllMagazines($this->getOfferMagazineIds($this->offers));
         $addons = $this->loadAllAddons($this->getOfferAddonIds($this->offers));
 
         $membershipCount = 0;
@@ -1370,6 +1437,8 @@ class Registration extends Form {
                     $membershipCount++;
                 } else if ($offer['type'] === 'addon') {
                     $offerName = $addons[$offerYear['paymentOrgId']][$offer['id']]['name'];
+                } else if ($offer['type'] === 'magazine') {
+                    $offerName = $magazines[$offer['id']]['name'];
                 } else {
                     return $this->localize('offers_error_inconsistent');
                 }
@@ -1399,9 +1468,11 @@ class Registration extends Form {
         $offers = $this->offers;
         $offersIndexed = $this->offersByYear;
         $categories = [];
+        $magazines = [];
         $addons = [];
         if ($this->offers) {
             $categories = $this->loadAllCategories($this->getOfferCategoryIds($this->offers));
+            $magazines = $this->loadAllMagazines($this->getOfferMagazineIds($this->offers));
             $addons = $this->loadAllAddons($this->getOfferAddonIds($this->offers));
         }
 
@@ -1415,6 +1486,7 @@ class Registration extends Form {
             'offers' => $offers,
             'offers_indexed' => $offersIndexed,
             'categories' => $categories,
+            'magazines' => $magazines,
             'addons' => $addons,
             'targets' => $targets,
             'thisYear' => $thisYear,
@@ -1425,6 +1497,7 @@ class Registration extends Form {
     static function floatval($n) {
         if (gettype($n) === 'float' || gettype($n) === 'integer') return $n;
         if (gettype($n) === 'string') {
+            if (empty($n)) return 0.0;
             return floatval(str_replace(',', '.', $n));
         }
         return 0.0;
