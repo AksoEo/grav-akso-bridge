@@ -1407,10 +1407,10 @@ class Registration extends Form {
         $magazines = $this->loadAllMagazines($this->getOfferMagazineIds($this->offers));
         $addons = $this->loadAllAddons($this->getOfferAddonIds($this->offers));
 
-        $membershipCount = 0;
+        $membershipLikeCount = 0;
         foreach ($this->state['offers'] as $year => $yearItems) {
             if (isset($this->state['locked_offers'][$year])) {
-                $membershipCount++;
+                $membershipLikeCount++;
                 continue;
             }
             if (!isset($this->offersByYear[$year])) return $this->localize('offers_error_inconsistent');
@@ -1434,11 +1434,12 @@ class Registration extends Form {
                     if (!$originalOffer['price']) return $this->localize('offers_error_inconsistent');
                     $minPrice = $originalOffer['price']['amount'];
                     $offerName = $categories[$offer['id']]['name'];
-                    $membershipCount++;
+                    $membershipLikeCount++;
                 } else if ($offer['type'] === 'addon') {
                     $offerName = $addons[$offerYear['paymentOrgId']][$offer['id']]['name'];
                 } else if ($offer['type'] === 'magazine') {
                     $offerName = $magazines[$offer['id']]['name'];
+                    $membershipLikeCount++;
                 } else {
                     return $this->localize('offers_error_inconsistent');
                 }
@@ -1449,8 +1450,8 @@ class Registration extends Form {
             }
         }
 
-        if ($membershipCount == 0) {
-            return $this->localize('offers_error_no_membership');
+        if ($membershipLikeCount == 0) {
+            return $this->localize('offers_error_no_membership_like');
         }
     }
 
