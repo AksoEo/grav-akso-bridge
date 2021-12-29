@@ -21,7 +21,7 @@ fs.mkdirSync(cachePath, { recursive: true, mode: 0o755 });
 fs.mkdirSync(rawCachePath, { recursive: true, mode: 0o755 });
 
 // set up socket directory
-const bridgePath = 'aksobridge';
+const bridgePath = 'run/aksobridge';
 fs.mkdirSync(bridgePath, { recursive: true, mode: 0o755 });
 const userAgent = `AKSOBridge/${version} (+https://akso.org)`;
 

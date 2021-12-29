@@ -56,10 +56,9 @@ class Magazines {
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
             return;
         }
-        $org = $magazineInfo['org'];
+        $editionInfo = $this->getMagazineEdition($magazine, $edition, $magazineInfo['name']);
 
-        $perm = "magazines.read.$org";
-        $hasPerm = $this->user ? $this->user->hasPerms([$perm])['p'][0] : false;
+        $hasPerm = $this->canUserReadMagazine($this->user, $magazineInfo, $editionInfo, 'access');
         if (!$hasPerm) {
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
             return;
@@ -220,7 +219,7 @@ class Magazines {
 
     function getMagazine($id) {
         $res = $this->bridge->get("/magazines/$id", array(
-            'fields' => ['id', 'name', 'description', 'org'],
+            'fields' => ['id', 'name', 'description', 'org', 'subscribers', 'subscriberFiltersCompiled'],
         ), 240);
         if ($res['k']) {
             $res['b']['description_rendered'] = $this->bridge->renderMarkdown(
@@ -270,7 +269,7 @@ class Magazines {
 
     function getMagazineEdition($magazine, $edition, $magazineName) {
         $res = $this->bridge->get("/magazines/$magazine/editions/$edition", array(
-            'fields' => ['id', 'idHuman', 'date', 'description', 'hasThumbnail', 'published'],
+            'fields' => ['id', 'idHuman', 'date', 'description', 'hasThumbnail', 'published', 'subscribers', 'subscriberFiltersCompiled'],
         ), 240);
         if ($res['k']) {
             $edition = $res['b'];
@@ -366,6 +365,44 @@ class Magazines {
         return null;
     }
 
+    private function canUserReadMagazine($user, $magazine, $edition, $accessType) {
+        $effectiveSubscribers = $edition['subscribers'] ?: $magazine['subscribers'];
+        $effectiveCompiledFilters = $edition['subscriberFiltersCompiled'] ?: $magazine['subscriberFiltersCompiled'];
+
+        if (!$effectiveSubscribers) return false;
+
+        if ($user) {
+            $res = $this->bridge->get("/codeholders", array(
+                'filter' => array(
+                    '$and' => [
+                        $effectiveCompiledFilters[$accessType],
+                        array('id' => $user['id']),
+                    ],
+                ),
+                'limit' => 1,
+            ));
+            if (!$res['k']) return false;
+            if ($res['h']['x-total-items'] > 0) {
+                return true;
+            }
+        }
+
+        if ($effectiveSubscribers[$accessType] === true) return true;
+
+        if (gettype($effectiveSubscribers[$accessType]) === 'array') {
+            $freelyAvailableAfter = $effectiveSubscribers[$accessType]['freelyAvailableAfter'];
+            if ($freelyAvailableAfter) {
+                $fDate = \DateTime::createFromFormat(\DateTime::RFC3339, $edition['date'] . 'T00:00:00Z');
+                $interval = new \DateInterval($freelyAvailableAfter);
+                $fDate->add($interval);
+                if ($fDate < new \DateTime()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     public function run() {
         $path = $this->plugin->getGrav()['page']->header()->path_subroute;
@@ -408,8 +445,6 @@ class Magazines {
             'toc' => self::TOC,
         );
 
-        $canRead = !!$this->plugin->aksoUser;
-
         if ($route['type'] === 'list') {
             $magazines = $this->listMagazines();
             $list = null;
@@ -442,11 +477,10 @@ class Magazines {
             $magazine = $this->getMagazine($route['magazine']);
             if (!$magazine) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
 
-            $org = $magazine['org'];
-            $canRead = $this->user ? $this->user->hasPerms(["magazines.read.$org"])['p'][0] : false;
-
             $edition = $this->getMagazineEdition($route['magazine'], $route['edition'], $magazine['name']);
             if (!$edition || !$edition['published']) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
+
+            $canRead = $this->canUserReadMagazine($this->user, $magazine, $edition, 'access');
 
             if (isset($_GET['js_toc_preview'])) {
                 $highlights = $this->getEditionTocEntries(
@@ -467,22 +501,18 @@ class Magazines {
                 'can_read' => $canRead,
             );
         } else if ($route['type'] === 'toc_entry') {
-            if (!$canRead) {
-                $this->plugin->getGrav()->redirectLangSafe($this->plugin->loginPath, 302);
-            }
-
             $magazine = $this->getMagazine($route['magazine']);
             if (!$magazine) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
 
-            $org = $magazine['org'];
-            $canRead = $this->user ? $this->user->hasPerms(["magazines.read.$org"])['p'][0] : false;
-
             $edition = $this->getMagazineEdition($route['magazine'], $route['edition'], $magazine['name']);
             if (!$edition || !$edition['published']) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
+
+            $canRead = $this->canUserReadMagazine($this->user, $magazine, $edition, 'access');
+
             $entry = $this->getEditionTocEntry(
                 $route['magazine'], $route['edition'], $route['entry'], $magazine['name'], $edition['idHuman']
             );
-            if (!$edition) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
+            if (!$entry) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
 
             return array(
                 'path_components' => $pathComponents,

@@ -20,7 +20,7 @@ class AppBridge {
         $dirname = explode('/', __DIR__);
         array_pop($dirname);
         $dirname = implode('/', $dirname);
-        $this->bridge = new \AksoBridge($dirname . '/aksobridged/aksobridge');
+        $this->bridge = new \AksoBridge($dirname . '/aksobridged/run/aksobridge');
         $this->bridge->openApp($this->apiHost, $apiKey, $apiSecret);
     }
 

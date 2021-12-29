@@ -3,3 +3,5 @@
 vendor/*
 # compiled output
 js/dist
+# runtime caches
+aksobridged/run

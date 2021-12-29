@@ -378,7 +378,7 @@ class AksoBridgePlugin extends Plugin {
     }
 
     private function runUserBridge() {
-        $this->bridge = new \AksoBridge(__DIR__ . '/aksobridged/aksobridge');
+        $this->bridge = new \AksoBridge(__DIR__ . '/aksobridged/run/aksobridge');
 
         // basic default state so stuff doesn’t error
         $this->pageState = array('state' => '');
@@ -837,7 +837,7 @@ class AksoBridgePlugin extends Plugin {
             "style-src 'self' 'unsafe-inline' " . $styleNonces,
             "child-src 'self' " . $extraChildSrc,
         ];
-        header('Content-Security-Policy: ' . implode($csp, ';'), FALSE);
+        header('Content-Security-Policy: ' . implode(';', $csp), FALSE);
     }
 
 }
