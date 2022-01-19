@@ -1,0 +1,13 @@
+{% extends "forms/field.html.twig" %}
+
+{% block input %}
+<div class="akso-field-sent-to-subscribers">
+    <input
+        type="checkbox"
+        class="akso-field-input"
+        name="{{ field_name|e('html_attr') }}"
+        {% if value %}
+        checked
+        {% endif %} />
+</div>
+{% endblock %}

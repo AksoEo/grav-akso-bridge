@@ -81,6 +81,8 @@ class AksoBridgePlugin extends Plugin {
 
         // Don't proceed if we are in the admin plugin
         if ($this->isAdmin()) {
+            $this->adminInterceptGkSendToSubscribers();
+
             $this->enable([
                 'onGetPageBlueprints' => ['onGetPageBlueprints', 0],
                 'onGetPageTemplates' => ['onGetPageTemplates', 0],
@@ -702,6 +704,7 @@ class AksoBridgePlugin extends Plugin {
     public function onTwigSiteVariables() {
         if ($this->isAdmin()) {
             // add admin js
+            $this->grav['assets']->add('plugin://akso-bridge/locale-admin.js');
             $this->grav['assets']->add('plugin://akso-bridge/css/akso-bridge-admin.css');
             $this->grav['assets']->add('plugin://akso-bridge/js/akso-bridge-admin.js');
             return;
@@ -840,4 +843,13 @@ class AksoBridgePlugin extends Plugin {
         header('Content-Security-Policy: ' . implode(';', $csp), FALSE);
     }
 
+    function adminInterceptGkSendToSubscribers() {
+        if (isset($_POST['akso_gk_send_to_subs'])) {
+            $title = $_POST['data']['header']['title'];
+            $content = $_POST['data']['content'];
+            $url = $_POST['data']['header']['canonical'];
+            var_dump("this is the part where the newsletter is sent out");
+            die();
+        }
+    }
 }
