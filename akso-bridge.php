@@ -15,6 +15,7 @@ use Grav\Plugin\AksoBridge\CongressRegistration;
 use Grav\Plugin\AksoBridge\CountryLists;
 use Grav\Plugin\AksoBridge\Delegates;
 use Grav\Plugin\AksoBridge\DelegationApplications;
+use Grav\Plugin\AksoBridge\GkSendToSubscribers;
 use Grav\Plugin\AksoBridge\Magazines;
 use Grav\Plugin\AksoBridge\Registration;
 use Grav\Plugin\AksoBridge\UserAccount;
@@ -805,7 +806,6 @@ class AksoBridgePlugin extends Plugin {
     }
 
     public function onMarkdownInitialized(Event $event) {
-        if ($this->isAdmin()) return;
         $markdownExt = $this->loadMarkdownExt();
         $markdownExt->onMarkdownInitialized($event);
     }
@@ -847,7 +847,12 @@ class AksoBridgePlugin extends Plugin {
         if (isset($_POST['akso_gk_send_to_subs'])) {
             $title = $_POST['data']['header']['title'];
             $content = $_POST['data']['content'];
-            $url = $_POST['data']['header']['canonical'];
+            $url = $_POST['data']['header']['routes']['canonical'];
+            $app = new AppBridge($this->grav);
+            $app->open();
+            $subs = new GkSendToSubscribers($this, $app);
+            $subs->run($title, $content, $url);
+            $app->close();
             var_dump("this is the part where the newsletter is sent out");
             die();
         }

@@ -1406,6 +1406,16 @@ class MarkdownExt {
         $newRootNode->appendChild($contentRootNode);
         $rootNode->replace($newRootNode);
 
+        return $this->handleHTMLComponents($document);
+    }
+
+    public function processHTMLComponents($contentString) {
+        $document = new Document($contentString);
+        return $this->handleHTMLComponents($document);
+    }
+
+    protected function handleHTMLComponents($document) {
+        $this->initAppIfNeeded();
         $this->handleHTMLCarousels($document);
         $this->handleHTMLSectionMarkers($document);
         $this->handleHTMLExpandables($document);

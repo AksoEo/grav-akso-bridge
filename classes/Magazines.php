@@ -10,12 +10,11 @@ class Magazines {
     const EDITION = 'numero';
     const TOC = 'enhavo';
 
-    private $plugin, $bridge, $user;
+    private $plugin, $user;
 
     public function __construct($plugin, $bridge) {
         $this->plugin = $plugin;
         $this->bridge = $bridge;
-        $this->user = $plugin->aksoUser ? $plugin->bridge : null;
     }
 
     public const TH_MAGAZINE = 'm';
