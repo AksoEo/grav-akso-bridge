@@ -102,9 +102,9 @@ export default [
         },
     },
     {
-        input: 'src/country-org-lists.js',
+        input: 'src/org-lists.js',
         preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/country-org-lists.css')),
+        plugins: plugins(path.join(__dirname, '../js/dist/org-lists.css')),
         output: {
             dir: path.join(__dirname, '../js/dist/'),
             chunkFileNames: 'col_[name].js',

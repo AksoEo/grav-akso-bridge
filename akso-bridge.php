@@ -13,6 +13,7 @@ use Grav\Plugin\AksoBridge\CongressLocations;
 use Grav\Plugin\AksoBridge\CongressPrograms;
 use Grav\Plugin\AksoBridge\CongressRegistration;
 use Grav\Plugin\AksoBridge\CountryLists;
+use Grav\Plugin\AksoBridge\OrgLists;
 use Grav\Plugin\AksoBridge\Delegates;
 use Grav\Plugin\AksoBridge\DelegationApplications;
 use Grav\Plugin\AksoBridge\GkSendToSubscribers;
@@ -264,14 +265,24 @@ class AksoBridgePlugin extends Plugin {
             $state['akso_magazines'] = $magazines->run();
             $app->close();
         } else if ($templateId === 'akso_country_org_list') {
-            $this->grav['assets']->add('plugin://akso-bridge/js/dist/country-org-lists.css');
-            $this->grav['assets']->add('plugin://akso-bridge/js/dist/country-org-lists.js');
+            $this->grav['assets']->add('plugin://akso-bridge/js/dist/org-lists.css');
+            $this->grav['assets']->add('plugin://akso-bridge/js/dist/org-lists.js');
             $app = new AppBridge($this->grav);
             $app->open();
             $countryLists = new CountryLists($this, $app->bridge);
             $state['akso_login_path'] = $this->loginPath;
             $state['akso_registration_path'] = $this->registrationPath;
             $state['akso_clist'] = $countryLists->run();
+            $app->close();
+        } else if ($templateId === 'akso_tag_org_list') {
+            $this->grav['assets']->add('plugin://akso-bridge/js/dist/org-lists.css');
+            $this->grav['assets']->add('plugin://akso-bridge/js/dist/org-lists.js');
+            $app = new AppBridge($this->grav);
+            $app->open();
+            $orgLists = new OrgLists($this, $app->bridge);
+            $state['akso_login_path'] = $this->loginPath;
+            $state['akso_registration_path'] = $this->registrationPath;
+            $state['akso_clist'] = $orgLists->run();
             $app->close();
         } else if ($templateId === 'akso_delegates') {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegates.css');

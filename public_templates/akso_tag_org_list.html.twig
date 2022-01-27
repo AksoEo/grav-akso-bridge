@@ -5,28 +5,32 @@
     {% if not akso_clist.view_all %}
         {% set should_collapse = 'init-collapsed' %}
     {% endif %}
-    {% set country_selector = {
-        should_collapse: should_collapse,
-        view: akso_clist.view,
-        list_country_codes: akso_clist.list_country_codes,
-        list_country_links: akso_clist.list_country_links,
-        country_names: akso_clist.country_names,
-        country_emoji: akso_clist.country_emoji,
-    } %}
-    {% include 'partials/akso_country_selector.html.twig' %}
+
+    <div class="org-list-tags {{should_collapse}}" id="fakoj">
+        <h3 class="overview-title">{{akso_locale.tag_org_lists.tag_selector_title}}</h3>
+        <ul class="tag-items" aria-label="{{akso_locale.tag_org_lists.tags_all_label}}">
+            {% for tag, link in akso_clist.list_tag_links %}
+                {% set is_current = '' %}
+                {% if akso_clist.view == tag %}
+                    {% set is_current = 'is-current' %}
+                {% endif %}
+                <li class="tag-item {{is_current}}" data-tag="{{tag|e('html_attr')}}">
+                    <a class="inner-item" href="{{link|e('html_attr')}}">
+                        {{tag}}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
     {% if not akso_clist.view_all %}
         <div class="org-list">
-            {% set code = akso_clist.view %}
-            <h1 class="country-title">
-                <img
-                    class="inline-flag-icon"
-                    draggable="false"
-                    src="{{akso_clist.country_emoji[code].src|e('html_attr')}}"
-                    alt="{{akso_clist.country_emoji[code].alt|e('html_attr')}}" />
-                {{akso_clist.country_names[code]}}
+            {% set tag = akso_clist.view %}
+            <h1 class="tag-title">
+                {{tag}}
             </h1>
-            <ul class="inner-org-list" aria-label="{{akso_locale.country_org_lists.country_list_label_0}}{{code}}{{akso_locale.country_org_lists.country_list_label_1}}">
-                {% for orgId in akso_clist.list_countries[code] %}
+            <ul class="inner-org-list" aria-label="{{akso_locale.tag_org_lists.tag_list_label_0}}{{tag}}{{akso_locale.tag_org_lists.tag_list_label_1}}">
+                {% for orgId in akso_clist.list_tags[tag] %}
                 {% set org = akso_clist.orgs[orgId] %}
                 <li class="inner-org-card">
                     <div class="org-header">

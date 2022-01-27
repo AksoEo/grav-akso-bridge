@@ -1,0 +1,10 @@
+title: AKSO Landa Sekcio
+'@extends':
+  type: default
+  context: blueprints://pages
+
+form:
+  fields:
+    header.org_list_name:
+      type: text
+      label: '[[ListName]]'

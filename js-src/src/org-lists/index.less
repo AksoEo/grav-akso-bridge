@@ -1,7 +1,60 @@
 @import '../prelude';
 @import '../common/codeholder-factoids';
 
-.country-org-list {
+.org-list-tags {
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 0.5em 1em;
+    box-shadow: @shade-both;
+    overflow: hidden auto;
+    text-align: left;
+
+    &.init-collapsed {
+        max-height: 200px;
+
+        @media (max-height: 400px) {
+            max-height: 130px;
+        }
+    }
+
+    .overview-title {
+        margin: 0;
+    }
+
+    .tag-items {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-gap: 0.5em;
+
+        @media (max-width: 420px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .tag-item {
+            display: inline-flex;
+            background: var(--bg2);
+            color: var(--accent);
+            border-radius: var(--radius);
+            box-shadow: @shade-both;
+
+            .inner-item {
+                flex: 1;
+                padding: 0.2em 0.5em;
+                text-decoration: none;
+                color: inherit;
+            }
+
+            &.is-current {
+                background: var(--accent);
+                color: var(--accent-fg);
+            }
+        }
+    }
+}
+
+.org-list {
     .inner-org-list {
         padding: 0;
         list-style-type: none;
