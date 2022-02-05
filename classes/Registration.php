@@ -84,10 +84,11 @@ class Registration extends Form {
         }
 
         $fields = ['year', 'paymentOrgId', 'currency'];
+        $currentYear = date('Y');
         if (!$skipOffers) $fields[] = 'offers';
         $res = $this->app->bridge->get('/registration/options', array(
             'limit' => 100,
-            'filter' => ['enabled' => true],
+            'filter' => ['enabled' => true, 'year' => ['$gte' => $currentYear]],
             'fields' => $fields,
             'order' => [['year', 'desc']],
         ));
@@ -1164,7 +1165,7 @@ class Registration extends Form {
                         }
                     } else if ($offer['type'] === 'magazine') {
                         if (isset($magazines[$offer['id']])) {
-                            $purposeDescription .= $magazines[$offer['id']]['name'];
+                            $purposeDescription .= $this->localize('payment_label_magazine') . ' ' . $magazines[$offer['id']]['name'];
                         } else {
                             $purposeDescription .= '(Eraro)';
                         }

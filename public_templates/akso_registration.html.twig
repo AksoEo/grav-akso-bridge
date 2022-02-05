@@ -16,7 +16,7 @@
         <h1>{{akso_locale.registration.title}}</h1>
         {% if akso_registration.state.form_error %}
             <div class="error-banner">
-                {{akso_registration.state.form_error}}
+                {{akso_registration.state.form_error|raw}}
             </div>
         {% endif %}
         {% if akso_registration.state.payment_success %}
@@ -274,6 +274,13 @@
                 <p>
                     {{akso_locale.registration.offers_desc}}
                 </p>
+
+                {% if akso_registration.offers is empty %}
+                    <div class="offer-selection-empty">
+                        {{akso_locale.registration.offers_desc_empty}}
+                    </div>
+                {% endif %}
+
                 {% for offerYear in akso_registration.offers %}
                 <div class="offer-year" role="group" aria-label="{{akso_locale.registration.offers_year_title_0}}{{offerYear.year}}{{akso_locale.registration.offers_year_title_1}}">
                     <input class="year-expansion-switch" type="checkbox"
