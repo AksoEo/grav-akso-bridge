@@ -1,20 +1,20 @@
 window.aksoAdminLocale = {
     gk: {
-        createGkPage: '[[Add GK]]',
+        createGkPage: 'Krei gazetaran komunikon',
         setup: {
-            title: '[[Add GK Article]]',
-            gkNum: '[[GK Number]]',
-            gkTitle: '[[Article Title]]',
+            title: 'Krei gazetaran komunikon',
+            gkNum: 'Numero',
+            gkTitle: 'Titolo',
         },
         gkTitleFmt: (num, title) => `${title} (GK ${num})`,
         // the regex should match the title format
         gkTitleRe: /(?<title>.*?)\s*\(GK\s*(?<num>\d+)\)/,
         aliases: num => [`/gk/${num}`, `/gk/${num}a1`],
         sendToSubs: {
-            send: '[[Send to subscribers]]',
-            willSend: '[[Will send to subscribers]]',
-            didSend: '[[Sent to subscribers]]',
-            willUnset: '[[Un-marking as “sent to subscribers”]]',
+            send: 'Sendi al abonantoj',
+            willSend: 'Sendos al ĉiuj abonantoj',
+            didSend: 'Sendita al abonantoj',
+            willUnset: 'Forigos etikedon “Jam sendita al abonantoj”',
         },
     },
 };
