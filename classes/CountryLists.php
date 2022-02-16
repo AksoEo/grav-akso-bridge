@@ -161,7 +161,7 @@ class CountryLists {
                     );
                 }
 
-                if ($org['address']) {
+                if ($org['address'] && isset($org['address']['country'])) {
                     $addr = $org['address'];
                     $countryName = $this->getCountryNames()[$addr['country']];
                     $rendered = $this->bridge->renderAddress(array(
