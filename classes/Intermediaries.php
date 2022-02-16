@@ -1,6 +1,7 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use \DiDom\Document;
 use \DiDom\Element;
 use Grav\Plugin\AksoBridgePlugin;
 use Grav\Plugin\AksoBridge\MarkdownExt;
@@ -81,6 +82,7 @@ class Intermediaries {
                     }
 
                     $ch['intermediary_country'] = $intermediary['countryCode'];
+                    $ch['intermediary_description'] = $intermediary['paymentDescription'];
                     $codeholders[] = $ch;
                 }
 
@@ -131,6 +133,16 @@ class Intermediaries {
 
                 $li->appendChild($countryLabel);
                 $li->appendChild(CodeholderLists::renderCodeholder($this->bridge, $codeholder, $dataOrgs, $isMember, 'div'));
+
+                $paymentDescription = new Element('blockquote');
+                $paymentDescription->class = 'infobox category-inner-quote';
+                $doc = new Document();
+                $doc->loadHtml($this->bridge->renderMarkdown(
+                    $codeholder['intermediary_description'],
+                    ['emphasis', 'strikethrough', 'link', 'list', 'table'],
+                )['c']);
+                $paymentDescription->appendChild($doc->toElement());
+                $li->appendChild($paymentDescription);
                 $node->appendChild($li);
             }
         }

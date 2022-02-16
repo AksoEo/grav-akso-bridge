@@ -2,7 +2,6 @@
 namespace Grav\Plugin\AksoBridge;
 
 use Grav\Plugin\AksoBridgePlugin;
-use Grav\Plugin\AksoBridge\MarkdownExt;
 use Grav\Plugin\AksoBridge\Utils;
 
 class CountryLists {
@@ -81,7 +80,7 @@ class CountryLists {
         foreach ($countryCodes as $code) {
             $countryLinks[$code] = $this->plugin->getGrav()['uri']->path() . '?' . self::COUNTRY_NAME . '=' . $code
                 . '#landoj';
-            $countryEmoji[$code] = MarkdownExt::getEmojiForFlag($code);
+            $countryEmoji[$code] = Utils::getEmojiForFlag($code);
         }
 
         if ($view !== self::VIEW_ALL && !in_array($view, $countryCodes)) {

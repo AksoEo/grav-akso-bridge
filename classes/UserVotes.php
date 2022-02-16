@@ -2,7 +2,6 @@
 namespace Grav\Plugin\AksoBridge;
 
 use Grav\Plugin\AksoBridgePlugin;
-use Grav\Plugin\AksoBridge\MarkdownExt;
 use Grav\Plugin\AksoBridge\Utils;
 
 class UserVotes {
@@ -140,7 +139,7 @@ class UserVotes {
                 }
                 if ($ch['country']) {
                     $ch['fmt_country'] = $this->formatCountry($ch['country']);
-                    $ch['fmt_country_emoji'] = MarkdownExt::getEmojiForFlag($ch['country']);
+                    $ch['fmt_country_emoji'] = Utils::getEmojiForFlag($ch['country']);
                 }
 
                 $ch['email'] = $ch['publicEmail'] ?:
