@@ -222,4 +222,46 @@ class Utils {
         return $emailLink;
     }
 
+    private static $cached_countries = null;
+    public static function getCountries($bridge) {
+        if (self::$cached_countries) {
+            return self::$cached_countries;
+        }
+        $res = $bridge->get('/countries', array(
+            'limit' => 300,
+            'fields' => ['code', 'name_eo'],
+            'order' => [['name_eo', 'asc']],
+        ), 600);
+        if (!$res['k']) return null;
+        self::$cached_countries = $res['b'];
+        return $res['b'];
+    }
+
+    // Formats a country code
+    public static function formatCountry($bridge, $code) {
+        foreach (self::getCountries($bridge) as $country) {
+            if ($country['code'] === $code) return $country['name_eo'];
+        }
+        return null;
+    }
+
+    public static function getEmojiForFlag($code) {
+        $altText = '';
+        $emojiName = '';
+        if (strlen($code) === 2) {
+            $ri1 = 0x1f1e6 - 0x61 + ord($code[0]);
+            $ri2 = 0x1f1e6 - 0x61 + ord($code[1]);
+            $altText = mb_chr($ri1) . mb_chr($ri2);
+            $emojiName = 'twemoji/' . dechex($ri1) . '-' . dechex($ri2);
+        } else {
+            $altText = $code;
+            $emojiName = 'extra/' . $code;
+        }
+        return array(
+            'src' => "/user/plugins/akso-bridge/emoji/$emojiName.png",
+            'alt' => $altText,
+        );
+    }
+
+
 }
