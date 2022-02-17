@@ -84,7 +84,7 @@ class Registration extends Form {
         }
 
         $fields = ['year', 'paymentOrgId', 'currency'];
-        $currentYear = date('Y');
+        $currentYear = (int) date('Y');
         if (!$skipOffers) $fields[] = 'offers';
         $res = $this->app->bridge->get('/registration/options', array(
             'limit' => 100,
@@ -120,9 +120,19 @@ class Registration extends Form {
                     $scriptCtx->setFormVar('agePrimo', $agePrimo);
                     $scriptCtx->setFormVar('feeCountry', $codeholder['feeCountry']);
 
-                    // TODO: fetch these variables
-                    $scriptCtx->setFormVar('feeCountryGroups', []);
-                    $scriptCtx->setFormVar('isActiveMember', false);
+                    $fcgRes = $this->app->bridge->get('/country_groups', array(
+                        'fields' => 'code',
+                        'filter' => array('countries' => array('$hasAny' => [$codeholder['feeCountry']])),
+                        'limit' => 100,
+                    ));
+                    $feeCountryGroups = [];
+                    if ($fcgRes['k']) {
+                        foreach ($fcgRes['b'] as $group) $feeCountryGroups[] = $group['code'];
+                    }
+                    $scriptCtx->setFormVar('feeCountryGroups', $feeCountryGroups);
+
+                    $isActiveMember = $this->plugin->aksoUser['member'];
+                    $scriptCtx->setFormVar('isActiveMember', $isActiveMember);
                 }
 
                 $currency = $this->state['currency'];
