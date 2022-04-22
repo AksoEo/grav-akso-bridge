@@ -2,7 +2,9 @@
 {% block content %}
     {% if akso_registration.disabled %}
     <div class="akso-registration-page">
-        <h1>{{akso_locale.registration.title}}</h1>
+        <h1>
+            {{akso_registration.is_donation ? akso_locale.registration.title_donation : akso_locale.registration.title}}
+        </h1>
         <div class="error-banner">
             {{akso_registration.disabled}}
         </div>
@@ -13,7 +15,9 @@
     {% else %}
     <form class="akso-registration-page akso-form" method="POST">
     {% endif %}
-        <h1>{{akso_locale.registration.title}}</h1>
+        <h1>
+            {{akso_registration.is_donation ? akso_locale.registration.title_donation : akso_locale.registration.title}}
+        </h1>
         {% if akso_registration.state.form_error %}
             <div class="error-banner">
                 {{akso_registration.state.form_error|raw}}
@@ -48,49 +52,62 @@
                     {{akso_locale.registration.codeholder_login_to_view}}
                     {% elseif akso_auth %}
                     {{akso_locale.registration.codeholder_is_registered}}
+                    {% elseif akso_registration.is_donation %}
+                    {{akso_locale.registration.codeholder_is_new_donating}}
                     {% else %}
                     {{akso_locale.registration.codeholder_is_new}}
                     {% endif %}
                 </div>
                 {% if not akso_registration.state.needs_login %}
-                <div class="summary-name">
-                    {{akso_registration.state.codeholder.honorific|e}}
-                    {% if akso_registration.state.codeholder.firstName %}
-                    {{akso_registration.state.codeholder.firstName|e}}
+                    {% if akso_registration.is_donation %}
+                        <div class="summary-name">
+                            {# we are using the firstNameLegal field for the entire name in this mode #}
+                            {{akso_registration.state.codeholder.firstNameLegal|e}}
+                        </div>
                     {% else %}
-                    {{akso_registration.state.codeholder.firstNameLegal|e}}
+                        <div class="summary-name">
+                            {{akso_registration.state.codeholder.honorific|e}}
+                            {% if akso_registration.state.codeholder.firstName %}
+                            {{akso_registration.state.codeholder.firstName|e}}
+                            {% else %}
+                            {{akso_registration.state.codeholder.firstNameLegal|e}}
+                            {% endif %}
+                            {% if akso_registration.state.codeholder.lastName %}
+                            {{akso_registration.state.codeholder.lastName|e}}
+                            {% else %}
+                            {{akso_registration.state.codeholder.lastNameLegal|e}}
+                            {% endif %}
+                            {% if akso_registration.state.codeholder.firstName or akso_registration.state.codeholder.lastName %}
+                            ({{akso_locale.registration.codeholder_name_legal}}:
+                            {{akso_registration.state.codeholder.firstNameLegal|e}}
+                            {{akso_registration.state.codeholder.lastNameLegal|e}})
+                            {% endif %}
+                        </div>
                     {% endif %}
-                    {% if akso_registration.state.codeholder.lastName %}
-                    {{akso_registration.state.codeholder.lastName|e}}
-                    {% else %}
-                    {{akso_registration.state.codeholder.lastNameLegal|e}}
+                    {% if not akso_registration.is_donation %}
+                        <div class="summary-birthdate">
+                            {{akso_locale.registration.codeholder_birthdate}}:
+                            {{akso_registration.state.codeholder_derived.birthdate|e|default('—')}}
+                        </div>
                     {% endif %}
-                    {% if akso_registration.state.codeholder.firstName or akso_registration.state.codeholder.lastName %}
-                    ({{akso_locale.registration.codeholder_name_legal}}:
-                    {{akso_registration.state.codeholder.firstNameLegal|e}}
-                    {{akso_registration.state.codeholder.lastNameLegal|e}})
+                    <div class="summary-contact">
+                        {{akso_registration.state.codeholder.email|e}}
+                        {% if akso_registration.state.codeholder_derived.cellphone is not empty %}
+                            · {{akso_locale.registration.codeholder_cellphone}}: {{akso_registration.state.codeholder_derived.cellphone|e}}
+                        {% endif %}
+                        {% if akso_registration.state.codeholder_derived.landline_phone is not empty %}
+                            · {{akso_locale.registration.codeholder_landline_phone}}: {{akso_registration.state.codeholder_derived.landline_phone|e}}
+                        {% endif %}
+                    </div>
+                    {% if not akso_registration.is_donation %}
+                        <div class="summary-address">
+                            {{akso_registration.state.codeholder_derived.address|e|default(akso_locale.registration.codeholder_no_address)}}
+                        </div>
+                        <div class="summary-payment">
+                            {{akso_locale.registration.codeholder_summary_fee_country}}:
+                            {{akso_registration.state.codeholder_derived.fee_country|e|default('—')}}
+                        </div>
                     {% endif %}
-                </div>
-                <div class="summary-birthdate">
-                    {{akso_locale.registration.codeholder_birthdate}}:
-                    {{akso_registration.state.codeholder_derived.birthdate|e|default('—')}}
-                </div>
-                <div class="summary-contact">
-                    {{akso_registration.state.codeholder.email|e}}
-                    {% if akso_registration.state.codeholder_derived.cellphone is not empty %}
-                        · {{akso_locale.registration.codeholder_cellphone}}: {{akso_registration.state.codeholder_derived.cellphone|e}}
-                    {% endif %}
-                    {% if akso_registration.state.codeholder_derived.landline_phone is not empty %}
-                        · {{akso_locale.registration.codeholder_landline_phone}}: {{akso_registration.state.codeholder_derived.landline_phone|e}}
-                    {% endif %}
-                </div>
-                <div class="summary-address">
-                    {{akso_registration.state.codeholder_derived.address|e|default(akso_locale.registration.codeholder_no_address)}}
-                </div>
-                <div class="summary-payment">
-                    {{akso_locale.registration.codeholder_summary_fee_country}}:
-                    {{akso_registration.state.codeholder_derived.fee_country|e|default('—')}}
-                </div>
                 {% endif %}
             </div>
             {% if akso_registration.state.registered %}
@@ -237,10 +254,40 @@
             {% if codeholder_is_valid %}
             <div class="registration-settings">
                 {% if not akso_auth %}
+                    {% if akso_registration.is_donation %}
+                        <div class="settings-field" data-el="input" data-type="text">
+                            <div class="inner-field">
+                                <label for="codeholder-first-name-legal">
+                                    {{akso_locale.registration.codeholder_full_name}}
+                                    <span class="required-star" title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
+                                </label>
+                                <input
+                                    id="codeholder-first-name-legal"
+                                    name="codeholder[firstNameLegal]"
+                                    type="text"
+                                    value="{{akso_registration.state.codeholder.firstNameLegal|e('html_attr')}}" />
+                            </div>
+                        </div>
+                        <div class="settings-field" data-el="input" data-type="email">
+                            <div class="inner-field">
+                                <label for="codeholder-email">
+                                    {{akso_locale.registration.codeholder_email}}
+                                    <span class="required-star" title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
+                                </label>
+                                <input
+                                    id="codeholder-email"
+                                    name="codeholder[email]"
+                                    type="email"
+                                    required
+                                    value="{{akso_registration.state.codeholder.email|e('html_attr')}}" />
+                            </div>
+                        </div>
+                    {% else %}
                     <div class="settings-section">
                         {{akso_locale.registration.codeholder_name}}
                     </div>
                     {% include 'partials/akso_user_profile_form.html.twig' %}
+                    {% endif %}
                     <hr />
                 {% endif %}
                 <div class="settings-field">
@@ -264,20 +311,22 @@
             </div>
             <div class="form-buttons">
                 <button type="submit" class="is-primary" formaction="{{akso_registration.targets.offers|e('html_attr')}}">
-                    {{akso_locale.registration.codeholder_next}}
+                    {{akso_registration.is_donation ? akso_locale.registration.codeholder_next_donation : akso_locale.registration.codeholder_next}}
                 </button>
             </div>
             {% endif %}
         {% elseif akso_registration.state.step == 1 %}
             <div class="offer-selection">
-                <h2>{{akso_locale.registration.offers_title}}</h2>
+                <h2>
+                    {{akso_registration.is_donation ? akso_locale.registration.offers_title_donation : akso_locale.registration.offers_title}}
+                </h2>
                 <p>
-                    {{akso_locale.registration.offers_desc}}
+                    {{akso_registration.is_donation ? akso_locale.registration.offers_desc_donation : akso_locale.registration.offers_desc}}
                 </p>
 
                 {% if akso_registration.offers is empty %}
                     <div class="offer-selection-empty">
-                        {{akso_locale.registration.offers_desc_empty}}
+                        {{akso_registration.is_donation ? akso_locale.registration.offers_desc_donation_empty : akso_locale.registration.offers_desc_empty}}
                     </div>
                 {% endif %}
 
@@ -289,12 +338,15 @@
                         {% if offerYear.year == akso_registration.thisYear %}
                         checked
                         {% endif %} />
-                    <label tabindex="0" for="rx-year-{{offerYear.year|e}}" class="year-title" aria-hidden="true">
-                        <span class="title-arrow"></span>
-                        <span class="title-contents">
-                            {{offerYear.year|e}}
-                        </span>
-                    </label>
+
+                    {% if not akso_registration.is_donation %}
+                        <label tabindex="0" for="rx-year-{{offerYear.year|e}}" class="year-title" aria-hidden="true">
+                            <span class="title-arrow"></span>
+                            <span class="title-contents">
+                                {{offerYear.year|e}}
+                            </span>
+                        </label>
+                    {% endif %}
 
                     {% set hasMembershipItemForThisYear = false %}
                     {% for offerGroup in offerYear.offers %}
@@ -484,11 +536,11 @@
             </div>
         {% elseif akso_registration.state.step == 2 %}
         <p>
-            {{akso_locale.registration.entry_create_desc}}
+            {{akso_registration.is_donation ? akso_locale.registration.entry_create_desc_donation : akso_locale.registration.entry_create_desc}}
         </p>
         <div class="form-buttons">
             <button type="submit" class="is-primary" formaction="{{akso_registration.targets.entry_create|e('html_attr')}}">
-                {{akso_locale.registration.entry_create}}
+                {{akso_registration.is_donation ? akso_locale.registration.entry_create_donation : akso_locale.registration.entry_create}}
             </button>
         </div>
         {% elseif akso_registration.state.step == 3 %}

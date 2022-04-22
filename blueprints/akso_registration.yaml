@@ -1,0 +1,10 @@
+title: AKSO Aliĝilo
+'@extends':
+  type: default
+  context: blueprints://pages
+
+form:
+  fields:
+    header.is_donation:
+      type: checkbox
+      label: '[[Donation page (addons only)]]'

@@ -30,12 +30,13 @@ class Registration extends Form {
         'address.streetAddress',
     ];
 
-    private $plugin;
+    private $plugin, $isDonation;
 
-    public function __construct($plugin, $app) {
+    public function __construct($plugin, $app, $isDonation) {
         parent::__construct($app);
         $this->plugin = $plugin;
         $this->locale = $plugin->locale['registration'];
+        $this->isDonation = $isDonation;
     }
 
     // if registration is disabled, will return an error. otherwise null
@@ -66,7 +67,7 @@ class Registration extends Form {
     // Loads all available offer years.
     private function loadAllOffers($skipOffers = false, $codeholder = null) {
         $registeredOffers = [];
-        if ($codeholder) {
+        if ($codeholder && !$this->isDonation) {
             $res = $this->app->bridge->get("/codeholders/$codeholder/membership", array(
                 'fields' => ['year', 'categoryId'],
                 'order' => [['year', 'desc']],
@@ -195,7 +196,24 @@ class Registration extends Form {
                                 }
                             }
                         }
+
+                        if ($this->isDonation) {
+                            $offerGroup['offers'] = array_filter($offerGroup['offers'], function ($offer) {
+                                return $offer['type'] === 'addon';
+                            });
+                        }
                     }
+                    if ($this->isDonation) {
+                        $offerYear['offers'] = array_filter($offerYear['offers'], function ($group) {
+                            return !empty($group['offers']);
+                        });
+                    }
+                }
+                if ($this->isDonation) {
+                    // keep only the current year, if it's not empty
+                    $offerYears = array_filter($offerYears, function ($year) use ($currentYear) {
+                        return !empty($year['offers']) && $year['year'] === $currentYear;
+                    });
                 }
             }
 
@@ -284,6 +302,7 @@ class Registration extends Form {
     }
     private function loadAllCategories($ids) {
         $categories = [];
+        if ($ids->isEmpty()) return $categories;
         for ($i = 0; true; $i += 100) {
             $res = $this->app->bridge->get("/membership_categories", array(
                 'fields' => ['id', 'nameAbbrev', 'name', 'description', 'lifetime', 'givesMembership'],
@@ -313,6 +332,7 @@ class Registration extends Form {
     }
     private function loadAllMagazines($ids) {
         $magazines = [];
+        if ($ids->isEmpty()) return $magazines;
         for ($i = 0; true; $i += 100) {
             $res = $this->app->bridge->get("/magazines", array(
                 'fields' => ['id', 'org', 'name', 'description'],
@@ -338,6 +358,10 @@ class Registration extends Form {
         foreach ($orgs->keys()->toArray() as $orgId) {
             $ids = $orgs->get($orgId);
             $addons = [];
+            if ($ids->isEmpty()) {
+                $result[$orgId] = $addons;
+                continue;
+            }
             for ($i = 0; true; $i += 100) {
                 $res = $this->app->bridge->get("/aksopay/payment_orgs/$orgId/addons", array(
                     'fields' => ['id', 'name', 'description'],
@@ -711,6 +735,7 @@ class Registration extends Form {
                 $ch['splitCountry'] = true;
                 $ch['splitName'] = true;
             }
+            if ($this->isDonation) $ch['splitName'] = true;
 
             $this->state['codeholder'] = self::readCodeholderStateSafe($this->app->bridge, $ch);
         }
@@ -1042,7 +1067,10 @@ class Registration extends Form {
         $errors = [];
         foreach ($years as $year) {
             if (isset($this->state['locked_offers'][$year])) continue;
-            $yearItems = &$this->state['offers'][$year];
+            $yearItems = [];
+            if (isset($this->state['offers'][$year])) {
+                $yearItems = &$this->state['offers'][$year];
+            }
             $options = [];
             $options['year'] = (int) $year;
             $options['currency'] = $this->state['currency'];
@@ -1092,6 +1120,10 @@ class Registration extends Form {
                 }
             }
 
+            if (empty($options['offers'])) {
+                $this->state['addons'][$year] = $addons;
+                continue;
+            }
             $res = $this->app->bridge->post('/registration/entries', $options, [], []);
             if ($res['k']) {
                 $this->state['dataIds'][$year] = $res['h']['x-identifier'];
@@ -1346,16 +1378,21 @@ class Registration extends Form {
         $ch = $this->state['codeholder'];
         if (isset($ch['locked'])) return null;
 
-        return self::getCodeholderError($this->app->bridge, $this->plugin->locale, $ch, false, $this->plugin->aksoUser != null);
+        return self::getCodeholderError($this->app->bridge, $this->plugin->locale, $ch, false, $this->plugin->aksoUser != null, $this->isDonation);
     }
 
     // Returns a best-effort error message for the codeholder data.
-    public static function getCodeholderError($bridge, $locale, $ch, $isOrg = false, $isNewUser = false) {
+    public static function getCodeholderError($bridge, $locale, $ch, $isOrg = false, $isNewUser = false, $isDonation = false) {
         if (!$isOrg && empty(trim($ch['firstNameLegal']))) {
             return $locale['registration']['codeholder_error_name_required'];
         } else if ($isOrg && (empty(trim($ch['fullName'])) || empty(trim($ch['fullNameLocal'])))) {
             return $locale['registration']['codeholder_error_name_required'];
         }
+
+        // HTML (and later, AKSO API) will take care of validating email
+
+        if ($isDonation) return null;
+
         if (!$isOrg) {
             $birthdate = \DateTime::createFromFormat('Y-m-d', $ch['birthdate']);
             $now = new \DateTime();
@@ -1367,7 +1404,6 @@ class Registration extends Form {
                 return $locale['registration']['codeholder_error_invalid_birthdate'];
             }
         }
-        // HTML will take care of validating email
         // no need to check if countries are in the country set because it's a <select>
 
         // validate phone numbers
@@ -1419,6 +1455,7 @@ class Registration extends Form {
         $addons = $this->loadAllAddons($this->getOfferAddonIds($this->offers));
 
         $membershipLikeCount = 0;
+        $addonCount = 0;
         foreach ($this->state['offers'] as $year => $yearItems) {
             if (isset($this->state['locked_offers'][$year])) {
                 $membershipLikeCount++;
@@ -1448,6 +1485,7 @@ class Registration extends Form {
                     $membershipLikeCount++;
                 } else if ($offer['type'] === 'addon') {
                     $offerName = $addons[$offerYear['paymentOrgId']][$offer['id']]['name'];
+                    $addonCount++;
                 } else if ($offer['type'] === 'magazine') {
                     $offerName = $magazines[$offer['id']]['name'];
                     $membershipLikeCount++;
@@ -1461,8 +1499,11 @@ class Registration extends Form {
             }
         }
 
-        if ($membershipLikeCount == 0) {
+        if ($membershipLikeCount == 0 && !$this->isDonation) {
             return $this->localize('offers_error_no_membership_like');
+        }
+        if ($addonCount == 0 && $this->isDonation) {
+            return $this->localize('offers_error_donating_no_addon');
         }
     }
 
@@ -1503,6 +1544,7 @@ class Registration extends Form {
             'targets' => $targets,
             'thisYear' => $thisYear,
             'payment_orgs' => $this->paymentOrgs,
+            'is_donation' => $this->isDonation,
         );
     }
 

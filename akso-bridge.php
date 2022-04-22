@@ -250,9 +250,12 @@ class AksoBridgePlugin extends Plugin {
             $state['akso_account_path'] = $this->accountPath;
             $state['uea_hide_support_button'] = true;
 
+            $head = $this->grav['page']->header();
+            $isDonation = isset($head->is_donation) && $head->is_donation;
+
             $app = new AppBridge($this->grav);
             $app->open();
-            $registration = new Registration($this, $app);
+            $registration = new Registration($this, $app, $isDonation);
             $state['akso_registration'] = $registration->run();
             $app->close();
         } else if (str_starts_with($templateId, 'akso_magazines')) {
