@@ -305,6 +305,8 @@ $(document).ready(() => {
             $(newPageForm.querySelector('input[name="data[title]"]')).parents('.block-text').remove();
             $(newPageForm.querySelector('input[name="data[folder]"]')).parents('.block-text').remove();
             $(newPageForm.querySelector('select[name="data[name]"]')).parents('.block-select').remove();
+            $(newPageForm.querySelector('input[name="data[route]"]')).parents('.block-parents').remove();
+            $(newPageForm.querySelector('input[name="data[visible]"]')).parents('.block-toggle').remove();
 
             newPageForm.querySelector('h1').textContent = locale.setup.title;
 
@@ -319,6 +321,11 @@ $(document).ready(() => {
             folderInput.required = true;
             folderInput.name = 'data[folder]';
             newPageForm.appendChild(folderInput);
+            const parentInput = document.createElement('input');
+            parentInput.type = 'hidden';
+            parentInput.required = true;
+            parentInput.name = 'data[route]';
+            newPageForm.appendChild(parentInput);
             $(newPageForm).append(`<input type="hidden" name="data[name]" value="${GK_TEMPLATE}" />`);
 
             // add user controls
@@ -345,14 +352,30 @@ $(document).ready(() => {
             const gkNum = makeBlock(locale.setup.gkNum);
             gkNum.type = 'number';
             const gkTitle = makeBlock(locale.setup.gkTitle);
+            const gkYear = makeBlock(locale.setup.gkYear);
+            gkYear.type = 'number';
+            gkYear.disabled = true;
+            gkYear.value = locale.setup.loadingYearTemplate;
+
+            let routeTemplate = null;
+            fetch(`/admin/akso_bridge?task=gk_page_route_template`).then(res => res.json()).then(res => {
+                routeTemplate = res.result;
+                gkYear.value = new Date().getFullYear();
+                gkYear.disabled = false;
+            }).catch(err => {
+                console.error(err);
+                gkYear.value = locale.setup.yearError;
+            });
 
             const update = () => {
                 folderInput.value = gkNum.value;
                 pageTitleInput.value = locale.gkTitleFmt(gkNum.value, gkTitle.value);
+                parentInput.value = (routeTemplate || 'ERROR').replace(/%year%/g, gkYear.value);
             };
 
             gkNum.addEventListener('change', update);
             gkTitle.addEventListener('change', update);
+            gkYear.addEventListener('change', update);
 
             newPageForm.dataset.aksoGkPageAddons = 'true';
         }

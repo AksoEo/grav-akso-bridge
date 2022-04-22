@@ -804,6 +804,8 @@ class AksoBridgePlugin extends Plugin {
                         )));
                     }
                 }
+            } else if ($task === "gk_page_route_template") {
+                echo json_encode(array('result' => $this->grav['config']->get('plugins.akso-bridge.gk_page_route_template')));
             }
 
             $app->close();
@@ -867,6 +869,7 @@ class AksoBridgePlugin extends Plugin {
             $subs = new GkSendToSubscribers($this, $app);
             $subs->run($title, $content, $url);
             $app->close();
+            // TODO
             var_dump("this is the part where the newsletter is sent out");
             die();
         }

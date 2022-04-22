@@ -5,6 +5,9 @@ window.aksoAdminLocale = {
             title: 'Krei gazetaran komunikon',
             gkNum: 'Numero',
             gkTitle: 'Titolo',
+            gkYear: 'Jaro',
+            loadingYearTemplate: '(Ŝarĝas…)',
+            yearError: '(Eraro)',
         },
         gkTitleFmt: (num, title) => `${title} (GK ${num})`,
         // the regex should match the title format

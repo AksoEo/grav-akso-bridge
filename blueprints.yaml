@@ -38,6 +38,10 @@ form:
     account_votes_path:
       type: text
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.ACCOUNT_VOTES_PATH
+    gk_page_route_template:
+      type: text
+      label: PLUGIN_AKSO_BRIDGE.SETTINGS.GK_PAGE_ROUTE_TEMPLATE
+      description: PLUGIN_AKSO_BRIDGE.SETTINGS.GK_PAGE_ROUTE_TEMPLATE_DESC
     api_host:
       type: text
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.API_HOST
