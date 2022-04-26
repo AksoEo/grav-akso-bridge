@@ -860,7 +860,7 @@ class AksoBridgePlugin extends Plugin {
     }
 
     function adminInterceptGkSendToSubscribers() {
-        if (isset($_POST['akso_gk_send_to_subs'])) {
+        if (isset($_POST['akso_gk_send_to_subs']) && $_POST['akso_gk_send_to_subs']) {
             $title = $_POST['data']['header']['title'];
             $content = $_POST['data']['content'];
             $url = $_POST['data']['header']['routes']['canonical'];
