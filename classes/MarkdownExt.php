@@ -1509,6 +1509,7 @@ class MarkdownExt {
             $pagesContainer = new Element('div');
             $pagesContainer->class = 'carousel-pages';
             $isFirst = true;
+            $i = 0;
             foreach ($pages as $ntlChild) {
                 $pageContainer = null;
                 if ($ntlChild['link']) {
@@ -1524,22 +1525,31 @@ class MarkdownExt {
                 if (trim($ntlChild['caption']->text())) {
                     $pageContainer->class .= ' page-has-caption';
                 }
+
+                $pageLabel = $this->plugin->locale['content']['img_carousel_page_label_0'] .
+                    ($i + 1) . $this->plugin->locale['content']['img_carousel_page_label_1'] .
+                    count($pages) . $this->plugin->locale['content']['img_carousel_page_label_2'];
+                $pageContainer->setAttribute('data-label', $pageLabel);
+
                 $pagesContainer->appendChild($pageContainer);
 
                 $radio = new Element('input');
                 $radio->class = 'carousel-page-button';
                 $radio->type = 'radio';
                 $radio->name = $carouselId;
+                $radio->setAttribute('aria-label', $pageLabel);
                 if ($isFirst) {
                     $isFirst = false;
                     $radio->checked = '';
                 }
                 $carousel->appendChild($radio);
+                $i++;
             }
             $carousel->appendChild($pagesContainer);
             if (sizeof($pages) === 1) {
                 $carousel->class .= ' is-single-page';
             }
+            $carousel->setAttribute('data-pagination-label', $this->plugin->locale['content']['img_carousel_pagination']);
         }
     }
 
@@ -1725,6 +1735,8 @@ class MarkdownExt {
                 $newsTitle = $params['title'];
                 $newsPath = $params['target'];
                 $newsCount = $params['count'];
+
+                $newNews->setAttribute('aria-label', $newsTitle);
 
                 $newsPage = $this->plugin->getGrav()['pages']->find($newsPath);
                 $newsPostCollection = $newsPage->collection();
