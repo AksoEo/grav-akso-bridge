@@ -2,6 +2,7 @@
 namespace Grav\Plugin\AksoBridge;
 
 use Grav\Plugin\AksoBridge\Form;
+use Grav\Plugin\AksoBridge\CodeholderLists;
 use Grav\Plugin\AksoBridge\Utils;
 
 // TODO: use form nonce
@@ -64,6 +65,63 @@ class Registration extends Form {
         return $obj[$keyPart];
     }
 
+    private function getPriceScriptCtx() {
+        $scriptCtx = new FormScriptExecCtx($this->app);
+        $codeholder = $this->state['codeholder'];
+        if (isset($codeholder['birthdate'])) {
+            // codeholder data exists; we can set form variables
+
+            $scriptCtx->setFormVar('birthdate', $codeholder['birthdate']);
+
+            $age = null;
+            $agePrimo = null;
+            {
+                $birthdate = \DateTime::createFromFormat('Y-m-d', $codeholder['birthdate']);
+                if ($birthdate) {
+                    $now = new \DateTime();
+                    $age = (int) $birthdate->diff($now)->format('y');
+
+                    $beginningOfYear = new \DateTime();
+                    $beginningOfYear->setISODate($now->format('Y'), 1, 1);
+                    $agePrimo = (int) $birthdate->diff($beginningOfYear)->format('y');
+                }
+            }
+            $scriptCtx->setFormVar('age', $age);
+            $scriptCtx->setFormVar('agePrimo', $agePrimo);
+            $scriptCtx->setFormVar('feeCountry', $codeholder['feeCountry']);
+
+            $fcgRes = $this->app->bridge->get('/country_groups', array(
+                'fields' => 'code',
+                'filter' => array('countries' => array('$hasAny' => [$codeholder['feeCountry']])),
+                'limit' => 100,
+            ));
+            $feeCountryGroups = [];
+            if ($fcgRes['k']) {
+                foreach ($fcgRes['b'] as $group) $feeCountryGroups[] = $group['code'];
+            }
+            $scriptCtx->setFormVar('feeCountryGroups', $feeCountryGroups);
+
+            $isActiveMember = $this->plugin->aksoUser['member'];
+            $scriptCtx->setFormVar('isActiveMember', $isActiveMember);
+            return $scriptCtx;
+        }
+        return null;
+    }
+
+    private function scriptCtxFmtCurrency($scriptCtx, $currency, $value) {
+        $scriptCtx->pushScript(array(
+            'currency' => array('t' => 's', 'v' => $currency),
+            'value' => array('t' => 'n', 'v' => $value),
+        ));
+        $formatted = $scriptCtx->eval(array(
+            't' => 'c',
+            'f' => 'currency_fmt',
+            'a' => ['currency', 'value'],
+        ))['v'];
+        $scriptCtx->popScript();
+        return $formatted;
+    }
+
     // Loads all available offer years.
     private function loadAllOffers($skipOffers = false, $codeholder = null) {
         $registeredOffers = [];
@@ -96,46 +154,8 @@ class Registration extends Form {
         if ($res['k']) {
             $offerYears = array_reverse($res['b']);
 
-            $scriptCtx = new FormScriptExecCtx($this->app);
-            {
-                $codeholder = $this->state['codeholder'];
-                if (isset($codeholder['birthdate'])) {
-                    // codeholder data exists; we can set form variables
-
-                    $scriptCtx->setFormVar('birthdate', $codeholder['birthdate']);
-
-                    $age = null;
-                    $agePrimo = null;
-                    {
-                        $birthdate = \DateTime::createFromFormat('Y-m-d', $codeholder['birthdate']);
-                        if ($birthdate) {
-                            $now = new \DateTime();
-                            $age = (int) $birthdate->diff($now)->format('y');
-
-                            $beginningOfYear = new \DateTime();
-                            $beginningOfYear->setISODate($now->format('Y'), 1, 1);
-                            $agePrimo = (int) $birthdate->diff($beginningOfYear)->format('y');
-                        }
-                    }
-                    $scriptCtx->setFormVar('age', $age);
-                    $scriptCtx->setFormVar('agePrimo', $agePrimo);
-                    $scriptCtx->setFormVar('feeCountry', $codeholder['feeCountry']);
-
-                    $fcgRes = $this->app->bridge->get('/country_groups', array(
-                        'fields' => 'code',
-                        'filter' => array('countries' => array('$hasAny' => [$codeholder['feeCountry']])),
-                        'limit' => 100,
-                    ));
-                    $feeCountryGroups = [];
-                    if ($fcgRes['k']) {
-                        foreach ($fcgRes['b'] as $group) $feeCountryGroups[] = $group['code'];
-                    }
-                    $scriptCtx->setFormVar('feeCountryGroups', $feeCountryGroups);
-
-                    $isActiveMember = $this->plugin->aksoUser['member'];
-                    $scriptCtx->setFormVar('isActiveMember', $isActiveMember);
-                }
-
+            $scriptCtx = $this->getPriceScriptCtx();
+            if ($scriptCtx) {
                 $currency = $this->state['currency'];
 
                 // compute all prices for the current codeholder
@@ -180,16 +200,7 @@ class Registration extends Form {
                                         $result['v']
                                     );
                                     $offer['price']['value'] = $convertedValue;
-                                    $scriptCtx->pushScript(array(
-                                        'currency' => array('t' => 's', 'v' => $currency),
-                                        'value' => array('t' => 'n', 'v' => $convertedValue),
-                                    ));
-                                    $offer['price']['amount'] = $scriptCtx->eval(array(
-                                        't' => 'c',
-                                        'f' => 'currency_fmt',
-                                        'a' => ['currency', 'value'],
-                                    ))['v'];
-                                    $scriptCtx->popScript();
+                                    $offer['price']['amount'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $convertedValue);
                                 } else {
                                     $offer['price']['value'] = null;
                                     $offer['price']['amount'] = '(Eraro)';
@@ -405,13 +416,13 @@ class Registration extends Form {
 
             for ($i = 0; true; $i += 100) {
                 $res = $this->app->bridge->get("/aksopay/payment_orgs/$orgId/methods", array(
-                    'fields' => ['id', 'type', 'name', 'description', 'currencies'],
+                    'fields' => ['id', 'type', 'name', 'description', 'currencies', 'prices', 'feePercent', 'feeFixed.val', 'feeFixed.cur'],
                     'filter' => array('internal' => false),
                     'limit' => 100,
                     'offset' => $i,
                 ), 120);
                 if (!$res['k']) {
-                    // TODO: emit error
+                    throw new \Exception('Failed to load payment methods');
                     break;
                 }
                 foreach ($res['b'] as $method) {
@@ -478,6 +489,10 @@ class Registration extends Form {
                 foreach ($res['b']['offers'] as $offer) {
                     $offer['amount_original'] = $offer['amount'];
                     $offer['amount_addon'] = null;
+
+                    if ($offer['type'] === 'magazine') {
+                        $offer['paper'] = $offer['paperVersion'];
+                    }
 
                     if ($offer['type'] === 'membership' || $offer['type'] === 'magazine') {
                         if (isset($membershipAddons[$res['b']['year']][$offer['id']])) {
@@ -772,19 +787,25 @@ class Registration extends Form {
             }
         }
 
-        $cellphoneFmt = $this->app->bridge->evalScript([array(
-            'number' => array('t' => 's', 'v' => $this->state['codeholder']['cellphone']),
-        )], [], array('t' => 'c', 'f' => 'phone_fmt', 'a' => ['number']));
-        if ($cellphoneFmt['s']) $cellphoneFmt = $cellphoneFmt['v'];
-        else $cellphoneFmt = null;
-        if ($cellphoneFmt === null) $cellphoneFmt = $this->state['codeholder']['cellphone'];
+        $cellphoneFmt = null;
+        if (isset($this->state['codeholder']['cellphone'])) {
+            $cellphoneFmt = $this->app->bridge->evalScript([array(
+                'number' => array('t' => 's', 'v' => $this->state['codeholder']['cellphone']),
+            )], [], array('t' => 'c', 'f' => 'phone_fmt', 'a' => ['number']));
+            if ($cellphoneFmt['s']) $cellphoneFmt = $cellphoneFmt['v'];
+            else $cellphoneFmt = null;
+            if ($cellphoneFmt === null) $cellphoneFmt = $this->state['codeholder']['cellphone'];
+        }
 
-        $landlinePhoneFmt = $this->app->bridge->evalScript([array(
-            'number' => array('t' => 's', 'v' => $this->state['codeholder']['landlinePhone']),
-        )], [], array('t' => 'c', 'f' => 'phone_fmt', 'a' => ['number']));
-        if ($landlinePhoneFmt['s']) $landlinePhoneFmt = $landlinePhoneFmt['v'];
-        else $landlinePhoneFmt = null;
-        if ($landlinePhoneFmt === null) $landlinePhoneFmt = $this->state['codeholder']['landlinePhone'];
+        $landlinePhoneFmt = null;
+        if (isset($this->state['codeholder']['landlinePhone'])) {
+            $landlinePhoneFmt = $this->app->bridge->evalScript([array(
+                'number' => array('t' => 's', 'v' => $this->state['codeholder']['landlinePhone']),
+            )], [], array('t' => 'c', 'f' => 'phone_fmt', 'a' => ['number']));
+            if ($landlinePhoneFmt['s']) $landlinePhoneFmt = $landlinePhoneFmt['v'];
+            else $landlinePhoneFmt = null;
+            if ($landlinePhoneFmt === null) $landlinePhoneFmt = $this->state['codeholder']['landlinePhone'];
+        }
 
         $this->state['codeholder_derived'] = array(
             'birthdate' => Utils::formatDate($this->state['codeholder']['birthdate']),
@@ -850,9 +871,10 @@ class Registration extends Form {
                         $offerKey = $offerKeys[0];
 
                         $offerKeyParts = explode('-', $offerKey);
-                        if (count($offerKeyParts) != 2) continue;
+                        if (count($offerKeyParts) != 3) continue;
                         $type = $offerKeyParts[0];
                         $id = (int) $offerKeyParts[1];
+                        $variant = $offerKeyParts[2];
 
                         if ($type !== 'membership' && $type !== 'addon' && $type !== 'magazine') continue;
 
@@ -868,12 +890,15 @@ class Registration extends Form {
                             }
                         }
 
-                        $this->state['offers'][$year]["$groupIndex-$offerIndex"] = array(
+                        $stateData = array(
                             'type' => $type,
                             'id' => $id,
                             'amount' => $amount,
                             'amount_addon' => $amountAddon,
+                            'paper' => $variant === 'p',
                         );
+
+                        $this->state['offers'][$year]["$groupIndex-$offerIndex"] = $stateData;
                     }
                 }
             }
@@ -887,14 +912,15 @@ class Registration extends Form {
                     $keyParts = explode('-', $key);
                     if (count($keyParts) != 2) continue;
                     $group = $keyParts[0];
-                    $id = $keyParts[1];
+                    $idx = $keyParts[1];
                     if (!isset($item['type']) || gettype($item['type']) !== 'string') continue;
                     if (!isset($item['id']) || gettype($item['id']) !== 'integer') continue;
-                    $items["$group-$id"] = array(
+                    $items["$group-$idx"] = array(
                         'type' => $item['type'],
                         'id' => $item['id'],
                         'amount' => isset($item['amount']) ? ((float) $item['amount']) : null,
                         'amount_addon' => isset($item['amount_addon']) ? ((float) $item['amount_addon']) : 0,
+                        'paper' => isset($item['paper']) ? $item['paper'] : false,
                     );
                 }
                 if (!empty($items)) $this->state['offers'][$year] = $items;
@@ -1029,7 +1055,11 @@ class Registration extends Form {
                             $yearStatus = $this->state['year_statuses'][$offerYear['year']];
                         }
                         $org['statuses'][$offerYear['year']] = $yearStatus;
-                        if (!$yearStatus || $yearStatus === 'submitted') $org['can_pay'] = true;
+                        if (!$yearStatus) $org['can_pay'] = true;
+                        else if ($yearStatus === 'pending') {
+                            // TODO: we need to filter payment methods to only the selected one
+                            $org['can_pay'] = true;
+                        }
 
                         if (isset($this->state['offers'][$offerYear['year']])) {
                             $offers = $this->state['offers'][$offerYear['year']];
@@ -1050,20 +1080,198 @@ class Registration extends Form {
                     'a' => ['currency', 'value'],
                 ))['v'];
                 $scriptCtx->popScript();
+
+                if ($org['can_pay']) {
+                    foreach ($org['methods'] as &$method) {
+                        $method = $this->deriveMethodState($org, $method);
+                    }
+                    $origCount = count($org['methods']);
+                    $org['methods'] = array_filter($org['methods'], function ($method) {
+                        return $method['currency_available'];
+                    });
+                    $org['methods_currency_unavailable'] = $origCount - count($org['methods']);
+                }
             }
 
-            if (isset($_POST['payment_org']) && isset($_POST['payment_method_id']) && isset($_POST['payment_currency'])) {
+            if (isset($_POST['payment_org']) && isset($_POST['payment_method_id'])) {
                 // the user clicked on the 'pay' button
                 $paymentOrg = (int) $_POST['payment_org'];
                 $paymentMethodId = (int) $_POST['payment_method_id'];
-                $currency = (string) $_POST['payment_currency'];
+                $currency = $this->state['currency'];
 
                 $this->createIntent($paymentOrg, $paymentMethodId, $currency);
             }
         }
     }
 
-    private function createEntries($years) {
+    private function deriveMethodState($org, $method) {
+        $scriptCtx = $this->getPriceScriptCtx();
+        if (!$scriptCtx) {
+            $method['available'] = false;
+            $method['error'] = '(Eraro)';
+            return $method;
+        }
+
+        $currency = $this->state['currency'];
+        $method['currency_available'] = in_array($currency, $method['currencies']);
+        $method['total_sum'] = $org['offers_sum'];
+        $method['fee_total'] = 0;
+        $method['fee_total_rendered'] = '';
+
+        if ($method['feeFixed'] && $method['feeFixed']['val']) {
+            $method['fee_total'] += $this->convertCurrency($method['feeFixed']['cur'], $currency, $method['feeFixed']['val']);
+        }
+
+        if ($method['type'] === 'intermediary') {
+            $res = $this->app->bridge->get('/intermediaries', array(
+                'fields' => ['codeholderId', 'paymentDescription'],
+                'filter' => array(
+                    'countryCode' => $this->state['codeholder']['feeCountry'],
+                ),
+                'limit' => 1,
+            ));
+            if (!$res['k']) {
+                $method['available'] = false;
+                $method['error'] = '(Eraro)';
+                return $method;
+            }
+
+            if (empty($res['b'])) {
+                $method['available'] = false;
+                $method['error'] = $this->locale['payment_intermediary_err_none_for_country'];
+                return $method;
+            }
+
+            $method['intermediary'] = $res['b'][0];
+
+            $intermediary = $method['intermediary']['codeholderId'];
+            $intermediary = $this->app->bridge->get("/codeholders/$intermediary", array(
+                'fields' => CodeholderLists::FIELDS,
+            ));
+            if (!$intermediary['k']) {
+                $method['available'] = false;
+                $method['error'] = '(Eraro)';
+                return $method;
+            }
+            $intermediary = $intermediary['b'];
+            $method['intermediary']['codeholder'] = $intermediary;
+            if ($method['intermediary']['paymentDescription']) {
+                $method['intermediary']['desc_rendered'] = $this->app->bridge->renderMarkdown(
+                    $method['intermediary']['paymentDescription'],
+                    ['emphasis', 'strikethrough', 'link', 'list', 'table'],
+                )['c'];
+            }
+
+            $isMember = $this->plugin->aksoUser ? $this->plugin->aksoUser['member'] : false;
+            $method['intermediary_rendered'] = CodeholderLists::renderCodeholder($this->app->bridge, $intermediary, null, $isMember)->html();
+
+            $scriptCtx->setFormVar('currency', $currency);
+
+            if (count($org['years']) != 1) {
+                $method['available'] = false;
+                $method['error'] = $this->locale['payment_intermediary_err_multiple_years'];
+                return $method;
+            }
+            $method['year'] = $org['years'][0];
+
+            foreach ($this->offers as $offerYear) {
+                if ($offerYear['paymentOrgId'] != $org['id']) {
+                    continue;
+                }
+                if (isset($method['prices'][$offerYear['year']])) {
+                    $method['available'] = true;
+                    $method['offers_sum'] = 0;
+                    $method['offers'] = [];
+
+                    $regEntries = $method['prices'][$offerYear['year']]['registrationEntries'];
+                    $categories = array();
+                    $magazines = array();
+                    foreach ($regEntries['membershipCategories'] as $category) {
+                        $categories[$category['id']] = $category;
+                    }
+                    foreach ($regEntries['magazines'] as $magazine) {
+                        $magazines[$magazine['id']] = $magazine;
+                    }
+
+                    if (isset($this->state['offers'][$offerYear['year']])) {
+                        $offers = $this->state['offers'][$offerYear['year']];
+                        foreach ($offers as $offer) {
+                            $priceScript = null;
+                            $priceDesc = null;
+                            if ($offer['type'] === 'membership') {
+                                if (isset($categories[$offer['id']])) {
+                                    $priceScript = $categories[$offer['id']]['price'];
+                                    $priceDesc = $categories[$offer['id']]['description'];
+                                }
+                            } else if ($offer['type'] === 'magazine') {
+                                if (isset($magazines[$offer['id']])) {
+                                    $priceScript = $magazines[$offer['id']]['prices'][$offer['paper'] ? 'paper' : 'access'];
+                                }
+                            }
+                            if (!$priceScript) {
+                                $method['available'] = false;
+                                $method['error'] = $this->locale['payment_intermediary_offer_not_available'];
+                                return $method;
+                            }
+
+                            if ($priceScript) {
+                                $offerId = implode('-', [$offer['type'], $offer['id']]);
+                                $method['offers'][$offerId] = [];
+                                if (gettype($priceDesc) === 'string') {
+                                    $method['offers'][$offerId]['price_desc'] = $this->app->bridge->renderMarkdown(
+                                        $priceDesc,
+                                        ['emphasis', 'strikethrough'],
+                                    )['c'];
+                                }
+
+                                $scriptCtx->pushScript($priceScript['script']);
+                                $result = $scriptCtx->eval(array(
+                                    't' => 'c',
+                                    'f' => 'id',
+                                    'a' => [$priceScript['var']],
+                                ));
+                                $scriptCtx->popScript();
+
+                                if ($result['s']) {
+                                    // i dont think intermediaries need currency conversion?
+                                    $convertedValue = $result['v'];
+                                    $method['offers'][$offerId]['value'] = $convertedValue;
+                                    $method['offers'][$offerId]['amount'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $convertedValue);
+                                    $method['offers_sum'] += $convertedValue;
+                                } else {
+                                    $method['offers'][$offerId]['value'] = null;
+                                    $method['offers'][$offerId]['amount'] = '(Eraro)';
+                                }
+                            }
+                        }
+                    }
+
+                    $method['total_sum'] = $method['offers_sum'];
+                    $method['offers_sum_rendered'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $method['offers_sum']);
+                } else {
+                    $method['available'] = false;
+                    $method['error'] = $this->locale['payment_intermediary_year_not_available'];
+                    return $method;
+                }
+            }
+
+            if ($method['feePercent']) $method['fee_total'] += $method['offers_sum'] * $method['feePercent'] / 100;
+        } else {
+            $method['fee_total'] = 0;
+            if ($method['feePercent']) $method['fee_total'] += $org['offers_sum'] * $method['feePercent'] / 100;
+        }
+
+        if ($method['fee_total']) {
+            $method['fee_total_rendered'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $method['fee_total']);
+            $method['total_sum'] += $method['fee_total'];
+        }
+
+        $method['total_sum_rendered'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $method['total_sum']);
+
+        return $method;
+    }
+
+    private function createEntries($years, $priceOverrides = null) {
         $errors = [];
         foreach ($years as $year) {
             if (isset($this->state['locked_offers'][$year])) continue;
@@ -1104,6 +1312,12 @@ class Registration extends Form {
                     'id' => $itemData['id'],
                     'amount' => $itemData['amount'],
                 );
+                if ($itemData['type'] === 'magazine') {
+                    $data['paperVersion'] = $itemData['paper'];
+                }
+                if ($priceOverrides) {
+                    $data['amount'] = $priceOverrides[implode('-', [$data['type'], $data['id']])]['value'];
+                }
 
                 if ($itemData['type'] === 'addon') {
                     $addons[] = $data;
@@ -1152,16 +1366,19 @@ class Registration extends Form {
             return;
         }
 
-        if (!isset($this->paymentOrgs[$paymentOrg])) {
+        if (!isset($this->paymentOrgs[$paymentOrg]) || !isset($this->paymentOrgs[$paymentOrg]['methods'][$paymentMethodId])) {
             // invalid
             // TODO: handle error?
             return;
         }
         $org = &$this->paymentOrgs[$paymentOrg];
+        $method = $org['methods'][$paymentMethodId];
+        $priceOverrides = null;
+        if ($method['type'] === 'intermediary') $priceOverrides = $method['offers'];
 
         // TODO: validate method id (esp. internal) and currency, maybe?
 
-        if (!$this->createEntries($org['years'])) {
+        if (!$this->createEntries($org['years'], $priceOverrides)) {
             return;
         }
 
@@ -1212,8 +1429,15 @@ class Registration extends Form {
                             $purposeDescription .= '(Eraro)';
                         }
                     }
-                    $sum += $offer['amount'];
-                    $originalAmountSum += $offer['amount_original'];
+
+                    if ($priceOverrides) {
+                        $value = $priceOverrides[implode('-', [$offer['type'], $offer['id']])]['value'];
+                        $sum += $value;
+                        $originalAmountSum += $value;
+                    } else {
+                        $sum += $offer['amount'];
+                        $originalAmountSum += $offer['amount_original'];
+                    }
 
                     if ($offer['amount_addon'] > 0) {
                         $purposeDescription .= "\n    - ";
@@ -1256,7 +1480,7 @@ class Registration extends Form {
             );
         }
 
-        $res = $this->app->bridge->post('/aksopay/payment_intents', array(
+        $intentData = array(
             'codeholderId' => $codeholderId,
             'customer' => array(
                 'name' => $customerName,
@@ -1267,7 +1491,34 @@ class Registration extends Form {
             'currency' => $currency,
             'customerNotes' => null,
             'purposes' => array_merge($purposes, $addonPurposes),
-        ), array(), []);
+        );
+
+        if ($method['type'] === 'intermediary') {
+            $country = $this->state['codeholder']['feeCountry'];
+            $year = $org['years'][0];
+            $latestIntent = $this->app->bridge->get('/aksopay/payment_intents', array(
+                'filter' => array(
+                    'intermediaryCountryCode' => $country,
+                    'intermediaryIdentifier.year' => $year,
+                ),
+                'fields' => ['intermediaryIdentifier.number'],
+                'order' => [['timeCreated', 'desc']],
+                'limit' => 1,
+            ));
+            if (!$latestIntent['k']) {
+                // TODO: error
+                return;
+            }
+            $number = 1;
+            if (!empty($latestIntent['b'])) $number = $latestIntent['b'][0]['intermediaryIdentifier']['number'] + 1;
+            $intentData['intermediaryIdentifier'] = array(
+                'number' => $number,
+                'year' => $year,
+            );
+            $intentData['intermediaryCountryCode'] = $country;
+        }
+
+        $res = $this->app->bridge->post('/aksopay/payment_intents', $intentData, array(), []);
 
         if ($res['k']) {
             $paymentId = $res['h']['x-identifier'];
@@ -1275,9 +1526,13 @@ class Registration extends Form {
             $returnTarget = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") .
                 "://$_SERVER[HTTP_HOST]" . $this->getEditTarget();
 
-            $paymentsHost = $this->plugin->getGrav()['config']->get('plugins.akso-bridge.payments_host');
-            $redirectTarget = $paymentsHost . '/i/' . $paymentId . '?return=' . urlencode($returnTarget);
-            $this->plugin->getGrav()->redirectLangSafe($redirectTarget, 303);
+            if ($method['type'] === 'intermediary') {
+                $this->plugin->getGrav()->redirectLangSafe($returnTarget, 303);
+            } else {
+                $paymentsHost = $this->plugin->getGrav()['config']->get('plugins.akso-bridge.payments_host');
+                $redirectTarget = $paymentsHost . '/i/' . $paymentId . '?return=' . urlencode($returnTarget);
+                $this->plugin->getGrav()->redirectLangSafe($redirectTarget, 303);
+            }
         } else {
             if ($res['sc'] === 400) $this->state['form_error'] = $this->locale['payment_error_bad_request'];
             else if ($res['sc'] === 417) $this->state['form_error'] = $this->locale['payment_error_too_high'];
@@ -1475,6 +1730,9 @@ class Registration extends Form {
                 $originalOffer = $group['offers'][$offerIndex];
                 if ($originalOffer['type'] !== $offer['type']) return $this->localize('offers_error_inconsistent');
                 if ($originalOffer['id'] !== $offer['id']) return $this->localize('offers_error_inconsistent');
+                if ($offer['type'] === 'magazine') {
+                    if ($originalOffer['paperVersion'] !== $offer['paper']) return $this->localize('offers_error_inconsistent');
+                }
 
                 $minPrice = 1;
                 $offerName = '';

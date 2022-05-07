@@ -73,6 +73,15 @@
         left: -10000px;
     }
 
+    .item-version {
+        // the version tag on magazines
+        font-size: smaller;
+        opacity: 0.7;
+        border: 1px solid var(--light-separator);
+        border-radius: var(--radius);
+        padding: 0.1em 0.2em;
+    }
+
     .registration-notice {
         border: 1px solid var(--accent);
         border-radius: var(--radius);
@@ -128,6 +137,10 @@
                         }
                     }
 
+                    .item-price {
+                        font-feature-settings: 'tnum' 1;
+                    }
+
                     @media (max-width: @media-narrow) {
                         .item-inner, .item-addon {
                             display: block;
@@ -151,6 +164,7 @@
 
                 .sum-value {
                     font-weight: bold;
+                    font-feature-settings: 'tnum' 1;
                 }
             }
         }
@@ -439,6 +453,8 @@
                     }
 
                     .item-price {
+                        font-feature-settings: 'tnum' 1;
+
                         &.is-variable {
                             border-radius: var(--radius);
 
@@ -611,6 +627,11 @@
                 padding: 0;
                 list-style-type: none;
 
+                .methods-empty {
+                    text-align: center;
+                    opacity: 0.8;
+                }
+
                 .payment-method {
                     margin: 0.5em 0;
                     background: var(--bg);
@@ -635,20 +656,107 @@
                                 margin-bottom: 0;
                             }
                         }
-                        .method-currency {
+
+                        .method-intermediary {
+                            background: var(--bg2);
+                            border-radius: var(--radius);
+                            padding: 0.5em 1em;
+
+                            .intermediary-title {
+                                font-weight: bold;
+                            }
+                            .intermediary-desc {
+                                font-size: smaller;
+                                margin-top: 0;
+                            }
+
+                            .intermediary-offer {
+                                display: flex;
+                                justify-content: space-between;
+                                flex-wrap: wrap;
+                                border-top: 1px solid var(--light-separator);
+
+                                &.is-total {
+                                    font-weight: bold;
+                                }
+
+                                .item-price {
+                                    font-feature-settings: 'tnum' 1;
+                                }
+                            }
+                        }
+
+                        .method-intermediary-info {
+                            background: var(--bg2);
+                            border-radius: var(--radius);
+                            padding: 0.5em 1em;
                             margin-top: 0.5em;
 
-                            label {
-                                margin-right: 0.3em;
+                            .payment-desc-title {
+                                font-weight: bold;
                             }
+                            .payment-desc {
+                                font-size: smaller;
+                                p:first-child {
+                                    margin-top: 0;
+                                }
+                                p:last-child {
+                                    margin-bottom: 0;
+                                }
+                            }
+
+                            .codeholder-card-container {
+                                font-size: smaller;
+                                margin: 0;
+                                margin-top: 0.5em;
+                                padding: 0;
+
+                                .codeholder-item {
+                                    // TODO: use CSS variables instead of modifying codeholder list styles
+                                    .item-picture-container {
+                                        width: 48px;
+                                        height: 48px;
+
+                                        .item-back-picture {
+                                            display: none;
+                                        }
+                                    }
+                                    .item-details {
+                                        padding-top: 0;
+                                    }
+                                }
+                            }
+                        }
+
+                        .method-fees {
+                            display: flex;
+                            justify-content: space-between;
+                            flex-wrap: wrap;
+                            border-top: 1px solid var(--light-separator);
+                            margin-top: 0.5em;
                         }
 
                         .method-selection {
                             display: flex;
-                            justify-content: space-between;
+                            justify-content: flex-end;
+                            align-items: center;
+                            margin-top: 0.5em;
+
+                            .method-selection-price {
+                                margin-right: 0.5em;
+                            }
+
+                            button {
+                                margin-right: 0;
+                            }
 
                             @media (max-width: @media-narrow) {
                                 display: block;
+
+                                .method-selection-price {
+                                    text-align: right;
+                                    margin-right: 0;
+                                }
 
                                 .submit-container {
                                     text-align: right;

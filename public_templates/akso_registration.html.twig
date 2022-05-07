@@ -180,6 +180,11 @@
                                         {{akso_registration.categories[offer.id].name|e}}
                                     {% else %}
                                         {{akso_registration.magazines[offer.id].name|e}}
+                                        {% if offer.paper %}
+                                            <span class="item-version">{{akso_locale.registration.offers_magazine_version_paper}}</span>
+                                        {% else %}
+                                            <span class="item-version">{{akso_locale.registration.offers_magazine_version_access}}</span>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                                 <div class="item-price">
@@ -377,7 +382,9 @@
                         {% for offerIndex, offer in offerGroup.offers %}
                         {% set id = 'offer-item-' ~ offerYear.year ~ '-' ~ groupIndex ~ '-' ~ offerIndex %}
                         {% set classes = '' %}
+                        {# true if the offer is available to select #}
                         {% set available = true %}
+                        {# true if the user already has the offer for this year #}
                         {% set duplicate = false %}
                         {% set is_mem_duplicate = false %}
                         {% if (offer.type == 'membership' or offer.type == 'magazine') and not offer.price %}
@@ -415,7 +422,11 @@
                             value="{{groupIndex}}-{{offerIndex}}-{{offer.type}}-{{offer.id}}"
                             {% else %}
                             type="checkbox"
-                            name="offers[{{offerYear.year|e}}][{{groupIndex|e}}][{{offerIndex|e}}][{{offer.type}}-{{offer.id}}]"
+                            {% set variant = '0' %}
+                            {% if offer.paperVersion %}
+                                {% set variant = 'p' %}
+                            {% endif %}
+                            name="offers[{{offerYear.year|e}}][{{groupIndex|e}}][{{offerIndex|e}}][{{offer.type}}-{{offer.id}}-{{variant}}]"
                             {% endif %}
                             {% if selectedOfferItem %}
                             checked
@@ -443,6 +454,11 @@
                                             {{akso_registration.categories[offer.id].name|e}}
                                         {% else %}
                                             {{akso_registration.magazines[offer.id].name|e}}
+                                            {% if offer.paperVersion %}
+                                                <span class="item-version">{{akso_locale.registration.offers_magazine_version_paper}}</span>
+                                            {% else %}
+                                                <span class="item-version">{{akso_locale.registration.offers_magazine_version_access}}</span>
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                     <div class="item-description">
@@ -583,34 +599,101 @@
                             {% set method_radio_id = 'payment-method-check-' ~ org.id ~ '-' ~ method.id %}
                             <form class="method-details" method="POST">
                                 <label class="method-name" for="{{method_radio_id}}">{{method.name|e}}</label>
-                                <div class="method-description">{{method.description}}</div>
-                                <div class="method-selection">
-                                    <div class="method-currency">
-                                        <label>{{akso_locale.registration.payment_currency}}</label>
-                                        <select
-                                            name="payment_currency">
-                                            {% for currency in method.currencies %}
-                                                <option
-                                                    {% if akso_registration.state.currency == currency %}
-                                                    selected
+                                <div class="method-description">
+                                    {{method.description}}
+                                </div>
+                                {% if method.type == 'intermediary' and method.available %}
+                                    <div class="method-intermediary">
+                                        <div class="intermediary-title">
+                                            {{akso_locale.registration.payment_method_intermediary_title}}
+                                        </div>
+                                        <p class="intermediary-desc">
+                                        {{akso_locale.registration.payment_method_intermediary_desc}}
+                                        </p>
+                                        {% for offer in akso_registration.state.offers[method.year] %}
+                                            <div class="intermediary-offer">
+                                                <div class="item-name">
+                                                    {% if offer.type == 'membership' %}
+                                                        <span class="item-abbrev">{{akso_registration.categories[offer.id].nameAbbrev|e}}</span>
+                                                        {{akso_registration.categories[offer.id].name|e}}
+                                                    {% else %}
+                                                        {{akso_registration.magazines[offer.id].name|e}}
+                                                        {% if offer.paper %}
+                                                            <span class="item-version">{{akso_locale.registration.offers_magazine_version_paper}}</span>
+                                                        {% else %}
+                                                            <span class="item-version">{{akso_locale.registration.offers_magazine_version_access}}</span>
+                                                        {% endif %}
                                                     {% endif %}
-                                                    value="{{currency|e('html_attr')}}">
-                                                    {{akso_locale.currencies[currency]|e}}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
+                                                </div>
+                                                <div class="item-price">
+                                                    {% set offerId = offer.type ~ '-' ~ offer.id %}
+                                                    {{method.offers[offerId].amount|e}}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                        <div class="intermediary-offer is-total">
+                                            <div class="item-name">
+                                                {{akso_locale.registration.payment_method_intermediary_total}}
+                                            </div>
+                                            <div class="item-price">
+                                                {{method.offers_sum_rendered|e}}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <input class="hidden-input" name="payment_org" value="{{org.id}}" />
-                                    <input class="hidden-input" name="payment_method_id" value="{{method.id}}" />
+                                    <div class="method-intermediary-info">
+                                        <div class="payment-desc-title">
+                                            {{akso_locale.registration.payment_method_intermediary_info_0}}
+                                            {{akso_registration.state.codeholder_derived.fee_country|e|default('—')}}
+                                            {{akso_locale.registration.payment_method_intermediary_info_1}}
+                                        </div>
+                                        <div class="payment-desc">
+                                            {{method.intermediary.desc_rendered|raw|default(akso_locale.registration.payment_method_intermediary_no_desc)}}
+                                        </div>
+                                        {#{akso_locale.registration.payment_method_intermediary_expand_codeholder}#}
+                                        <ul class="codeholder-card-container codeholder-list">
+                                            {{method.intermediary_rendered|raw}}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                                {% if method.fee_total %}
+                                <div class="method-fees">
+                                    <div class="item-name">{{akso_locale.registration.payment_method_fees}}</div>
+                                    <div class="item-price">{{method.fee_total_rendered|e}}</div>
+                                </div>
+                                {% endif %}
+                                {% if method.type == 'intermediary' and not method.available %}
+                                    <div class="method-error">
+                                        {{method.error}}
+                                    </div>
+                                {% endif %}
+                                <div class="method-selection">
+                                    <div class="method-selection-price">
+                                        {{method.total_sum_rendered}}
+                                    </div>
+                                    <input type="hidden" name="payment_org" value="{{org.id}}" />
+                                    <input type="hidden" name="payment_method_id" value="{{method.id}}" />
                                     <div class="submit-container">
-                                        <button type="submit">
-                                            {{akso_locale.registration.payment_method_select}}
-                                        </button>
+                                        {% if method.type == 'intermediary' %}
+                                            {% if method.available %}
+                                                <button type="submit">
+                                                    {{akso_locale.registration.payment_method_intermediary_select}}
+                                                </button>
+                                            {% else %}
+                                                {{akso_locale.registration.payment_method_intermediary_unavailable}}
+                                            {% endif %}
+                                        {% else %}
+                                            <button type="submit">
+                                                {{akso_locale.registration.payment_method_select}}
+                                            </button>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </form>
                         </li>
                         {% endfor %}
+                        {% if org.methods_currency_unavailable > 0 %}
+                            <li class="methods-empty">{{akso_locale.registration.payment_org_methods_currency_unavailable}}</li>
+                        {% endif %}
                     </ul>
                 {% else %}
                     <ul class="org-summary">

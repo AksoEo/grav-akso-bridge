@@ -119,51 +119,53 @@ class CodeholderLists {
         $nameContainer->class = 'item-name';
         $right->appendChild($nameContainer);
 
-        $rolesContainer = new Element('ul');
-        $rolesContainer->class = 'item-roles';
-        foreach ($codeholder['activeRoles'] as $role) {
-            $li = new Element('li');
-            $li->class = 'item-role';
+        if (isset($codeholder['activeRoles']) && $dataOrgs) {
+            $rolesContainer = new Element('ul');
+            $rolesContainer->class = 'item-roles';
+            foreach ($codeholder['activeRoles'] as $role) {
+                $li = new Element('li');
+                $li->class = 'item-role';
 
-            $roleName = new Element('span', $role['role']['name']);
-            $roleName->class = 'role-name';
-            $li->appendChild($roleName);
+                $roleName = new Element('span', $role['role']['name']);
+                $roleName->class = 'role-name';
+                $li->appendChild($roleName);
 
-            if ($role['dataCountry'] || $role['dataString'] || $role['dataOrg']) {
-                $roleDetails = new Element('span');
-                $roleDetails->class = 'role-details';
-                $roleDetails->appendChild(new Element('span', '('));
+                if ($role['dataCountry'] || $role['dataString'] || $role['dataOrg']) {
+                    $roleDetails = new Element('span');
+                    $roleDetails->class = 'role-details';
+                    $roleDetails->appendChild(new Element('span', '('));
 
-                if ($role['dataCountry']) {
-                    $dCountry = new Element('span', Utils::formatCountry($bridge, $role['dataCountry']));
-                    $dCountry->class = 'detail-country';
-                    $roleDetails->appendChild($dCountry);
+                    if ($role['dataCountry']) {
+                        $dCountry = new Element('span', Utils::formatCountry($bridge, $role['dataCountry']));
+                        $dCountry->class = 'detail-country';
+                        $roleDetails->appendChild($dCountry);
+                    }
+
+                    if ($role['dataOrg']) {
+                        if ($role['dataCountry']) $roleDetails->appendChild(new Element('span', ': '));
+                        $orgId = $role['dataOrg'];
+                        $dOrg = new Element('span', $dataOrgs[$orgId]['nameAbbrev']);
+                        $dOrg->title = $dataOrgs[$orgId]['fullName'];
+                        $dOrg->class = 'detail-org';
+                        $roleDetails->appendChild($dOrg);
+                    }
+
+                    if ($role['dataString']) {
+                        if ($role['dataCountry'] || $role['dataOrg']) $roleDetails->appendChild(new Element('span', ', '));
+                        $dStr = new Element('span', $role['dataString']);
+                        $dStr->class = 'detail-string';
+                        $roleDetails->appendChild($dStr);
+                    }
+
+                    $roleDetails->appendChild(new Element('span', ')'));
+                    $li->appendChild(new Element('span', ' '));
+                    $li->appendChild($roleDetails);
                 }
 
-                if ($role['dataOrg']) {
-                    if ($role['dataCountry']) $roleDetails->appendChild(new Element('span', ': '));
-                    $orgId = $role['dataOrg'];
-                    $dOrg = new Element('span', $dataOrgs[$orgId]['nameAbbrev']);
-                    $dOrg->title = $dataOrgs[$orgId]['fullName'];
-                    $dOrg->class = 'detail-org';
-                    $roleDetails->appendChild($dOrg);
-                }
-
-                if ($role['dataString']) {
-                    if ($role['dataCountry'] || $role['dataOrg']) $roleDetails->appendChild(new Element('span', ', '));
-                    $dStr = new Element('span', $role['dataString']);
-                    $dStr->class = 'detail-string';
-                    $roleDetails->appendChild($dStr);
-                }
-
-                $roleDetails->appendChild(new Element('span', ')'));
-                $li->appendChild(new Element('span', ' '));
-                $li->appendChild($roleDetails);
+                $rolesContainer->appendChild($li);
             }
-
-            $rolesContainer->appendChild($li);
+            $right->appendChild($rolesContainer);
         }
-        $right->appendChild($rolesContainer);
 
         $canSeeEmail = $codeholder['emailPublicity'] === 'public'
             || ($isViewerMember && $codeholder['emailPublicity'] === 'members');

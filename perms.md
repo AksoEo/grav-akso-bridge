@@ -85,3 +85,5 @@ These permissions must be granted to the uea.org API client for this plugin to w
     - used for registration
 - `lists.read`
     - used for markdown codeholder lists
+- `intermediaries.read`
+    - used for intermediary payment methods
