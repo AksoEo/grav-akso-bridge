@@ -1,6 +1,10 @@
 {% extends 'partials/base.html.twig' %}
 {% block content %}
-    {% if akso_login_error %}
+    {% if akso_auth_failed %}
+        <div id="akso-login-error">
+            {{ akso_locale.login.error_auth_failed }}
+        </div>
+    {% elseif akso_login_error %}
         <div id="akso-login-error">
             {% if akso_login_error == 'loginbad' %}
                 {{ akso_locale.login.generic_error }}

@@ -1,5 +1,12 @@
 <div class="akso-bridge-login-bar {{ akso_auth ? 'is-logged-in' : 'is-logged-out' }}" role="banner">
-    {% if akso_auth %}
+    {% if akso_auth_failed %}
+        <details class="akso-auth-failed">
+            <summary>{{ akso_locale.login.akso_auth_failed }}</summary>
+            <div class="akso-auth-failed-desc">
+                {{ akso_locale.login.akso_auth_failed_desc }}
+            </div>
+        </details>
+    {% elseif akso_auth %}
         <div class="akso-user">
             {{ akso_user_fmt_name|e }}
         </div>

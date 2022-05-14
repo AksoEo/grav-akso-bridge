@@ -338,6 +338,7 @@ class AksoBridgePlugin extends Plugin {
             $state['akso_login_lost_code_path'] = $this->loginPath . '?' . $lostCodePathComponent;
         }
 
+        $state['akso_auth_failed'] = $this->loginConnFailed;
         $state['akso_auth'] = $this->aksoUser !== null;
         $state['akso_full_auth'] = $this->aksoUser ? !$this->aksoUser['totp'] : false;
         $state['akso_user_is_member'] = $this->aksoUser ? $this->aksoUser['member'] : false;
@@ -394,6 +395,7 @@ class AksoBridgePlugin extends Plugin {
         $this->pageVars = $state;
     }
 
+    private $loginConnFailed = false;
     private function runUserBridge() {
         $this->bridge = new \AksoBridge(__DIR__ . '/aksobridged/run/aksobridge');
 
@@ -420,7 +422,13 @@ class AksoBridgePlugin extends Plugin {
         if (isset($cookies['akso_session']) || $isLogin) {
             // run akso user bridge if this is the login page or if there's a session cookie
 
+            try {
             $aksoUserState = $this->bridge->open($this->apiHost, $ip, $cookies);
+            } catch (\Exception $e) {
+                // connection failed probably
+                $this->loginConnFailed = true;
+                return;
+            }
             if ($aksoUserState['auth']) {
                 $this->aksoUser = $aksoUserState;
             }

@@ -365,6 +365,32 @@
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'address.sortingCode')}}
     </div>
+    {% if akso_reg_editing and akso_registration.state.codeholder.addressInvalid %}
+    <input
+        class="hidden-input"
+        id="codeholder-address-validity"
+        name="codeholder[markAddressValid]"
+        type="checkbox" />
+    <div class="settings-field address-validity-field">
+        <div class="inner-field">
+            <label>{{akso_locale.registration.codeholder_address_validity}}</label>
+            <div class="address-validity-box">
+                <div class="address-invalid-desc">
+                    {{akso_locale.registration.codeholder_address_invalid_desc}}
+                </div>
+                <label for="codeholder-address-validity" class="link-button address-validity-button">
+                    <span class="unmarked-label">
+                        {{akso_locale.registration.codeholder_address_mark_valid}}
+                    </span>
+                    <span class="marked-label">
+                        {{akso_locale.registration.codeholder_address_will_mark_valid}}
+                    </span>
+                </label>
+            </div>
+        </div>
+        {{_self.akso_field_extra(akso_registration, akso_locale, 'addressInvalid')}}
+    </div>
+    {% endif %}
     <hr />
     {% if not akso_reg_editing and not akso_auth %}
     <div class="settings-field">

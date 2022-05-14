@@ -276,6 +276,57 @@
         #codeholder-split-name:checked ~ .settings-field .inner-field #codeholder-first-name-required {
             display: none;
         }
+
+        #codeholder-address-validity + .address-validity-field .marked-label {
+            display: none;
+        }
+        .address-validity-field {
+            .inner-field {
+                align-items: flex-start;
+            }
+
+            .address-validity-box {
+                text-align: right;
+
+                .address-invalid-desc {
+                    margin: 0.5em 0;
+                    margin-left: 1em;
+                    max-width: 500px;
+                    padding: 0.5em 1em;
+                    border-radius: var(--radius);
+                    background: var(--bg2);
+                    font-size: smaller;
+                    text-align: left;
+                }
+
+                .link-button {
+                    margin-right: 0;
+                }
+            }
+
+            &.address-did-change {
+                opacity: 0.5;
+
+                .address-validity-button {
+                    .unmarked-label {
+                        display: none;
+                    }
+                    .marked-label {
+                        display: initial !important;
+                    }
+                }
+            }
+        }
+        #codeholder-address-validity:checked + .address-validity-field {
+            opacity: 0.5;
+
+            .unmarked-label {
+                display: none;
+            }
+            .marked-label {
+                display: initial;
+            }
+        }
     }
 
     .form-summary {

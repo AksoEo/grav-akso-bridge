@@ -347,6 +347,17 @@
                                 {{ _self.pending_field(pfd, 'fmtAddress', nil, true) }}
                             </td>
                         </tr>
+                        {% if account.details.addressInvalid %}
+                            <tr>
+                                <th class="field-label">{{ akso_locale.account.addressInvalid }}</th>
+                                <td>
+                                    <div class="infobox is-warning">
+                                        {{ akso_locale.account.addressInvalidDesc }}
+                                    </div>
+                                    {{ _self.pending_field(pfd, 'addressInvalid', 'addressInvalidChgReq') }}
+                                </td>
+                            </tr>
+                        {% endif %}
                         <tr>
                             <th class="field-label">{{ akso_locale.account.feeCountry }}</th>
                             <td>

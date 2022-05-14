@@ -153,6 +153,11 @@ class UserAccount {
             $details['fmtAddress'] = $this->doc->saveHtml($fmtAddress);
         }
 
+        $details['addressInvalidChgReq'] = $this->plugin->locale['account']['addressInvalidChgReqNo'];
+        if ($details['addressInvalid']) {
+            $details['addressInvalidChgReq'] = $this->plugin->locale['account']['addressInvalidChgReqYes'];
+        }
+
         $details['fmtFeeCountry'] = '—';
         if ($details['feeCountry']) {
             $details['fmtFeeCountry'] = $this->formatCountry($details['feeCountry']);
@@ -183,6 +188,7 @@ class UserAccount {
                 'address.streetAddress',
                 'address.postalCode',
                 'address.sortingCode',
+                'addressInvalid',
                 'feeCountry',
                 'email',
                 'officePhone',
@@ -425,6 +431,8 @@ class UserAccount {
         if (isset($ch['profession']) && gettype($ch['profession']) === 'string') $codeholder['profession'] = $ch['profession'] ?: null;
         if (isset($ch['website']) && gettype($ch['website']) === 'string') $codeholder['website'] = $ch['website'] ?: null;
         if (isset($ch['biography']) && gettype($ch['biography']) === 'string') $codeholder['biography'] = $ch['biography'] ?: null;
+
+        if (isset($ch['markAddressValid'])) $codeholder['addressInvalid'] = false;
 
         $commitDesc = null;
         if (isset($input['commit_desc']) && gettype($input['commit_desc']) === 'string') {
