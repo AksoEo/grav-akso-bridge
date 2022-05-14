@@ -13,6 +13,7 @@ en:
       API_KEY: API-ŝlosilo
       API_SECRET: API-sekreto
       PAYMENTS_HOST: Adreso de AKSO-Pago-kliento
+      VOTE_ORGS: "[[Vote Orgs]]"
       CSP:
         TITLE: Content Security Policy
         IMG: Image Sources

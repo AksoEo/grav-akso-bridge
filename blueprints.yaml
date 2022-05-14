@@ -54,6 +54,11 @@ form:
     payments_host:
       type: text
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.PAYMENTS_HOST
+    vote_orgs:
+      type: selectize
+      label: PLUGIN_AKSO_BRIDGE.SETTINGS.VOTE_ORGS
+      validate:
+        type: commalist
     csp:
       type: section
       title: PLUGIN_AKSO_BRIDGE.SETTINGS.CSP.TITLE

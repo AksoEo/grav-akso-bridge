@@ -408,49 +408,51 @@
                     {{ akso_locale.account.logins_title }}
                 </a>
             </div>
-            <div class="account-memberships">
-                <h2 class="memberships-title">{{ akso_locale.account.memberships_title }}</h2>
-                <div class="sign-up-container">
-                    <a class="link-button" href="{{ account.registration_link }}">
-                        {{ akso_locale.account.memberships_register }}
-                    </a>
-                </div>
-                <div class="memberships-title-clear"></div>
-                {% if account.membership.categories is empty %}
-                    <div class="memberships-none">
-                        {{ akso_locale.account.memberships_none }}
+            {% if account.details.codeholderType == 'human' %}
+                <div class="account-memberships">
+                    <h2 class="memberships-title">{{ akso_locale.account.memberships_title }}</h2>
+                    <div class="sign-up-container">
+                        <a class="link-button" href="{{ account.registration_link }}">
+                            {{ akso_locale.account.memberships_register }}
+                        </a>
                     </div>
-                {% else %}
-                    <ul class="memberships-list">
-                        {% for category in account.membership.categories %}
-                        <li class="membership-category">
-                            {{ category.meow }}
-                            {% if category.canBeRenewed %}
-                                <button class="category-renew-button">
-                                    {{ akso_locale.account.membership_category_renew }}
-                                </button>
-                            {% endif %}
-                            <div class="category-name">{{ category.name|e }}</div>
-                            <ul class="membership-years">
-                                {% for year in category.years %}
-                                    <li class="membership-year {{ category.lifetime ? 'is-lifetime' : '' }}">
-                                        {% if category.lifetime %}
-                                            {{ akso_locale.account.membership_lifetime_prefix }}
-                                        {% endif %}
-                                        {{ year|e }}
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% if account.membership.historyHasMore %}
-                    <div class="memberships-has-more">
-                        {{ akso_locale.account.memberships_has_more_items }}
-                    </div>
+                    <div class="memberships-title-clear"></div>
+                    {% if account.membership.categories is empty %}
+                        <div class="memberships-none">
+                            {{ akso_locale.account.memberships_none }}
+                        </div>
+                    {% else %}
+                        <ul class="memberships-list">
+                            {% for category in account.membership.categories %}
+                            <li class="membership-category">
+                                {{ category.meow }}
+                                {% if category.canBeRenewed %}
+                                    <button class="category-renew-button">
+                                        {{ akso_locale.account.membership_category_renew }}
+                                    </button>
+                                {% endif %}
+                                <div class="category-name">{{ category.name|e }}</div>
+                                <ul class="membership-years">
+                                    {% for year in category.years %}
+                                        <li class="membership-year {{ category.lifetime ? 'is-lifetime' : '' }}">
+                                            {% if category.lifetime %}
+                                                {{ akso_locale.account.membership_lifetime_prefix }}
+                                            {% endif %}
+                                            {{ year|e }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% if account.membership.historyHasMore %}
+                        <div class="memberships-has-more">
+                            {{ akso_locale.account.memberships_has_more_items }}
+                        </div>
+                        {% endif %}
                     {% endif %}
-                {% endif %}
-            </div>
+                </div>
+            {% endif %}
         {% endif %}
     {% endif %}
 {% endblock %}

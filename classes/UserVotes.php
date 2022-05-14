@@ -14,10 +14,15 @@ class UserVotes {
     }
 
     function getVotesList() {
+        $voteOrgs = $this->plugin->getGrav()['config']->get('plugins.akso-bridge.vote_orgs');
+
         $votes = [];
         while (true) {
             $res = $this->bridge->get('/codeholders/self/votes', array(
                 'fields' => ['mayVote', 'hasVoted', 'id', 'org', 'name', 'timeStart', 'timeEnd', 'hasStarted', 'hasEnded', 'hasResults', 'isActive', 'description'],
+                'filter' => array(
+                    'org' => array('$in' => $voteOrgs),
+                ),
                 'offset' => count($votes),
                 'order' => [['timeEnd', 'desc']],
                 'limit' => 100,
@@ -68,6 +73,11 @@ class UserVotes {
             $vote['description'] ?: '',
             ['emphasis', 'strikethrough', 'link', 'list', 'table', 'image'],
         )['c'];
+
+        // fix mayVote
+        if ($vote['ballotsSecret']) {
+            $vote['mayVote'] = $vote['mayVote'] && !$vote['hasVoted'];
+        }
 
         if ($vote['options']) {
             $codeholderIds = [];
