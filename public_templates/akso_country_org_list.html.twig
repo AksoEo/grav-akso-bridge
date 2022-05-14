@@ -46,15 +46,16 @@
                         {% endif %}
                         <div class="org-descriptor">{{org.mainDescriptor|e}}</div>
                     </div>
+                    {% if org.factoids is not empty or org.biography is not empty %}
                     <details class="org-details">
                         <summary>
                             {{akso_locale.country_org_lists.country_item_summary_title}}
+                        </summary>
+                        <div class="org-post-info">
                             {% set factoids = {
                                 factoids: org.factoids|merge(org.data_factoids),
                             } %}
                             {% include 'partials/akso_codeholder_factoids.html.twig' %}
-                        </summary>
-                        <div class="org-post-info">
                             <div class="org-biography">
                                 {% set is_first = true %}
                                 {% for line in org.biography|split('\n') %}
@@ -68,6 +69,7 @@
                             </div>
                         </div>
                     </details>
+                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>
