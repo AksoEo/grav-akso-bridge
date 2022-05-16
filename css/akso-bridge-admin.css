@@ -44,3 +44,8 @@
     background: none;
     color: inherit;
 }
+
+/* fix clashing css in another plugin */
+.grav-youtube > button {
+    display: none;
+}
