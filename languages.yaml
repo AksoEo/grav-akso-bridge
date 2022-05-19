@@ -7,6 +7,7 @@ en:
       REGISTRATION_PATH: Adreso de registriĝpaĝo
       ACCOUNT_LOGINS_PATH: Adreso de paĝo kun superrigardo de ensalutoj
       ACCOUNT_VOTES_PATH: Adreso de paĝo kun superrigardo de voĉdonoj
+      ACCOUNT_NOTIFS_PATH: "[[notification page path]]"
       GK_PAGE_ROUTE_TEMPLATE: "[[GK Page Route Template]]"
       GK_PAGE_ROUTE_TEMPLATE_DESC: "[[This will be used for the + button in admin pages. Please put %year% where the year should go. Example: <code>/komunikoj/%year%</code>]]"
       API_HOST: API-adreso

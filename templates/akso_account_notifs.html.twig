@@ -1,0 +1,63 @@
+{% extends 'partials/base.html.twig' %}
+{% block content %}
+    {% if account.page == 'notifications' %}
+        <a class="back-button" href="{{account.account_path}}">
+            <span class="back-icon"></span>
+            {{akso_locale.account_notifs.back_to_account}}
+        </a>
+        <h1>{{akso_locale.account_notifs.title}}</h1>
+        <div class="account-telegram-link">
+            <h3>{{akso_locale.account_notifs.telegram_link}}</h3>
+            {% if account.telegram_linked %}
+                <p>
+                    {{akso_locale.account_notifs.telegram_is_linked}}
+                </p>
+                <form action="{{account.path}}" method="POST">
+                    <input type="hidden" name="telegram" value="unlink" />
+                    <button type="submit">{{akso_locale.account_notifs.telegram_unlink_btn}}</button>
+                </form>
+            {% else %}
+                <p>
+                    {{akso_locale.account_notifs.telegram_is_not_linked}}
+                </p>
+                <form action="{{account.path}}" method="POST">
+                    <input type="hidden" name="telegram" value="link" />
+                    <button type="submit">{{akso_locale.account_notifs.telegram_link_btn}}</button>
+                </form>
+            {% endif %}
+        </div>
+    {% elseif account.page == 'link-telegram' %}
+        <a class="back-button" href="{{account.path}}">
+            <span class="back-icon"></span>
+            {{akso_locale.account_notifs.telegram_back}}
+        </a>
+        {% if account.already_linked %}
+            <p>
+                {{akso_locale.account_notifs.telegram_is_linked}}
+            </p>
+        {% else %}
+            <h2>{{akso_locale.account_notifs.telegram_link}}</h2>
+            <p>
+                {{akso_locale.account_notifs.telegram_link_desc}}
+            </p>
+            <a rel="nofollow noreferrer" target="_blank" href="{{account.link|e('html_attr')}}">
+                {{account.link|e}}
+            </a>
+            <p>
+                {{akso_locale.account_notifs.telegram_link_desc2}}
+            </p>
+        {% endif %}
+    {% elseif account.page == 'unlink-telegram' %}
+        <a class="back-button" href="{{account.path}}">
+            <span class="back-icon"></span>
+            {{akso_locale.account_notifs.telegram_back}}
+        </a>
+        <p>
+            {% if account.success %}
+                {{akso_locale.account_notifs.telegram_unlinked}}
+            {% else %}
+                {{akso_locale.account_notifs.telegram_unlinked_no_link}}
+            {% endif %}
+        </p>
+    {% endif %}
+{% endblock %}

@@ -3,6 +3,7 @@ namespace Grav\Plugin\AksoBridge;
 
 use Grav\Plugin\AksoBridge\Registration;
 use Grav\Plugin\AksoBridge\UserVotes;
+use Grav\Plugin\AksoBridge\UserNotifications;
 use Grav\Plugin\AksoBridge\Utils;
 
 // Handles the user’s “my account” page.
@@ -13,7 +14,7 @@ class UserAccount {
     const QUERY_CANCEL_REQUEST = 'peto-nuligi';
     const QUERY_EDIT_PICTURE = 'redakti-profilbildon';
 
-    private $plugin, $app, $bridge, $page, $path;
+    private $plugin, $app, $bridge, $page, $path, $notifsPath;
     private $editing = false;
 
     public function __construct($plugin, $app, $bridge, $path) {
@@ -27,6 +28,8 @@ class UserAccount {
         $this->cancelRequestPath = $this->plugin->accountPath . '?' . self::QUERY_CANCEL_REQUEST;
         $this->editPicturePath = $this->plugin->accountPath . '?' . self::QUERY_EDIT_PICTURE;
         $votesPath = $this->plugin->accountPath . $this->plugin->getGrav()['config']->get('plugins.akso-bridge.account_votes_path');
+        $this->notifsPath = $this->plugin->accountPath . $this->plugin->getGrav()['config']->get('plugins.akso-bridge.account_notifs_path');
+
         if ($path === $this->plugin->accountPath) {
             $this->page = 'account';
 
@@ -43,6 +46,8 @@ class UserAccount {
             $this->page = 'logins';
         } else if (str_starts_with($path, $votesPath)) {
             $this->page = 'votes';
+        } else if (str_starts_with($path, $this->notifsPath)) {
+            $this->page = 'notifications';
         }
 
         $this->doc = new \DOMDocument();
@@ -523,6 +528,9 @@ class UserAccount {
         if ($this->page === 'votes') {
             $votes = new UserVotes($this->plugin, $this->app, $this->bridge, $this->path);
             return $votes->run();
+        } else if ($this->page === 'notifications') {
+            $notifs = new UserNotifications($this->plugin, $this->app, $this->bridge, $this->path);
+            return $notifs->run();
         }
 
         if ($this->editing && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -582,7 +590,8 @@ class UserAccount {
                 'edit_link' => $this->editPath,
                 'cancel_request_link' => $this->cancelRequestPath,
                 'edit_picture_link' => $this->editPicturePath,
-                'registration_link' => $this->plugin->registrationPath
+                'registration_link' => $this->plugin->registrationPath,
+                'notifs_link' => $this->notifsPath,
             );
         } else if ($this->page === 'logins') {
             $countries = [];
