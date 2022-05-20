@@ -210,6 +210,14 @@ class AksoBridge {
         return $this->request('forgot_pw', array('un' => urlencode($username)));
     }
 
+    public function createPassword(string $username, string $password, string $token) {
+        return $this->request('create_pw', array(
+            'un' => urlencode($username),
+            'pw' => $password,
+            'tok' => $token,
+        ));
+    }
+
     public function get(string $path, $query, $maxCacheAgeSecs = 0) {
         return $this->request('get', array(
             'p' => $path,

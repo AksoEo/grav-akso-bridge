@@ -31,6 +31,10 @@
                 {{ akso_locale.login.generic_error }}
             {% elseif akso_login_error == 'reset-error' %}
                 {{ akso_locale.login.generic_error }}
+            {% elseif akso_login_error == 'create-error' %}
+                {{ akso_locale.login.generic_error }}
+            {% elseif akso_login_error == 'create-error-mismatch' %}
+                {{ akso_locale.login.error_create_mismatch }}
             {% endif %}
         </div>
     {% endif %}
@@ -48,7 +52,7 @@
                 {{ akso_locale.login.forgot_password_success }}
             </p>
         {% elseif akso_login_is_pw_reset %}
-            <h1 class="title small-title">Restarigi Pasvorton</h1>
+            <h1 class="title small-title">{{akso_locale.login.forgot_password_title}}</h1>
             <p>
                 {{ akso_locale.login.forgot_password_msg }}
             </p>
@@ -74,6 +78,49 @@
                 <div class="footer-spacer"></div>
                 <button type="submit" class="is-primary">
                     {{ akso_locale.login.btn_send_reset_email }}
+                </button>
+            </footer>
+        {% elseif akso_login_creating_password %}
+            <h1 class="title small-title">{{akso_locale.login.create_password_title}}</h1>
+            <p>
+                {{ akso_locale.login.create_password_msg }}
+            </p>
+            <div class="form-field">
+                <label for="akso-login-username">
+                    {{ akso_locale.login.username }}
+                </label>
+                <input
+                    id="akso-login-username"
+                    disabled readonly
+                    name="username"
+                    type="text"
+                    value="{{ akso_login_create_password_data.login|e('html_attr') }}" />
+            </div>
+            <div class="form-field">
+                <label for="akso-login-password">
+                    {{ akso_locale.login.password }}
+                </label>
+                <input
+                    id="akso-login-password"
+                    name="password"
+                    type="password"
+                    autofocus />
+            </div>
+            <div class="form-field">
+                <label for="akso-login-password">
+                    {{ akso_locale.login.password_confirm }}
+                </label>
+                <input
+                    id="akso-login-password"
+                    name="password2"
+                    type="password" />
+            </div>
+            <input type="hidden" name="create_password_username" value="{{ akso_login_create_password_data.login|e('html_attr') }}">
+            <input type="hidden" name="create_password_token" value="{{ akso_login_create_password_data.token|e('html_attr') }}">
+            <footer class="form-footer">
+                <div class="footer-spacer"></div>
+                <button type="submit" class="is-primary">
+                    {{ akso_locale.login.btn_create_password }}
                 </button>
             </footer>
         {% elseif akso_login_totp_setup %}

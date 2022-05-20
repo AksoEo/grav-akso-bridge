@@ -555,6 +555,25 @@ const messageHandlers = {
             return { k: false, sc: err.statusCode, h: {}, b: err.toString() };
         }
     },
+    create_pw: async (conn, { un, pw, tok }) => {
+        assertType(un, 'string', 'expected un to be a string');
+        assertType(pw, 'string', 'expected pw to be a string');
+        assertType(tok, 'string', 'expected tok to be a string');
+        try {
+            const res = await conn.client.req({
+                method: 'POST',
+                path: `/codeholders/${un}/!create_password_use`,
+                body: {
+                    key: Buffer.from(tok, 'hex'),
+                    password: pw,
+                },
+                _allowLoggedOut: true,
+            });
+            return { k: res.ok, sc: res.res.status, h: {}, b: res.body };
+        } catch (err) {
+            return { k: false, sc: err.statusCode, h: {}, b: err.toString() };
+        }
+    },
     get: async (conn, { p, q, c }) => {
         assertType(p, 'string', 'expected p to be a string');
         assertType(q, 'object', 'expected q to be an object');

@@ -311,6 +311,19 @@ class AksoBridgePlugin extends Plugin {
 
             $state['akso_login_path'] = $this->loginPath;
 
+            $createPasswordPathComponent = $this->locale['login']['create_password_path'];
+            $createPasswordData = isset($_GET[$createPasswordPathComponent]) && gettype($_GET[$createPasswordPathComponent]) === 'string'
+                ? $_GET[$createPasswordPathComponent]
+                : null;
+            $createPasswordData = explode('/', $createPasswordData);
+            if (count($createPasswordData) == 2) {
+                $state['akso_login_create_password_data'] = array(
+                    'login' => $createPasswordData[0],
+                    'token' => $createPasswordData[1],
+                );
+                $state['akso_login_creating_password'] = $createPasswordData != null;
+            }
+
             $resetPasswordPathComponent = $this->locale['login']['forgot_password_path'];
             $isResettingPassword = isset($_GET[$resetPasswordPathComponent]);
             $state['akso_login_is_pw_reset'] = $isResettingPassword;
@@ -389,6 +402,10 @@ class AksoBridgePlugin extends Plugin {
                 $state['akso_login_error'] = 'reset-error';
             } else if ($istate['login_state'] === 'reset-success') {
                 $state['akso_login_pw_reset_success'] = true;
+            } else if ($istate['login_state'] === 'create-error') {
+                $state['akso_login_error'] = 'create-error';
+            } else if ($istate['login_state'] === 'create-error-mismatch') {
+                $state['akso_login_error'] = 'create-error-mismatch';
             }
         }
 
@@ -489,6 +506,25 @@ class AksoBridgePlugin extends Plugin {
                     );
                 }
                 return;
+            } else if (isset($post['create_password_token'])) {
+                $password = $post['password'];
+                $password2 = $post['password2'];
+                if ($password !== $password2) {
+                    $this->pageState = array(
+                        'login_state' => 'create-error-mismatch',
+                    );
+                    return;
+                }
+                $canonUsername = $post['create_password_username'];
+                $token = $post['create_password_token'];
+                $res = $this->bridge->createPassword($canonUsername, $password, $token);
+                if (!$res['k']) {
+                    $this->pageState = array(
+                        'login_state' => 'create-error',
+                    );
+                    return;
+                }
+                // fall through to normal login on success
             }
 
             $rpath = '/';
