@@ -312,6 +312,11 @@ class AksoBridgePlugin extends Plugin {
             $state['akso_login_path'] = $this->loginPath;
 
             $createPasswordPathComponent = $this->locale['login']['create_password_path'];
+            $resettingPassword = false;
+            if (!isset($_GET[$createPasswordPathComponent])) {
+                $createPasswordPathComponent = $this->locale['login']['reset_password_path'];
+                $resettingPassword = true;
+            }
             $createPasswordData = isset($_GET[$createPasswordPathComponent]) && gettype($_GET[$createPasswordPathComponent]) === 'string'
                 ? $_GET[$createPasswordPathComponent]
                 : null;
@@ -322,6 +327,7 @@ class AksoBridgePlugin extends Plugin {
                     'token' => $createPasswordData[1],
                 );
                 $state['akso_login_creating_password'] = $createPasswordData != null;
+                $state['akso_login_resetting_password'] = $resettingPassword;
             }
 
             $resetPasswordPathComponent = $this->locale['login']['forgot_password_path'];

@@ -81,9 +81,19 @@
                 </button>
             </footer>
         {% elseif akso_login_creating_password %}
-            <h1 class="title small-title">{{akso_locale.login.create_password_title}}</h1>
+            <h1 class="title small-title">
+                {% if akso_login_resetting_password %}
+                    {{akso_locale.login.reset_password_title}}
+                {% else %}
+                    {{akso_locale.login.create_password_title}}
+                {% endif %}
+            </h1>
             <p>
-                {{ akso_locale.login.create_password_msg }}
+                {% if akso_login_resetting_password %}
+                    {{ akso_locale.login.reset_password_msg }}
+                {% else %}
+                    {{ akso_locale.login.create_password_msg }}
+                {% endif %}
             </p>
             <div class="form-field">
                 <label for="akso-login-username">
@@ -120,7 +130,11 @@
             <footer class="form-footer">
                 <div class="footer-spacer"></div>
                 <button type="submit" class="is-primary">
-                    {{ akso_locale.login.btn_create_password }}
+                    {% if akso_login_resetting_password %}
+                        {{ akso_locale.login.btn_reset_password }}
+                    {% else %}
+                        {{ akso_locale.login.btn_create_password }}
+                    {% endif %}
                 </button>
             </footer>
         {% elseif akso_login_totp_setup %}
