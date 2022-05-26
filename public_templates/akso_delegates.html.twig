@@ -2,6 +2,7 @@
 {% block content %}
     {{page.content|raw}}
 
+    <div class="akso-delegates-container">
     {% macro country_label(akso_delegates, code) %}
         <img
             class="inline-flag-icon"
@@ -433,4 +434,5 @@
             {% endif %}
         {% endif %}
     {% endif %}
+    </div>
 {% endblock %}

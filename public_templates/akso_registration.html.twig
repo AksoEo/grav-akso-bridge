@@ -600,7 +600,7 @@
                             <form class="method-details" method="POST">
                                 <label class="method-name" for="{{method_radio_id}}">{{method.name|e}}</label>
                                 <div class="method-description">
-                                    {{method.description}}
+                                    {{method.description|raw}}
                                 </div>
                                 {% if method.type == 'intermediary' and method.available %}
                                     <div class="method-intermediary">
