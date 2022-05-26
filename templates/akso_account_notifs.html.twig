@@ -1,5 +1,16 @@
 {% extends 'partials/base.html.twig' %}
 {% block content %}
+    {% if account.message %}
+        {% if account.message.success %}
+            <blockquote class="infobox">
+                {{account.message.message}}
+            </blockquote>
+        {% else %}
+            <blockquote class="infobox is-error">
+                {{account.message.message}}
+            </blockquote>
+        {% endif %}
+    {% endif %}
     {% if account.page == 'notifications' %}
         <a class="back-button" href="{{account.account_path}}">
             <span class="back-icon"></span>
@@ -26,6 +37,120 @@
                 </form>
             {% endif %}
         </div>
+        <div class="account-newsletters">
+            <h3>{{akso_locale.account_notifs.newsletters_title}}</h3>
+            <ul class="newsletters-list">
+                {% for newsletter in account.newsletters %}
+                    {% set newsletter_label = newsletter.name %}
+                    {% if newsletter.subscribed %}
+                        {% set newsletter_label = newsletter_label ~ ', ' ~ akso_locale.account_notifs.newsletter_subscribed %}
+                    {% endif %}
+                    <li class="newsletter-item" aria-label="{{newsletter_label}}">
+                        <span class="newsletter-org">{{newsletter.org}}</span>
+                        <span class="newsletter-name">{{newsletter.name}}</span>
+                        <div class="newsletter-description">
+                            {{newsletter.description_rendered|raw}}
+                        </div>
+                        {% if newsletter.subscribed %}
+                            <form class="newsletter-action" method="POST" action="{{account.path}}">
+                                <div class="newsletter-is-subscribed">
+                                    {{akso_locale.account_notifs.newsletter_subscribed}}
+                                    <div class="newsletter-subscribed-since">
+                                        {{akso_locale.account_notifs.newsletter_subscribed_since}}
+                                        {{newsletter.time|date('c')}}
+                                    </div>
+                                </div>
+
+                                <input type="hidden" name="action" value="unsub">
+                                <input type="hidden" name="newsletter" value="{{newsletter.id}}">
+                                <button type="submit">
+                                    {{akso_locale.account_notifs.newsletter_unsubscribe}}
+                                </button>
+                            </form>
+                        {% else %}
+                            <form class="newsletter-action" method="POST" action="{{account.path}}">
+                                <span class="spacer"></span>
+                                <input type="hidden" name="action" value="sub">
+                                <input type="hidden" name="newsletter" value="{{newsletter.id}}">
+                                <button type="submit">
+                                    {{akso_locale.account_notifs.newsletter_subscribe}}
+                                </button>
+                            </form>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% elseif account.page == 'confirm-sub' %}
+        <a class="back-button" href="{{account.path}}">
+            <span class="back-icon"></span>
+            {{akso_locale.account_notifs.newsletter_sub_back}}
+        </a>
+        <h2>{{akso_locale.account_notifs.newsletter_subscribe}}</h2>
+        {% if account.newsletter %}
+            <p>
+                {{akso_locale.account_notifs.newsletter_subscribe_yousure_0}}{{
+                account.newsletter.name
+                }}{{akso_locale.account_notifs.newsletter_subscribe_yousure_1}}
+            </p>
+            <form method="POST" action="{{account.path}}">
+                <input type="hidden" name="action" value="sub">
+                <input type="hidden" name="confirmed" value="yes">
+                <input type="hidden" name="newsletter" value="{{account.newsletter.id}}">
+                <button type="submit">
+                    {{akso_locale.account_notifs.newsletter_subscribe}}
+                </button>
+            </form>
+        {% else %}
+            <p>
+                {{akso_locale.account_notifs.newsletter_subscribe_failed_notfound}}
+            </p>
+        {% endif %}
+    {% elseif account.page == 'confirm-unsub' %}
+        <a class="back-button" href="{{account.path}}">
+            <span class="back-icon"></span>
+            {{akso_locale.account_notifs.newsletter_sub_back}}
+        </a>
+        <h2>{{akso_locale.account_notifs.newsletter_unsubscribe}}</h2>
+        {% if account.newsletter %}
+            <p>
+                {{akso_locale.account_notifs.newsletter_unsubscribe_yousure_0}}{{
+                account.newsletter.name
+                }}{{akso_locale.account_notifs.newsletter_unsubscribe_yousure_1}}
+            </p>
+            <p>
+                {{akso_locale.account_notifs.newsletter_unsubscribe_reason_desc}}
+            </p>
+            <form method="POST" action="{{account.path}}">
+                <ul>
+                    {% for i in 0..(akso_locale.account_notifs.newsletter_unsub_reason_max) %}
+                        <li>
+                            {% set id = 'unsub_reason_' ~ i %}
+                            <input
+                                type="radio"
+                                id="{{id}}"
+                                name="reason"
+                                {% if i == 0 %}
+                                checked
+                                {% endif %}
+                                value="{{i}}" />
+                            <label for="{{id}}">
+                                {{akso_locale.account_notifs['newsletter_unsub_reason_' ~ i]}}
+                            </label>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <input type="hidden" name="action" value="unsub">
+                <input type="hidden" name="newsletter" value="{{account.newsletter.id}}">
+                <button type="submit">
+                    {{akso_locale.account_notifs.newsletter_unsubscribe}}
+                </button>
+            </form>
+        {% else %}
+            <p>
+                {{akso_locale.account_notifs.newsletter_unsubscribe_failed_notfound}}
+            </p>
+        {% endif %}
     {% elseif account.page == 'link-telegram' %}
         <a class="back-button" href="{{account.path}}">
             <span class="back-icon"></span>

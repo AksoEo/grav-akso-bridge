@@ -3,6 +3,7 @@ import initAddressFields from '../registration/address-fields';
 import initVotes from './votes';
 import './index.less';
 import './votes.less';
+import './notifs.less';
 
 const locale = { account };
 

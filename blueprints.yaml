@@ -62,6 +62,11 @@ form:
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.VOTE_ORGS
       validate:
         type: commalist
+    newsletter_orgs:
+      type: selectize
+      label: PLUGIN_AKSO_BRIDGE.SETTINGS.NEWSLETTER_ORGS
+      validate:
+        type: commalist
     csp:
       type: section
       title: PLUGIN_AKSO_BRIDGE.SETTINGS.CSP.TITLE

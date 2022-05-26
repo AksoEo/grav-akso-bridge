@@ -15,6 +15,7 @@ en:
       API_SECRET: API-sekreto
       PAYMENTS_HOST: Adreso de AKSO-Pago-kliento
       VOTE_ORGS: "[[Vote Orgs]]"
+      NEWSLETTER_ORGS: "[[Newsletter Orgs]]"
       CSP:
         TITLE: Content Security Policy
         IMG: Image Sources
