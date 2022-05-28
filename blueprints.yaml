@@ -67,6 +67,22 @@ form:
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.NEWSLETTER_ORGS
       validate:
         type: commalist
+    gk:
+      type: section
+      title: PLUGIN_AKSO_BRIDGE.SETTINGS.GK.TITLE
+      fields:
+        newsletter:
+          type: number
+          label: PLUGIN_AKSO_BRIDGE.SETTINGS.GK.NEWSLETTER
+        from:
+          type: string
+          label: PLUGIN_AKSO_BRIDGE.SETTINGS.GK.FROM
+        from_name:
+          type: string
+          label: PLUGIN_AKSO_BRIDGE.SETTINGS.GK.FROM_NAME
+        reply_to:
+          type: string
+          label: PLUGIN_AKSO_BRIDGE.SETTINGS.GK.REPLY_TO
     csp:
       type: section
       title: PLUGIN_AKSO_BRIDGE.SETTINGS.CSP.TITLE

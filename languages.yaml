@@ -16,6 +16,12 @@ en:
       PAYMENTS_HOST: Adreso de AKSO-Pago-kliento
       VOTE_ORGS: "[[Vote Orgs]]"
       NEWSLETTER_ORGS: "[[Newsletter Orgs]]"
+      GK:
+        TITLE: Gazetaraj Komunikoj
+        NEWSLETTER: '[[Newsletter ID]]'
+        FROM: Sendanto
+        FROM_NAME: Nomo de sendanto
+        REPLY_TO: Respondu al-adreso
       CSP:
         TITLE: Content Security Policy
         IMG: Image Sources

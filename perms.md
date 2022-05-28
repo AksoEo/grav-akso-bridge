@@ -87,3 +87,10 @@ These permissions must be granted to the uea.org API client for this plugin to w
     - used for markdown codeholder lists
 - `intermediaries.read`
     - used for intermediary payment methods
+- `newsletters.read.<org>`
+    - used for user notification settings / newsletter subscriptions
+    - used for GK send to subscribers
+- `notif_templates.read.<org>`
+    - used for GK send to subscribers
+- `notif_templates.delete.<org>`
+    - used for GK send to subscribers (delete on complete)

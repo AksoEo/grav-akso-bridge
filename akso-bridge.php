@@ -915,15 +915,22 @@ class AksoBridgePlugin extends Plugin {
         if (isset($_POST['akso_gk_send_to_subs']) && $_POST['akso_gk_send_to_subs']) {
             $title = $_POST['data']['header']['title'];
             $content = $_POST['data']['content'];
-            $url = $_POST['data']['header']['routes']['canonical'];
+            $url = null;
+            if (isset($_POST['data']['route'])) {
+                $url = $_POST['data']['route'];
+            } else if (isset($_POST['data']['header']['routes']['canonical'])) {
+                $url = $_POST['data']['header']['routes']['canonical'];
+            } else {
+                echo('Eraro');
+                echo('');
+                echo('could not read route');
+                die();
+            }
             $app = new AppBridge($this->grav);
             $app->open();
             $subs = new GkSendToSubscribers($this, $app);
             $subs->run($title, $content, $url);
             $app->close();
-            // TODO
-            var_dump("this is the part where the newsletter is sent out");
-            die();
         }
     }
 }

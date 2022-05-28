@@ -285,7 +285,7 @@ $(document).ready(() => {
             ${locale.createGkPage}
         </button>
         `;
-        const titlebarAdd = document.querySelector('#titlebar-add');
+        const titlebarAdd = document.querySelector('#titlebar-button-back').nextElementSibling;
         titlebarAdd.parentNode.insertBefore(titlebarButtonGroup, titlebarAdd);
         titlebarAdd.parentNode.insertBefore(document.createTextNode(' '), titlebarAdd);
 
