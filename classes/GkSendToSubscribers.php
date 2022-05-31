@@ -18,6 +18,7 @@ class GkSendToSubscribers {
         //
         // we are using markdown notif templates
         $md = $content;
+        $extraText = $this->plugin->locale['content']['gk_send_to_subs_extra_text'];
 
         $notifTemplate = $this->app->bridge->post('/notif_templates', array(
             'base' => 'inherit',
@@ -32,6 +33,10 @@ class GkSendToSubscribers {
                 array(
                     'type' => 'text',
                     'columns' => [$md],
+                ),
+                array(
+                    'type' => 'text',
+                    'columns' => [$extraText],
                 ),
             ],
         ), [], []);
