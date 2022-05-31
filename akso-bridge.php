@@ -138,8 +138,12 @@ class AksoBridgePlugin extends Plugin {
 
         if ($this->path === $this->loginPath) {
             $this->addLoginPage();
-        } else if ($this->aksoUser && $this->pathStartsWithComponent($this->path, $this->accountPath)) {
-            $this->addAccountPage();
+        } else if ($this->pathStartsWithComponent($this->path, $this->accountPath)) {
+            if ($this->aksoUser) {
+                $this->addAccountPage();
+            } else {
+                $this->grav->redirectLangSafe($this->loginPath . '?r=' . $this->path, 302);
+            }
         } else if ($this->path === self::CONGRESS_LOC_THUMBNAIL_PATH) {
             $app = new AppBridge($this->grav);
             $app->open();
@@ -347,6 +351,8 @@ class AksoBridgePlugin extends Plugin {
             if (isset($post['return'])) {
                 // keep return path if it already exists
                 $rpath = $post['return'];
+            } else if (isset($_GET['r']) && gettype($_GET['r']) === 'string' && str_starts_with($_GET['r'], '/')) {
+                $rpath = $_GET['r'];
             } else {
                 $rpath = $this->getReferrerPath();
             }
