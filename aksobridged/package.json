@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "A daemon for managing user sessions on a web server",
   "main": "src/main.js",
+  "type": "module",
   "scripts": {
     "start": "node ."
   },
@@ -25,6 +26,8 @@
     "cross-fetch": "^3.1.4",
     "google-libphonenumber": "^3.2.21",
     "markdown-it": "^12.0.2",
-    "tough-cookie": "^4.0.0"
+    "remark": "^14.0.2",
+    "tough-cookie": "^4.0.0",
+    "unist-util-visit": "^4.1.0"
   }
 }

@@ -1,21 +1,25 @@
-const { Server } = require('net');
-const { workerData, parentPort } = require('worker_threads');
-const { AppClient, UserClient, generateTotp } = require('@tejo/akso-client');
-const { evaluate, currencies } = require('@tejo/akso-script');
-require('@tejo/akso-script/country_fmt');
-require('@tejo/akso-script/phone_fmt');
-const { PhoneNumberUtil, PhoneNumberFormat } = require('google-libphonenumber');
-const { CookieJar } = require('tough-cookie');
-const { encode, decode } = require('@msgpack/msgpack');
-const { setThreadName, info, debug, warn, error } = require('./log');
-const path = require('path');
-const { promisify } = require('util');
-const fs = require('fs');
-const crypto = require('crypto');
-const { Cashify } = require('cashify');
-const fetch = require('cross-fetch');
-const Markdown = require('markdown-it');
-const { formatAddress, normalizeAddress } = require('@cpsdqs/google-i18n-address');
+import { Server } from 'net';
+import { workerData, parentPort } from 'worker_threads';
+import { AppClient, UserClient, generateTotp } from '@tejo/akso-client';
+import { evaluate, currencies } from '@tejo/akso-script';
+import '@tejo/akso-script/country_fmt.js';
+import '@tejo/akso-script/phone_fmt.js';
+import libPhoneNumber from 'google-libphonenumber';
+const { PhoneNumberUtil, PhoneNumberFormat } = libPhoneNumber;
+import { CookieJar } from 'tough-cookie';
+import { encode, decode } from '@msgpack/msgpack';
+import { setThreadName, info, debug, warn, error } from './log.js';
+import path from 'path';
+import { promisify } from 'util';
+import fs from 'fs';
+import crypto from 'crypto';
+import { Cashify } from 'cashify';
+import fetch from 'cross-fetch';
+import Markdown from 'markdown-it';
+import { remark } from 'remark';
+import { formatAddress, normalizeAddress } from '@cpsdqs/google-i18n-address';
+import { URL } from 'url';
+import { visit } from 'unist-util-visit';
 
 process.on('uncaughtException', err => {
     error(`!!!! uncaught exception`);
@@ -928,6 +932,14 @@ const messageHandlers = {
         md.enable(r);
         return { c: md.render(c) };
     },
+    absolute_md_urls: async (conn, { c, u }) => {
+        assertType(c, 'string', 'expected v to be a string');
+        assertType(u, 'string', 'expected u to be a string');
+
+        return await remark()
+            .use(remarkPluginAbsoluteUrls, { base: u })
+            .process(c);
+    },
     render_addr: async (conn, { f, c }) => {
         return { c: await formatAddress(f, false, undefined, c) };
     },
@@ -969,4 +981,12 @@ function collectHeaders (headers) {
         entries[k.toLowerCase()] = v;
     }
     return entries;
+}
+
+function remarkPluginAbsoluteUrls ({ base }) {
+    return tree => visit(tree, node => {
+        if (node.type === 'link' || node.type === 'image') {
+            node.url = new URL(node.url, base).href;
+        }
+    });
 }

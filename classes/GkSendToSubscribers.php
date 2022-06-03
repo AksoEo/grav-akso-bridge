@@ -17,7 +17,7 @@ class GkSendToSubscribers {
         // $md = (new MarkdownExt($this->plugin))->processHTMLComponents($md);
         //
         // we are using markdown notif templates
-        $md = $content;
+        $md = $this->app->bridge->absoluteMarkdownUrls($content, $url);
         $extraText = $this->plugin->locale['content']['gk_send_to_subs_extra_text'];
 
         $notifTemplate = $this->app->bridge->post('/notif_templates', array(

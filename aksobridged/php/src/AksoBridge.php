@@ -336,6 +336,13 @@ class AksoBridge {
         ));
     }
 
+    public function absoluteMarkdownUrls(string $contents, string $baseUrl) {
+        return $this->request('absolute_md_urls', array(
+            'c' => $contents,
+            'u' => $baseUrl,
+        ));
+    }
+
     public function renderAddress(array $fields, $countryName) {
         return $this->request('render_addr', array('f' => $fields, 'c' => $countryName));
     }

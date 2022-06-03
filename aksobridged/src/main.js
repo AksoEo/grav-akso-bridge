@@ -1,11 +1,14 @@
-const { Worker, isMainThread, MessageChannel } = require('worker_threads');
-const { cpus: getCPUs } = require('os');
-const { promisify } = require('util');
-const path = require('path');
-const fs = require('fs');
-const { decode } = require('@msgpack/msgpack');
-const { setThreadName, debug, info, error } = require('./log.js');
-const { version } = require('../package.json');
+import { Worker, isMainThread, MessageChannel } from 'worker_threads';
+import { cpus as getCPUs } from 'os';
+import { promisify } from 'util';
+import { URL } from 'url';
+import path from 'path';
+import fs from 'fs';
+import { decode } from '@msgpack/msgpack';
+import { setThreadName, debug, info, error } from './log.js';
+import packageJson from '../package.json' assert { type: 'json' };
+
+const { version } = packageJson;
 
 if (!isMainThread) {
     error('main.js running off-thread');
@@ -36,6 +39,8 @@ try {
 
 let isClosing = false;
 const writeLocks = new Map();
+
+const __dirname = new URL('.', import.meta.url).pathname;
 
 function createWorkerInSlot (id) {
     const worker = new Worker(path.join(__dirname, 'worker.js'), {
