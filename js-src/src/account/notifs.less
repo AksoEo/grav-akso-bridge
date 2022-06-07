@@ -1,5 +1,50 @@
 @import '../prelude';
 
+.account-notifs {
+    .notif-setting {
+        background: var(--bg);
+        border-radius: var(--radius);
+        box-shadow: @shade-both;
+        padding: 0.5em 1em;
+        margin: 1em 0;
+
+        .inner-setting {
+            &.is-inline {
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .setting-label {
+                display: block;
+                font-weight: bold;
+            }
+
+            .setting-desc {
+                font-size: smaller;
+                margin-bottom: 0.2em;
+            }
+
+            .setting-value {
+                display: block;
+                text-align: right;
+
+                input:disabled + label {
+                    opacity: 0.5;
+                }
+            }
+        }
+    }
+    .notifs-actions {
+        text-align: right;
+        margin-top: 0.5em;
+
+        button {
+            margin-right: 0;
+        }
+    }
+}
+
 .account-newsletters {
     .newsletters-list {
         padding: 0;
