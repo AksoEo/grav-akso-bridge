@@ -7,18 +7,18 @@ en:
       REGISTRATION_PATH: Adreso de registriĝpaĝo
       ACCOUNT_LOGINS_PATH: Adreso de paĝo kun superrigardo de ensalutoj
       ACCOUNT_VOTES_PATH: Adreso de paĝo kun superrigardo de voĉdonoj
-      ACCOUNT_NOTIFS_PATH: "[[notification page path]]"
-      GK_PAGE_ROUTE_TEMPLATE: "[[GK Page Route Template]]"
-      GK_PAGE_ROUTE_TEMPLATE_DESC: "[[This will be used for the + button in admin pages. Please put %year% where the year should go. Example: <code>/komunikoj/%year%</code>]]"
+      ACCOUNT_NOTIFS_PATH: Adreso de konto-paĝo por agordado de sciigoj
+      GK_PAGE_ROUTE_TEMPLATE: Ŝablono por dosieruja adreso por novaj Gazetaraj Komunikoj
+      GK_PAGE_ROUTE_TEMPLATE_DESC: "Tiu ĉi estas uzata por kreado de novaj Gazetaraj Komunikoj. Metu %year% tie kie aperu la jaro. Ekzemple: <code>/komunikoj/%year%</code>"
       API_HOST: API-adreso
       API_KEY: API-ŝlosilo
       API_SECRET: API-sekreto
       PAYMENTS_HOST: Adreso de AKSO-Pago-kliento
-      VOTE_ORGS: "[[Vote Orgs]]"
-      NEWSLETTER_ORGS: "[[Newsletter Orgs]]"
+      VOTE_ORGS: Organizoj por voĉdonoj
+      NEWSLETTER_ORGS: Organizoj por bultenoj
       GK:
         TITLE: Gazetaraj Komunikoj
-        NEWSLETTER: '[[Newsletter ID]]'
+        NEWSLETTER: Identigilo de bulteno
         FROM: Sendanto
         FROM_NAME: Nomo de sendanto
         REPLY_TO: Respondu al-adreso
