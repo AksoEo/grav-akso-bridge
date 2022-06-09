@@ -439,6 +439,99 @@ $(document).ready(() => {
 
         updateTitle();
 
+        const fetchRendered = async () => {
+            const formData = new FormData();
+            formData.append('title', gravTitle.value);
+            formData.append('content', document.querySelector('[name="data[content]"]').value);
+
+            const route = document.querySelector('[name="data[route]"]').value;
+            const folder = document.querySelector('[name="data[folder]"]').value;
+            const url = new URL(route + '/' + folder, location.href);
+            formData.append('url', url);
+
+            const res = await fetch(`/admin/akso_bridge?task=gk_notif_preview`, {
+                method: 'POST',
+                body: formData,
+            });
+            if (!res.ok) {
+                throw await res.text();
+            }
+            return await res.json();
+        };
+
+        const showPreview = () => {
+            const previewContainer = document.createElement('div');
+            const close = () => {
+                document.body.removeChild(previewContainer);
+            };
+
+            Object.assign(previewContainer.style, {
+                position: 'fixed',
+                zIndex: 99999,
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                justifyContent: 'stretch',
+                alignItems: 'stretch',
+                padding: '2em',
+            });
+            document.body.appendChild(previewContainer);
+            previewContainer.addEventListener('click', (e) => {
+                if (e.target === previewContainer) close();
+            });
+
+            const previewBox = document.createElement('div');
+            Object.assign(previewBox.style, {
+                background: 'white',
+                color: 'black',
+                borderRadius: '8px',
+                border: '1px solid rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                flexDirection: 'column',
+                flex: '1',
+            });
+            previewContainer.appendChild(previewBox);
+
+            const header = document.createElement('div');
+            const closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'button';
+            closeButton.innerHTML = '<i class="fa fa-close"></i>&nbsp;';
+            closeButton.appendChild(document.createTextNode(locale.gkPreview.close));
+            closeButton.addEventListener('click', close);
+            header.appendChild(closeButton);
+            previewBox.appendChild(header);
+
+            const htmlPreview = document.createElement('iframe');
+            previewBox.appendChild(htmlPreview);
+
+            const textPreview = document.createElement('pre');
+            textPreview.textContent = locale.gkPreview.loading;
+            previewBox.appendChild(textPreview);
+
+            Object.assign(htmlPreview.style, {
+                flex: '6',
+                width: '100%',
+                height: '0',
+                margin: '0',
+                border: 'none',
+                borderBottom: '3px solid black',
+            });
+            Object.assign(textPreview.style, {
+                flex: '5',
+                width: '100%',
+                height: '0',
+                margin: '0',
+            });
+
+            fetchRendered().then(result => {
+                htmlPreview.srcdoc = result.html;
+                textPreview.textContent = result.text;
+            }).catch(err => {
+                textPreview.textContent = locale.gkPreview.error + '\n\n' + err.toString();
+            });
+        };
+
         {
             const sentToSubscribers = document.querySelector('.block-akso_gk_sent_to_subscribers');
             const checkbox = sentToSubscribers.querySelector('input');
@@ -455,6 +548,16 @@ $(document).ready(() => {
             sendButton.className = 'button';
             sendButton.type = 'button';
             checkbox.parentNode.appendChild(sendButton);
+
+            const previewButtonContainer = document.createElement('div');
+            previewButtonContainer.style.marginTop = '1em';
+            const previewButton = document.createElement('button');
+            previewButton.className = 'button';
+            previewButton.type = 'button';
+            previewButton.innerHTML = '<i class="fa fa-eye"></i>&nbsp;';
+            previewButton.appendChild(document.createTextNode(locale.gkPreview.button));
+            checkbox.parentNode.appendChild(previewButtonContainer);
+            previewButtonContainer.appendChild(previewButton);
 
             const update = () => {
                 sendToSubs.classList.remove('secondary');
@@ -491,6 +594,10 @@ $(document).ready(() => {
             sendButton.addEventListener('click', () => {
                 checkbox.checked = !checkbox.checked;
                 update();
+            });
+
+            previewButton.addEventListener('click', () => {
+                showPreview();
             });
         }
     };

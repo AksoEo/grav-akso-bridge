@@ -588,7 +588,8 @@ class AksoBridgePlugin extends Plugin {
                 }
             } else {
                 if (!isset($post['username']) || !isset($post['password'])) {
-                    die(401);
+                    http_response_code(401);
+                    die();
                 }
 
                 $result = $this->bridge->login($canonUsername, $post['password']);
@@ -864,6 +865,20 @@ class AksoBridgePlugin extends Plugin {
                 }
             } else if ($task === "gk_page_route_template") {
                 echo json_encode(array('result' => $this->grav['config']->get('plugins.akso-bridge.gk_page_route_template')));
+            } else if ($task === "gk_notif_preview") {
+                $title = $_POST['title'];
+                $content = $_POST['content'];
+                $url = $_POST['url'];
+                $templateId = GkSendToSubscribers::createNotifTemplate($this, $app, $title, $content, $url);
+                $rendered = $app->bridge->get("/notif_templates/$templateId/render", []);
+                if (!$rendered['k']) {
+                    $app->bridge->delete("/notif_templates/$templateId", []); // we dont really care about result here
+                    http_response_code($rendered['sc']);
+                    echo($rendered['b']);
+                    die();
+                }
+                $app->bridge->delete("/notif_templates/$templateId", []); // we dont really care about result here
+                echo json_encode($rendered['b']);
             }
 
             $app->close();
@@ -922,8 +937,8 @@ class AksoBridgePlugin extends Plugin {
             $title = $_POST['data']['header']['title'];
             $content = $_POST['data']['content'];
             $url = null;
-            if (isset($_POST['data']['route'])) {
-                $url = $_POST['data']['route'];
+            if (isset($_POST['data']['route']) && isset($_POST['data']['folder'])) {
+                $url = $_POST['data']['route'] . '/' . $_POST['data']['folder'];
             } else if (isset($_POST['data']['header']['routes']['canonical'])) {
                 $url = $_POST['data']['header']['routes']['canonical'];
             } else {
@@ -932,10 +947,11 @@ class AksoBridgePlugin extends Plugin {
                 echo('could not read route');
                 die();
             }
+            $host = $this->grav['uri']->rootUrl(true);
             $app = new AppBridge($this->grav);
             $app->open();
             $subs = new GkSendToSubscribers($this, $app);
-            $subs->run($title, $content, $url);
+            $subs->run($title, $content, $host . $url . '/');
             $app->close();
         }
     }

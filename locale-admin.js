@@ -19,5 +19,13 @@ window.aksoAdminLocale = {
             didSend: 'Sendita al abonantoj',
             willUnset: 'Forigos etikedon “Jam sendita al abonantoj”',
         },
+        gkPreview: {
+            button: 'Antaŭvidi',
+            close: 'Fermi',
+            html: 'HTML',
+            text: 'Teksto',
+            loading: '(Ŝarĝas…)',
+            error: 'Eraro',
+        },
     },
 };

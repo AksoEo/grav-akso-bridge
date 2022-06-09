@@ -17,6 +17,66 @@
             {{akso_locale.account_notifs.back_to_account}}
         </a>
         <h1>{{akso_locale.account_notifs.title}}</h1>
+        <form class="account-notifs" action="{{account.path}}" method="POST">
+            <input type="hidden" name="action" value="set_notif_builtin" />
+            <div class="notif-setting">
+                <div class="inner-setting is-inline">
+                    <div class="setting-label">{{akso_locale.account_notifs.notif_global}}</div>
+                    <div class="setting-value">
+                        <input
+                            {% if account.global_prefs == 'e' %} checked {% endif %}
+                            type="radio" name="notif_global" value="e" id="notif-global-email">
+                        <label for="notif-global-email">{{akso_locale.account_notifs.notif_email}}</label>
+                        <input
+                            {% if account.global_prefs == 't' %} checked {% endif %}
+                            {% if not account.telegram_linked %} disabled {% endif %}
+                            type="radio" name="notif_global" value="t" id="notif-global-telegram">
+                        <label for="notif-global-telegram">{{akso_locale.account_notifs.notif_telegram}}</label>
+                        <input
+                            {% if account.global_prefs == 'et' %} checked {% endif %}
+                            {% if not account.telegram_linked %} disabled {% endif %}
+                            type="radio" name="notif_global" value="et" id="notif-global-both">
+                        <label for="notif-global-both">{{akso_locale.account_notifs.notif_both}}</label>
+                    </div>
+                </div>
+            </div>
+            <h4>{{akso_locale.account_notifs.notif_builtin}}</h4>
+            {% for pref, value in account.builtin_prefs %}
+                <div class="notif-setting">
+                    <div class="inner-setting">
+                        <div class="setting-label">{{akso_locale.notif_pref_builtin_categories[pref]}}</div>
+                        <div class="setting-desc">
+                            {{akso_locale.notif_pref_builtin_categories[pref ~ '_desc']}}
+                        </div>
+                        <div class="setting-value">
+                            {% set id_prefix = 'notif-' ~ pref %}
+                            {% set name = 'notif_builtin[' ~ pref ~ ']' %}
+                            <input
+                                {% if not value %} checked {% endif %}
+                                type="radio" name="{{name}}" value="x" id="{{id_prefix}}-inherit">
+                            <label for="{{id_prefix}}-inherit">{{akso_locale.account_notifs.notif_inherit}}</label>
+                            <input
+                                {% if value == 'e' %} checked {% endif %}
+                                type="radio" name="{{name}}" value="e" id="{{id_prefix}}-email">
+                            <label for="{{id_prefix}}-email">{{akso_locale.account_notifs.notif_email}}</label>
+                            <input
+                                {% if value == 't' %} checked {% endif %}
+                                {% if not account.telegram_linked %} disabled {% endif %}
+                                type="radio" name="{{name}}" value="t" id="{{id_prefix}}-telegram">
+                            <label for="{{id_prefix}}-telegram">{{akso_locale.account_notifs.notif_telegram}}</label>
+                            <input
+                                {% if value == 'et' %} checked {% endif %}
+                                {% if not account.telegram_linked %} disabled {% endif %}
+                                type="radio" name="{{name}}" value="et" id="{{id_prefix}}-both">
+                            <label for="{{id_prefix}}-both">{{akso_locale.account_notifs.notif_both}}</label>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="notifs-actions">
+                <button type="submit">{{akso_locale.account_notifs.notif_apply}}</button>
+            </div>
+        </form>
         <div class="account-telegram-link">
             <h3>{{akso_locale.account_notifs.telegram_link}}</h3>
             {% if account.telegram_linked %}
