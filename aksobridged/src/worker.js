@@ -16,6 +16,7 @@ import crypto from 'crypto';
 import { Cashify } from 'cashify';
 import fetch from 'cross-fetch';
 import Markdown from 'markdown-it';
+import MarkdownMultiMdTable from 'markdown-it-multimd-table';
 import { remark } from 'remark';
 import { formatAddress, normalizeAddress } from '@cpsdqs/google-i18n-address';
 import { URL } from 'url';
@@ -927,7 +928,7 @@ const messageHandlers = {
         assertType(c, 'string', 'expected c to be a string');
         assertType(r, 'array', 'expected r to be an array');
 
-        const md = new Markdown('zero');
+        const md = new Markdown('zero').use(MarkdownMultiMdTable);
         md.enable('newline');
         md.enable(r);
         return { c: md.render(c) };
