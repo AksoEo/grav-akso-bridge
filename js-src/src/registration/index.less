@@ -801,6 +801,20 @@
                                 margin-right: 0;
                             }
 
+                            &[data-is-not-available] {
+                                display: block;
+                                text-align: right;
+
+                                .method-selection-price {
+                                    margin-right: 0;
+                                }
+                            }
+
+                            .method-above-max-amount {
+                                margin-top: 0.5em;
+                                font-size: smaller;
+                            }
+
                             @media (max-width: @media-narrow) {
                                 display: block;
 

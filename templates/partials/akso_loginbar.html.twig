@@ -30,7 +30,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ config.plugins['akso-bridge'].account_path|e('html_attr') }}/{{ config.plugins['akso-bridge'].account_votes_path|e('html_attr') }}">
+                    <a href="{{ config.plugins['akso-bridge'].account_path|e('html_attr') }}{{ config.plugins['akso-bridge'].account_votes_path|e('html_attr') }}">
                         {{ akso_locale.login.account_votes|e }}
                     </a>
                 </li>

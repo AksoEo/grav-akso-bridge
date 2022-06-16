@@ -416,7 +416,7 @@ class Registration extends Form {
 
             for ($i = 0; true; $i += 100) {
                 $res = $this->app->bridge->get("/aksopay/payment_orgs/$orgId/methods", array(
-                    'fields' => ['id', 'type', 'name', 'description', 'currencies', 'prices', 'feePercent', 'feeFixed.val', 'feeFixed.cur'],
+                    'fields' => ['id', 'type', 'name', 'description', 'currencies', 'prices', 'feePercent', 'feeFixed.val', 'feeFixed.cur', 'maxAmount'],
                     'filter' => array('internal' => false),
                     'limit' => 100,
                     'offset' => $i,
@@ -1267,6 +1267,13 @@ class Registration extends Form {
         }
 
         $method['total_sum_rendered'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $method['total_sum']);
+
+        $totalUsd = $this->convertCurrency($currency, 'USD', $method['total_sum']);
+        $methodMaxAmount = 50000000; // (default to hard limit)
+        if ($method['maxAmount']) {
+            $methodMaxAmount = $method['maxAmount'];
+        }
+        $method['above_max_amount'] = $totalUsd > $methodMaxAmount;
 
         return $method;
     }

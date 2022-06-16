@@ -666,7 +666,11 @@
                                         {{method.error}}
                                     </div>
                                 {% endif %}
-                                <div class="method-selection">
+                                <div
+                                    {% if method.above_max_amount %}
+                                    data-is-not-available
+                                    {% endif %}
+                                    class="method-selection">
                                     <div class="method-selection-price">
                                         {{method.total_sum_rendered}}
                                     </div>
@@ -681,6 +685,10 @@
                                             {% else %}
                                                 {{akso_locale.registration.payment_method_intermediary_unavailable}}
                                             {% endif %}
+                                        {% elseif method.above_max_amount %}
+                                            <div class="method-above-max-amount">
+                                                {{akso_locale.registration.payment_method_maxamount_unavailable}}
+                                            </div>
                                         {% else %}
                                             <button type="submit">
                                                 {{akso_locale.registration.payment_method_select}}
