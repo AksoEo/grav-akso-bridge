@@ -26,7 +26,7 @@
   "dependencies": {
     "@tejo/akso-script": "^0.2.2",
     "leaflet": "^1.7.1",
-    "markdown-it": "^12.0.2",
+    "markdown-it": "^12.3.2",
     "punycode2": "^1.0.0",
     "regenerator-runtime": "^0.13.9",
     "rollup-plugin-less-modules": "^0.1.11",
