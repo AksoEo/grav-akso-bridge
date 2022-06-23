@@ -515,7 +515,7 @@ class Delegates {
             ), 120);
 
             if (!$res['k']) {
-                throw new \Exception("Failed to fetch subjects");
+                throw new \Exception("Failed to fetch cities");
             }
             foreach ($res['b'] as $city) {
                 $city['label'] = $city['eoLabel'] ?: $city['nativeLabel'];

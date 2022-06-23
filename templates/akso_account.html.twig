@@ -184,17 +184,10 @@
                     {% set akso_reg_editing = true %}
                     {% include 'partials/akso_user_profile_form.html.twig' %}
                     <hr />
-                    {% if account.codeholder.codeholderType == 'org' %}
-                    <div class="settings-field" data-el="input" data-type="text">
-                        <div class="inner-field">
-                            <label for="codeholder-main-descriptor">{{akso_locale.account.main_descriptor}}</label>
-                            <input
-                                id="codeholder-main-descriptor"
-                                name="codeholder[mainDescriptor]"
-                                type="text"
-                                value="{{account.codeholder.mainDescriptor|e('html_attr')}}" />
-                        </div>
+                    <div class="settings-description">
+                        {{akso_locale.account.public_fields_desc}}
                     </div>
+                    {% if account.codeholder.codeholderType == 'org' %}
                     {% else %}
                     <div class="settings-field" data-el="input" data-type="text">
                         <div class="inner-field">
@@ -216,6 +209,40 @@
                                 type="url"
                                 placeholder="{{akso_locale.account.website_placeholder|e('html_attr')}}"
                                 value="{{account.codeholder.website|e('html_attr')}}" />
+                        </div>
+                    </div>
+                    <div class="settings-field" data-el="input" data-type="text">
+                        <div class="inner-field">
+                            <label for="codeholder-public-email">{{akso_locale.account.publicEmail}}</label>
+                            <input
+                                id="codeholder-public-email"
+                                name="codeholder[publicEmail]"
+                                type="email"
+                                value="{{account.codeholder.publicEmail|e('html_attr')}}" />
+                        </div>
+                        <div class="field-description">
+                            {{akso_locale.account.publicEmailDesc}}
+                        </div>
+                    </div>
+                    <div class="settings-field" data-el="input" data-type="text">
+                        <div class="inner-field">
+                            <label for="codeholder-public-country">{{akso_locale.account.publicCountry}}</label>
+                            <select
+                                id="registration-public-country"
+                                name="codeholder[publicCountry]">
+                                <option value="">—</option>
+                                {% for country in account.countries %}
+                                    <option
+                                        value="{{ country.code|e('html_attr') }}"
+                                        {% if account.codeholder.publicCountry == country.code %}
+                                        selected
+                                        {% endif %}
+                                        >{{country.name_eo|e}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="field-description">
+                            {{akso_locale.account.publicCountryDesc}}
                         </div>
                     </div>
                     <div class="settings-field" data-el="input" data-type="text">
@@ -262,6 +289,18 @@
                         </div>
                     {% endif %}
                 {% endmacro %}
+                {% macro field_visibility(pfd, name) %}
+                    <span class="field-visibility-item">
+                        <img class="visibility-icon" src="/user/plugins/akso-bridge/assets/visibility-{{pfd.account.details[name]}}.svg">
+                        {% if pfd.account.details[name] == 'public' %}
+                            {{pfd.akso_locale.account.field_visibility_public}}
+                        {% elseif pfd.account.details[name] == 'members' %}
+                            {{pfd.akso_locale.account.field_visibility_members}}
+                        {% else %}
+                            {{pfd.akso_locale.account.field_visibility_private}}
+                        {% endif %}
+                    </span>
+                {% endmacro %}
                 {% set pfd = { account, akso_locale } %}
                 {% if account.details.profilePictureHash %}
                     <div class="account-profile-picture">
@@ -296,6 +335,18 @@
                     </a>
                 {% endif %}
                 <div class="table-clear" />
+                {% if account.details.profilePictureHash %}
+                    <div class="field-visibility">
+                    {{akso_locale.account.profile_picture_visibility}}:
+                        {{ _self.field_visibility(pfd, 'profilePicturePublicity') }}
+                    </div>
+                {% endif %}
+                {% if account.details.codeholderType == 'human' %}
+                <div class="field-visibility">
+                    {{akso_locale.account.last_name_visibility}}:
+                    {{ _self.field_visibility(pfd, 'lastNamePublicity') }}
+                </div>
+                {% endif %}
                 <table class="details-table">
                     <tbody>
                         <tr>
@@ -322,6 +373,16 @@
                             <td>
                                 {{ account.details.email|e }}
                                 {{ _self.pending_field(pfd, 'email') }}
+                                {% if account.details.publicEmail %}
+                                    <div class="field-public-email">
+                                        {{akso_locale.account.publicEmail}}:
+                                        {{account.details.publicEmail}}
+                                    </div>
+                                {% else %}
+                                    <div class="field-visibility">
+                                        {{ _self.field_visibility(pfd, 'emailPublicity') }}
+                                    </div>
+                                {% endif %}
                             </td>
                         </tr>
                         {% if account.details.codeholderType == 'human' %}
@@ -336,14 +397,31 @@
                         <tr>
                             <th class="field-label">{{ akso_locale.account.phoneNumbers }}</th>
                             <td>
-                                {{ account.details.phoneNumbersFormatted }}
-                                {{ _self.pending_field(pfd, 'phoneNumbersFormatted') }}
+                                {% if account.details.phoneNumbersFormatted is empty %}
+                                —
+                                {% else %}
+                                <ul class="phone-numbers-list">
+                                    {% for entry in account.details.phoneNumbersFormatted %}
+                                    <li>
+                                        <span class="number-label">{{entry[1]}}</span>
+                                        <span class="number-value">{{entry[2]}}</span>
+                                        <span class="number-visibility">
+                                            {{ _self.field_visibility(pfd, entry[0] ~ 'Publicity') }}
+                                        </span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                                {{ _self.pending_field(pfd, 'phoneNumbersConcatenated', 'phoneNumbersConcatenated', true) }}
                             </td>
                         </tr>
                         <tr>
                             <th class="field-label">{{ akso_locale.account.address }}</th>
                             <td>
                                 {{ account.details.fmtAddress|raw }}
+                                <div class="field-visibility">
+                                    {{ _self.field_visibility(pfd, 'addressPublicity') }}
+                                </div>
                                 {{ _self.pending_field(pfd, 'fmtAddress', nil, true) }}
                             </td>
                         </tr>
@@ -358,11 +436,20 @@
                                 </td>
                             </tr>
                         {% endif %}
+                        {% if account.details.publicCountry %}
+                        <tr>
+                            <th class="field-label">{{ akso_locale.account.publicCountry }}</th>
+                            <td>
+                                {{ account.details.fmtPublicCountry }}
+                                {{ _self.pending_field(pfd, 'publicCountry', 'fmtPublicCountry') }}
+                            </td>
+                        </tr>
+                        {% endif %}
                         <tr>
                             <th class="field-label">{{ akso_locale.account.feeCountry }}</th>
                             <td>
                                 {{ account.details.fmtFeeCountry|e }}
-                                {{ _self.pending_field(pfd, 'fmtFeeCountry') }}
+                                {{ _self.pending_field(pfd, 'feeCountry', 'fmtFeeCountry') }}
                             </td>
                         </tr>
                         {% if account.details.codeholderType == 'human' %}
@@ -373,12 +460,6 @@
                                     {{ _self.pending_field(pfd, 'profession') }}
                                 </td>
                             </tr>
-                        {% endif %}
-                        {% if account.details.codeholderType == 'org' %}
-                        <tr>
-                            <th class="field-label">{{ akso_locale.account.main_descriptor }}</th>
-                            <td>{{ account.details.mainDescriptor|e }}</td>
-                        </tr>
                         {% endif %}
                         <tr>
                             <th class="field-label">{{ akso_locale.account.website }}</th>

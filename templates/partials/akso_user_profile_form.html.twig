@@ -6,6 +6,25 @@
         </div>
     {% endif %}
 {% endmacro %}
+    {% if akso_registration.state.codeholder.profilePictureHash and akso_reg_editing %}
+        <div class="settings-field is-publicity-field" data-el="input" data-type="text">
+            <div class="inner-field">
+                <label for="codeholder-pppublicity">{{akso_locale.registration.codeholder_profile_picture_publicity}}</label>
+                <select
+                    id="codeholder-pppublicity"
+                    name="codeholder[profilePicturePublicity]">
+                    <option
+                        {% if akso_registration.state.codeholder.profilePicturePublicity == 'public' %} selected {% endif %}
+                        value="public">{{akso_locale.registration.codeholder_publicity_public}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.profilePicturePublicity == 'members' %} selected {% endif %}
+                        value="members">{{akso_locale.registration.codeholder_publicity_members}}</option>
+                </select>
+            </div>
+            {{_self.akso_field_extra(akso_registration, akso_locale, 'lastNamePublicity')}}
+        </div>
+        <hr />
+    {% endif %}
     {% if akso_registration.state.codeholder.codeholderType == 'org' %}
     <div class="settings-field" data-el="input" data-type="text">
         <div class="inner-field">
@@ -179,6 +198,27 @@
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'honorific')}}
     </div>
+    {% if akso_registration.state.codeholder.codeholderType == 'human' and akso_reg_editing %}
+        <div class="settings-field is-publicity-field" data-el="input" data-type="text">
+            <div class="inner-field">
+                <label for="codeholder-lastnamepublicity">{{akso_locale.registration.codeholder_last_name_publicity}}</label>
+                <select
+                    id="codeholder-lastnamepublicity"
+                    name="codeholder[lastNamePublicity]">
+                    <option
+                        {% if akso_registration.state.codeholder.lastNamePublicity == 'public' %} selected {% endif %}
+                        value="public">{{akso_locale.registration.codeholder_publicity_public}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.lastNamePublicity == 'members' %} selected {% endif %}
+                        value="members">{{akso_locale.registration.codeholder_publicity_members}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.lastNamePublicity == 'private' %} selected {% endif %}
+                        value="private">{{akso_locale.registration.codeholder_publicity_private}}</option>
+                </select>
+            </div>
+            {{_self.akso_field_extra(akso_registration, akso_locale, 'lastNamePublicity')}}
+        </div>
+    {% endif %}
     <hr />
     <div class="settings-field form-item" data-el="input" data-type="date">
         <div class="inner-field">
@@ -211,6 +251,27 @@
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'email')}}
     </div>
+    {% if akso_reg_editing %}
+        <div class="settings-field is-publicity-field" data-el="input" data-type="text">
+            <div class="inner-field">
+                <label for="codeholder-emailpublicity">{{akso_locale.registration.codeholder_email_publicity}}</label>
+                <select
+                    id="codeholder-emailpublicity"
+                    name="codeholder[emailPublicity]">
+                    <option
+                        {% if akso_registration.state.codeholder.emailPublicity == 'public' %} selected {% endif %}
+                        value="public">{{akso_locale.registration.codeholder_publicity_public}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.emailPublicity == 'members' %} selected {% endif %}
+                        value="members">{{akso_locale.registration.codeholder_publicity_members}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.emailPublicity == 'private' %} selected {% endif %}
+                        value="private">{{akso_locale.registration.codeholder_publicity_private}}</option>
+                </select>
+            </div>
+            {{_self.akso_field_extra(akso_registration, akso_locale, 'emailPublicity')}}
+        </div>
+    {% endif %}
     <hr />
     <div class="settings-description">
         {{akso_locale.registration.codeholder_phone_desc}}
@@ -230,6 +291,27 @@
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'landlinePhone')}}
     </div>
+    {% if akso_reg_editing %}
+        <div class="settings-field is-publicity-field" data-el="input" data-type="text">
+            <div class="inner-field">
+                <label for="codeholder-landlinepublicity">{{akso_locale.registration.codeholder_landline_phone_publicity}}</label>
+                <select
+                    id="codeholder-landlinepublicity"
+                    name="codeholder[landlinePhonePublicity]">
+                    <option
+                        {% if akso_registration.state.codeholder.landlinePhonePublicity == 'public' %} selected {% endif %}
+                        value="public">{{akso_locale.registration.codeholder_publicity_public}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.landlinePhonePublicity == 'members' %} selected {% endif %}
+                        value="members">{{akso_locale.registration.codeholder_publicity_members}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.landlinePhonePublicity == 'private' %} selected {% endif %}
+                        value="private">{{akso_locale.registration.codeholder_publicity_private}}</option>
+                </select>
+            </div>
+            {{_self.akso_field_extra(akso_registration, akso_locale, 'landlinePhonePublicity')}}
+        </div>
+    {% endif %}
     <div class="settings-field" data-el="input" data-type="phone">
         <div class="inner-field">
             <label for="codeholder-cellphone">{{akso_locale.registration.codeholder_cellphone}}</label>
@@ -244,6 +326,27 @@
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'cellphone')}}
     </div>
+    {% endif %}
+    {% if akso_reg_editing %}
+        <div class="settings-field is-publicity-field" data-el="input" data-type="text">
+            <div class="inner-field">
+                <label for="codeholder-cellpublicity">{{akso_locale.registration.codeholder_cellphone_publicity}}</label>
+                <select
+                    id="codeholder-cellpublicity"
+                    name="codeholder[cellphonePublicity]">
+                    <option
+                        {% if akso_registration.state.codeholder.cellphonePublicity == 'public' %} selected {% endif %}
+                        value="public">{{akso_locale.registration.codeholder_publicity_public}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.cellphonePublicity == 'members' %} selected {% endif %}
+                        value="members">{{akso_locale.registration.codeholder_publicity_members}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.cellphonePublicity == 'private' %} selected {% endif %}
+                        value="private">{{akso_locale.registration.codeholder_publicity_private}}</option>
+                </select>
+            </div>
+            {{_self.akso_field_extra(akso_registration, akso_locale, 'cellphonePublicity')}}
+        </div>
     {% endif %}
 
     {% if akso_reg_editing %}
@@ -262,7 +365,30 @@
             {{_self.akso_field_extra(akso_registration, akso_locale, 'officePhone')}}
         </div>
     {% endif %}
+    {% if akso_reg_editing %}
+        <div class="settings-field is-publicity-field" data-el="input" data-type="text">
+            <div class="inner-field">
+                <label for="codeholder-officepublicity">{{akso_locale.registration.codeholder_office_phone_publicity}}</label>
+                <select
+                    id="codeholder-officepublicity"
+                    name="codeholder[officePhonePublicity]">
+                    <option
+                        {% if akso_registration.state.codeholder.officePhonePublicity == 'public' %} selected {% endif %}
+                        value="public">{{akso_locale.registration.codeholder_publicity_public}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.officePhonePublicity == 'members' %} selected {% endif %}
+                        value="members">{{akso_locale.registration.codeholder_publicity_members}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.officePhonePublicity == 'private' %} selected {% endif %}
+                        value="private">{{akso_locale.registration.codeholder_publicity_private}}</option>
+                </select>
+            </div>
+            {{_self.akso_field_extra(akso_registration, akso_locale, 'officePhonePublicity')}}
+        </div>
+    {% endif %}
+
     <hr />
+
     <div class="settings-section">
         {{akso_locale.registration.codeholder_address}}
         <span
@@ -391,6 +517,29 @@
         {{_self.akso_field_extra(akso_registration, akso_locale, 'addressInvalid')}}
     </div>
     {% endif %}
+
+    {% if akso_reg_editing %}
+        <div class="settings-field is-publicity-field" data-el="input" data-type="text">
+            <div class="inner-field">
+                <label for="codeholder-addrpublicity">{{akso_locale.registration.codeholder_address_publicity}}</label>
+                <select
+                    id="codeholder-addrpublicity"
+                    name="codeholder[addressPublicity]">
+                    <option
+                        {% if akso_registration.state.codeholder.addressPublicity == 'public' %} selected {% endif %}
+                        value="public">{{akso_locale.registration.codeholder_publicity_public}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.addressPublicity == 'members' %} selected {% endif %}
+                        value="members">{{akso_locale.registration.codeholder_publicity_members}}</option>
+                    <option
+                        {% if akso_registration.state.codeholder.addressPublicity == 'private' %} selected {% endif %}
+                        value="private">{{akso_locale.registration.codeholder_publicity_private}}</option>
+                </select>
+            </div>
+            {{_self.akso_field_extra(akso_registration, akso_locale, 'addressPublicity')}}
+        </div>
+    {% endif %}
+
     <hr />
     {% if not akso_reg_editing and not akso_auth %}
     <div class="settings-field">

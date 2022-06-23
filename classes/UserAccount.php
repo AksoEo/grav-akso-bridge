@@ -110,14 +110,15 @@ class UserAccount {
 
         $phoneNumbers = [];
         if ($details['codeholderType'] === 'human' && $details['cellphoneFormatted']) {
-            $phoneNumbers[] = [$this->plugin->locale['account']['phoneNumberCell'], $details['cellphoneFormatted']];
+            $phoneNumbers[] = ['cellphone', $this->plugin->locale['account']['phoneNumberCell'], $details['cellphoneFormatted']];
         }
         if ($details['codeholderType'] === 'human' && $details['landlinePhoneFormatted']) {
-            $phoneNumbers[] = [$this->plugin->locale['account']['phoneNumberLandline'], $details['landlinePhoneFormatted']];
+            $phoneNumbers[] = ['landlinePhone', $this->plugin->locale['account']['phoneNumberLandline'], $details['landlinePhoneFormatted']];
         }
         if ($details['officePhoneFormatted']) {
-            $phoneNumbers[] = [$this->plugin->locale['account']['phoneNumberOffice'], $details['officePhoneFormatted']];
+            $phoneNumbers[] = ['officePhone', $this->plugin->locale['account']['phoneNumberOffice'], $details['officePhoneFormatted']];
         }
+        $details['phoneNumbersFormatted'] = $phoneNumbers;
         if (!empty($phoneNumbers)) {
             $phoneNumbersList = $this->doc->createElement('ul');
             $phoneNumbersList->setAttribute('class', 'phone-numbers-list');
@@ -125,16 +126,16 @@ class UserAccount {
                 $li = $this->doc->createElement('li');
                 $label = $this->doc->createElement('span');
                 $label->setAttribute('class', 'number-label');
-                $label->textContent = $entry[0] . ': ';
+                $label->textContent = $entry[1] . ': ';
                 $li->appendChild($label);
                 $value = $this->doc->createElement('span');
                 $value->setAttribute('class', 'number-value');
-                $value->textContent = $entry[1];
+                $value->textContent = $entry[2];
                 $li->appendChild($value);
                 $phoneNumbersList->appendChild($li);
             }
-            $details['phoneNumbersFormatted'] = $this->doc->saveHtml($phoneNumbersList);
-        } else $details['phoneNumbersFormatted'] = '—';
+            $details['phoneNumbersConcatenated'] = $this->doc->saveHtml($phoneNumbersList);
+        } else $details['phoneNumbersConcatenated'] = null;
 
         $details['fmtAddress'] = '—';
         if ($details['address']) {
@@ -163,6 +164,10 @@ class UserAccount {
             $details['addressInvalidChgReq'] = $this->plugin->locale['account']['addressInvalidChgReqYes'];
         }
 
+        $details['fmtPublicCountry'] = '—';
+        if ($details['publicCountry']) {
+            $details['fmtPublicCountry'] = $this->formatCountry($details['publicCountry']);
+        }
         $details['fmtFeeCountry'] = '—';
         if ($details['feeCountry']) {
             $details['fmtFeeCountry'] = $this->formatCountry($details['feeCountry']);
@@ -183,6 +188,7 @@ class UserAccount {
                 'fullNameLocal',
                 'nameAbbrev',
                 'careOf',
+                'lastNamePublicity',
                 'newCode',
                 'oldCode',
                 'birthdate',
@@ -193,21 +199,29 @@ class UserAccount {
                 'address.streetAddress',
                 'address.postalCode',
                 'address.sortingCode',
+                'addressPublicity',
                 'addressInvalid',
                 'feeCountry',
                 'email',
+                'emailPublicity',
+                'publicEmail',
                 'officePhone',
                 'cellphone',
                 'landlinePhone',
                 'officePhoneFormatted',
                 'cellphoneFormatted',
                 'landlinePhoneFormatted',
+                'officePhonePublicity',
+                'cellphonePublicity',
+                'landlinePhonePublicity',
 
                 'profilePictureHash',
+                'profilePicturePublicity',
+                'publicEmail',
+                'publicCountry',
                 'profession',
                 'website',
                 'biography',
-                // 'mainDescriptor', FIXME causes issues on API side
             ],
         ));
 
@@ -436,8 +450,18 @@ class UserAccount {
         if (isset($ch['profession']) && gettype($ch['profession']) === 'string') $codeholder['profession'] = $ch['profession'] ?: null;
         if (isset($ch['website']) && gettype($ch['website']) === 'string') $codeholder['website'] = $ch['website'] ?: null;
         if (isset($ch['biography']) && gettype($ch['biography']) === 'string') $codeholder['biography'] = $ch['biography'] ?: null;
+        if (isset($ch['publicEmail']) && gettype($ch['publicEmail']) === 'string') $codeholder['publicEmail'] = $ch['publicEmail'] ?: null;
+        if (isset($ch['publicCountry']) && gettype($ch['publicCountry']) === 'string') $codeholder['publicCountry'] = $ch['publicCountry'] ?: null;
 
         if (isset($ch['markAddressValid'])) $codeholder['addressInvalid'] = false;
+
+        if (isset($ch['profilePicturePublicity'])) $codeholder['profilePicturePublicity'] = $ch['profilePicturePublicity'];
+        if (isset($ch['lastNamePublicity'])) $codeholder['lastNamePublicity'] = $ch['lastNamePublicity'];
+        if (isset($ch['emailPublicity'])) $codeholder['emailPublicity'] = $ch['emailPublicity'];
+        if (isset($ch['addressPublicity'])) $codeholder['addressPublicity'] = $ch['addressPublicity'];
+        if (isset($ch['landlinePhonePublicity'])) $codeholder['landlinePhonePublicity'] = $ch['landlinePhonePublicity'];
+        if (isset($ch['cellphonePublicity'])) $codeholder['cellphonePublicity'] = $ch['cellphonePublicity'];
+        if (isset($ch['officePhonePublicity'])) $codeholder['officePhonePublicity'] = $ch['officePhonePublicity'];
 
         $commitDesc = null;
         if (isset($input['commit_desc']) && gettype($input['commit_desc']) === 'string') {
