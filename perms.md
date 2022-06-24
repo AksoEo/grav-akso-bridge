@@ -1,11 +1,11 @@
 # Client Permissions
-These permissions must be granted to the uea.org API client for this plugin to work properly.
+These permissions must be granted to the AKSO bridge API client for this plugin to work properly.
 
-- `congresses.read.uea`, `congress_instances.read.uea`, `congress_instances.participants.read.uea`
+- `congresses.read.<org>`, `congress_instances.read.<org>`, `congress_instances.participants.read.<org>`
     - used for the congress/instance selector in grav admin
     - used for markdown congress fields, locations, program, and participants
     - used for congress registration
-- `congress_instances.participants.update.uea`, `congress_instances.participants.create.uea`
+- `congress_instances.participants.update.<org>`, `congress_instances.participants.create.<org>`
     - used for congress registration form
 - `codeholders.read`, `codeholder_roles.read`
     - fields:
@@ -62,13 +62,13 @@ These permissions must be granted to the uea.org API client for this plugin to w
             - used for registration
 - `codeholders.change_requests.read`, `codeholders.change_requests.update`
     - used for the user account page
-- `codeholders.delegations.read.uea`
+- `codeholders.delegations.read.<org>`
     - used for delegates
-- `delegations.subjects.read.uea`
+- `delegations.subjects.read.<org>`
     - used for delegation applications
 - `registration.options.read`, `membership_categories.read`, `registration.entries.read`, `registration.entries.create`
     - used for registration
-- `pay.read.uea`, `pay.payment_intents.create.uea`
+- `pay.read.<org>`, `pay.payment_intents.create.<org>`
     - used for congress registration
     - used for payment
     - used for registration
@@ -77,9 +77,9 @@ These permissions must be granted to the uea.org API client for this plugin to w
 - `geodb.read`
     - used for delegates
     - used for delegation applications
-- `delegations.applications.read.uea`, `delegations.applications.create.uea`, `delegations.applications.delete.uea`
+- `delegations.applications.read.<org>`, `delegations.applications.create.<org>`, `delegations.applications.delete.<org>`
     - used for delegation applications
-- `magazines.read.uea` (maybe tejo too, for registration?)
+- `magazines.read.<org>`
     - used for magazines
     - used for markdown magazine lists
     - used for registration
