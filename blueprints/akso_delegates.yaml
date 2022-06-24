@@ -7,4 +7,4 @@ form:
   fields:
     header.org:
       type: text
-      label: '[[Org]]'
+      label: 'Organizo'

@@ -7,4 +7,4 @@ form:
   fields:
     header.is_donation:
       type: checkbox
-      label: '[[Donation page (addons only)]]'
+      label: 'Estas donaca paĝo (nur aldonebloj)'

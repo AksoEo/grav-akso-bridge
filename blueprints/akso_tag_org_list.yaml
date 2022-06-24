@@ -7,4 +7,4 @@ form:
   fields:
     header.org_list_name:
       type: text
-      label: '[[ListName]]'
+      label: 'Nomo de la listo'

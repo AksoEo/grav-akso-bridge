@@ -7,10 +7,10 @@ form:
   fields:
     header.gk_num:
       type: number
-      label: '[[Number]]'
+      label: 'Numero'
     header.gk_title:
       type: text
-      label: '[[Title]]'
+      label: 'Titolo'
     header.akso_sent_to_subscribers:
       type: akso_gk_sent_to_subscribers
-      label: '[[Sent to subscribers]]'
+      label: 'Sendita al abonantoj'
