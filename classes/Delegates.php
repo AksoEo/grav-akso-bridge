@@ -70,6 +70,12 @@ class Delegates {
     ];
 
     public function run() {
+        if (!$this->plugin->aksoUser || !$this->plugin->aksoUser['member']) {
+            return array(
+                'no_access' => true,
+            );
+        }
+
         $org = $this->plugin->getGrav()['page']->header()->org;
         $page = 0;
         if (isset($_GET[self::PAGE]) && gettype($_GET[self::PAGE]) == 'string') {
@@ -621,6 +627,14 @@ class Delegates {
             if (!is_array($codeholder['factoids'])) $codeholder['factoids'] = [];
 
             $codeholder['data_factoids'] = [];
+
+            if ($codeholder['biography']) {
+                $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['biography_field']] = array(
+                    'type' => 'text',
+                    'publicity' => 'public',
+                    'val' => $codeholder['biography'],
+                );
+            }
 
             if ($codeholder['publicEmail'] || $codeholder['email']) {
                 $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['public_email_field']] = array(

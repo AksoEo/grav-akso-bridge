@@ -2,6 +2,11 @@
 {% block content %}
     {{page.content|raw}}
 
+{% if akso_delegates.no_access %}
+    <div class="akso-delegates-container">
+        <div class="akso-members-only-box"></div>
+    </div>
+{% else %}
     <div class="akso-delegates-container">
     {% macro country_label(akso_delegates, code) %}
         <img
@@ -435,4 +440,5 @@
         {% endif %}
     {% endif %}
     </div>
+{% endif %}
 {% endblock %}
