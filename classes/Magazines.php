@@ -485,6 +485,13 @@ class Magazines {
                 $highlights = $this->getEditionTocEntries(
                     $route['magazine'], $route['edition'], $magazine['name'], $edition['idHuman'], true
                 );
+                if (empty($highlights)) {
+                    // fall back
+                    $highlights = $this->getEditionTocEntries(
+                        $route['magazine'], $route['edition'], $magazine['name'], $edition['idHuman']
+                    );
+                    $highlights = array_slice($highlights, 0, 10);
+                }
                 echo json_encode(array('highlights' => $highlights, 'canRead' => $canRead));
                 die();
             }
