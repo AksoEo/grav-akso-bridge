@@ -119,7 +119,7 @@ class CodeholderLists {
         $nameContainer->class = 'item-name';
         $right->appendChild($nameContainer);
 
-        if (isset($codeholder['activeRoles']) && $dataOrgs) {
+        if (isset($codeholder['activeRoles']) && isset($dataOrgs)) {
             $rolesContainer = new Element('ul');
             $rolesContainer->class = 'item-roles';
             foreach ($codeholder['activeRoles'] as $role) {
