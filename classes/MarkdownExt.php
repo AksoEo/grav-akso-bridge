@@ -302,6 +302,7 @@ class MarkdownExt {
                     'element' => array(
                         'name' => 'blockquote',
                         'attributes' => array(
+                            // we don't call it 'is-ad' because of ad blockers
                             'class' => 'infobox is-ab',
                             'data-ab-label' => $this->plugin->locale['content']['info_box_ad_label'],
                         ),
