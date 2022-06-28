@@ -72,6 +72,8 @@ These permissions must be granted to the AKSO bridge API client for this plugin 
     - used for congress registration
     - used for payment
     - used for registration
+- `pay.payment_intents.intermediary.<org>.<intermediaryCountryCode>`
+    - used for registration
 - `countries.lists.read`
     - used to load country lists
 - `geodb.read`
@@ -90,7 +92,9 @@ These permissions must be granted to the AKSO bridge API client for this plugin 
 - `newsletters.read.<org>`
     - used for user notification settings / newsletter subscriptions
     - used for GK send to subscribers
-- `notif_templates.read.<org>`
+- `notif_templates.read.<org>`, `notif_templates.create.<org>`
     - used for GK send to subscribers
 - `notif_templates.delete.<org>`
     - used for GK send to subscribers (delete on complete)
+- `ratelimit.disable`
+    - so the website doesn't get rate limited
