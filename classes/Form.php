@@ -394,6 +394,7 @@ class Form {
                 'base' => $fromCur,
             ), 60);
             if ($res['k']) $this->cachedCurrencyRates = $res['b'];
+            else throw new \Exception('failed to load exchange rates');
         }
         $rates = $this->cachedCurrencyRates;
         $multipliers = $this->app->bridge->currencies();
