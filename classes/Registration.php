@@ -101,7 +101,7 @@ class Registration extends Form {
             }
             $scriptCtx->setFormVar('feeCountryGroups', $feeCountryGroups);
 
-            $isActiveMember = $this->plugin->aksoUser['member'];
+            $isActiveMember = isset($this->plugin->aksoUser) && $this->plugin->aksoUser['member'];
             $scriptCtx->setFormVar('isActiveMember', $isActiveMember);
             return $scriptCtx;
         }
