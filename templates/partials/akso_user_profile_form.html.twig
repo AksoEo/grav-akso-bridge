@@ -277,6 +277,7 @@
         {{akso_locale.registration.codeholder_phone_desc}}
     </div>
     {% if akso_registration.state.codeholder.codeholderType != 'org' %}
+    {% if akso_reg_editing %}
     <div class="settings-field" data-el="input" data-type="phone">
         <div class="inner-field">
             <label for="codeholder-landline-phone">{{akso_locale.registration.codeholder_landline_phone}}</label>
@@ -291,7 +292,6 @@
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'landlinePhone')}}
     </div>
-    {% if akso_reg_editing %}
         <div class="settings-field is-publicity-field" data-el="input" data-type="text">
             <div class="inner-field">
                 <label for="codeholder-landlinepublicity">{{akso_locale.registration.codeholder_landline_phone_publicity}}</label>
@@ -326,7 +326,6 @@
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'cellphone')}}
     </div>
-    {% endif %}
     {% if akso_reg_editing %}
         <div class="settings-field is-publicity-field" data-el="input" data-type="text">
             <div class="inner-field">
@@ -347,6 +346,7 @@
             </div>
             {{_self.akso_field_extra(akso_registration, akso_locale, 'cellphonePublicity')}}
         </div>
+    {% endif %}
     {% endif %}
 
     {% if akso_reg_editing %}
