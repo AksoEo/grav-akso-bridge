@@ -1553,6 +1553,7 @@ class Registration extends Form {
                 $this->plugin->getGrav()->redirectLangSafe($redirectTarget, 303);
             }
         } else {
+            error_log('failed to create payment intent ' . $res['sc'] . ' - ' . $res['b']);
             if ($res['sc'] === 400) $this->state['form_error'] = $this->locale['payment_error_bad_request'];
             else if ($res['sc'] === 417) $this->state['form_error'] = $this->locale['payment_error_too_high'];
             else if ($res['sc'] === 500) $this->state['form_error'] = $this->locale['payment_error_server_error'];
