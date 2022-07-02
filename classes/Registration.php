@@ -1305,6 +1305,14 @@ class Registration extends Form {
                         $options['codeholderData'][$k] = null;
                     }
                 }
+                if (array_key_exists('landlinePhone', $options['codeholderData'])) {
+                    // this field is not allowed. we'll just... remove it
+                    unset($options['codeholderData']['landlinePhone']);
+                }
+                if (array_key_exists('officePhone', $options['codeholderData'])) {
+                    // same
+                    unset($options['codeholderData']['officePhone']);
+                }
             }
 
             $options['offers'] = [];
@@ -1350,8 +1358,12 @@ class Registration extends Form {
                 $this->state['dataIds'][$year] = $res['h']['x-identifier'];
                 $this->state['addons'][$year] = $addons;
             } else if (!$res['k']) {
-                if ($res['sc'] === 400) $errors[$year] = $this->localize('create_entry_bad_request');
-                else $errors[$year] = $this->localize('create_entry_internal_error');
+                error_log('create /registration/entries failed! status ' . $res['sc'] . ' - ' . $res['b']);
+                if ($res['sc'] === 400) {
+                    $errors[$year] = $this->localize('create_entry_bad_request');
+                } else {
+                    $errors[$year] = $this->localize('create_entry_internal_error');
+                }
             }
         }
 
@@ -1541,6 +1553,7 @@ class Registration extends Form {
                 $this->plugin->getGrav()->redirectLangSafe($redirectTarget, 303);
             }
         } else {
+            error_log('failed to create payment intent ' . $res['sc'] . ' - ' . $res['b']);
             if ($res['sc'] === 400) $this->state['form_error'] = $this->locale['payment_error_bad_request'];
             else if ($res['sc'] === 417) $this->state['form_error'] = $this->locale['payment_error_too_high'];
             else if ($res['sc'] === 500) $this->state['form_error'] = $this->locale['payment_error_server_error'];
@@ -1658,8 +1671,11 @@ class Registration extends Form {
         if (!$isOrg) {
             $birthdate = \DateTime::createFromFormat('Y-m-d', $ch['birthdate']);
             $now = new \DateTime();
-            if (!$birthdate) {
+            if (!$birthdate && !$ch['birthdate']) {
                 return $locale['registration']['codeholder_error_birthdate_required'];
+            } else if (!$birthdate) {
+                // it failed to parse probably
+                return $locale['registration']['codeholder_error_invalid_birthdate'];
             }
             if ($birthdate->diff($now)->invert) {
                 // this is a future date

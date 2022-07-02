@@ -66,8 +66,9 @@ These permissions must be granted to the AKSO bridge API client for this plugin 
     - used for delegates
 - `delegations.subjects.read.<org>`
     - used for delegation applications
-- `registration.options.read`, `membership_categories.read`, `registration.entries.read`, `registration.entries.create`
+- `registration.options.read`, `membership_categories.read`, `registration.entries.read`, `registration.entries.create`, `registration.entries.update`, `congress_instances.participants.update.<org>`
     - used for registration
+    - (the update perms are required for payment intent triggers)
 - `pay.read.<org>`, `pay.payment_intents.create.<org>`
     - used for congress registration
     - used for payment
