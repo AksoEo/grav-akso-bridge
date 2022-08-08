@@ -1,2 +1,26 @@
 enabled: true
 login_path: /ensaluti
+registration_path: /alighi
+api_host: 'https://apitest.akso.org'
+logout_path: /elsaluti
+account_path: /konto
+account_logins_path: /ensalutoj
+account_votes_path: /vochdonadoj
+payments_host: 'https://pagtesto.akso.org'
+csp_img:
+  - 'https://i.ytimg.com'
+csp_child:
+  - 'https://www.openstreetmap.org'
+  - 'https://www.youtube-nocookie.com'
+account_notifs_path: /konto/sciigoj
+gk_page_route_template: /komunikoj/%year%
+vote_orgs:
+  - uea
+  - tejo
+newsletter_orgs:
+  - uea
+  - tejo
+newsletter: null
+from: ne-respondu@uea.org
+from_name: 'Universala Esperanto-Asocio'
+reply_to: null

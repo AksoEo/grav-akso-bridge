@@ -65,15 +65,13 @@ class Intermediaries {
 
                     // FIXME: do not do this (sending a request for each codeholder)
                     $res2 = $this->bridge->get("/codeholders/$id/roles", array(
-                        'fields' => ['role.name', 'role.public', 'dataCountry', 'dataOrg', 'dataString'],
-                        'filter' => array('isActive' => true),
+                        'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString'],
+                        'filter' => array('isActive' => true, 'role.public' => true),
                         'order' => [['role.name', 'asc']],
                         'limit' => 100
                     ), 240);
                     if ($res2['k']) {
                         foreach ($res2['b'] as $role) {
-                            if (!$role['role']['public']) continue;
-
                             $ch['activeRoles'][] = $role;
                             if ($role['dataOrg'] && !in_array($role['dataOrg'], $dataOrgIds)) {
                                 $dataOrgIds[] = $role['dataOrg'];

@@ -637,7 +637,7 @@ class MarkdownExt {
                         // FIXME: do not do this (sending a request for each codeholder)
                         $res2 = $this->bridge->get("/codeholders/$id/roles", array(
                             'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString'],
-                            'filter' => array('isActive' => true),
+                            'filter' => array('isActive' => true, 'role.public' => true),
                             'order' => [['role.name', 'asc']],
                             'limit' => 100
                         ), 240);
