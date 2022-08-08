@@ -57,7 +57,7 @@ class Magazines {
         }
         $editionInfo = $this->getMagazineEdition($magazine, $edition, $magazineInfo['name']);
 
-        $hasPerm = $this->canUserReadMagazine($this->user, $magazineInfo, $editionInfo, 'access');
+        $hasPerm = $this->canUserReadMagazine($this->plugin->aksoUser, $magazineInfo, $editionInfo, 'access');
         if (!$hasPerm) {
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
             return;
@@ -380,7 +380,7 @@ class Magazines {
                 ),
                 'limit' => 1,
             ));
-            if (!$res['k']) return false;
+            if (!$res['k']) throw new \Exception("failed to check codeholder magazine access");
             if ($res['h']['x-total-items'] > 0) {
                 return true;
             }
@@ -436,7 +436,7 @@ class Magazines {
             ];
         }
 
-        $pathComponents = array( 
+        $pathComponents = array(
             'login_path' => $this->plugin->loginPath,
             'base' => $this->plugin->getGrav()['page']->header()->path_base,
             'magazine' => self::MAGAZINE,
@@ -479,7 +479,7 @@ class Magazines {
             $edition = $this->getMagazineEdition($route['magazine'], $route['edition'], $magazine['name']);
             if (!$edition || !$edition['published']) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
 
-            $canRead = $this->canUserReadMagazine($this->user, $magazine, $edition, 'access');
+            $canRead = $this->canUserReadMagazine($this->plugin->aksoUser, $magazine, $edition, 'access');
 
             if (isset($_GET['js_toc_preview'])) {
                 $highlights = $this->getEditionTocEntries(
@@ -513,7 +513,7 @@ class Magazines {
             $edition = $this->getMagazineEdition($route['magazine'], $route['edition'], $magazine['name']);
             if (!$edition || !$edition['published']) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
 
-            $canRead = $this->canUserReadMagazine($this->user, $magazine, $edition, 'access');
+            $canRead = $this->canUserReadMagazine($this->plugin->aksoUser, $magazine, $edition, 'access');
 
             $entry = $this->getEditionTocEntry(
                 $route['magazine'], $route['edition'], $route['entry'], $magazine['name'], $edition['idHuman']
