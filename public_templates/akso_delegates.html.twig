@@ -173,6 +173,53 @@
             {% include 'partials/akso_country_selector.html.twig' %}
         {% endif %}
 
+        {% if akso_delegates.common.view_mode == 'subject' %}
+            {% if akso_delegates.search_mode == 'subject' %}
+                <input type="checkbox" id="subject-search-item" checked />
+            {% endif %}
+            <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
+                <input type="hidden" name="fako" id="subject-search-subjects" value="{{akso_delegates.search_subjects|default(['*'])|join(',')}}">
+                {% if akso_delegates.search_mode == 'subject' %}
+                    <div class="subject-search">
+                        <div class="search-header">
+                            <label
+                                for="subject-search-item"
+                                class="search-cancel"
+                                aria-label="{{akso_locale.delegates.search_subjects_cancel}}"
+                                role="button">
+                            </label>
+                            <h2 class="search-title">
+                                {% if akso_delegates.search_subjects|count == 1 %}
+                                    {{akso_locale.delegates.search_subject_one}}
+                                {% else %}
+                                    {{akso_locale.delegates.search_subjects}}
+                                {% endif %}
+                            </h2>
+                        </div>
+                        <ul class="subject-search-items">
+                            {% for subjectId in akso_delegates.search_subjects %}
+                                {{_self.subject_item(akso_delegates.subjects[subjectId], akso_delegates)}}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                <div class="inner-search inline-search-form">
+                    <input
+                        class="search-query"
+                        type="text"
+                        name="q"
+                        placeholder="{{akso_locale.delegates.subject_search_placeholder}}"
+                        value="{{akso_delegates.search_query}}" />
+                    <button type="submit" class="search-submit">
+                        <img
+                            class="search-icon"
+                            role="presentation"
+                            aria-label="{{akso_locale.delegate.subject_search_label}}"
+                            src="/user/themes/uea/images/search.svg" />
+                    </button>
+                </div>
+        {% endif %}
+
         {% if akso_delegates.has_filters %}
             {% if akso_delegates.common.view_mode == 'country' %}
                 {% set code = akso_delegates.view %}
@@ -183,50 +230,6 @@
                 <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
                     <input type="hidden" name="lando" value="{{akso_delegates.view}}">
             {% elseif akso_delegates.common.view_mode == 'subject' %}
-                {% if akso_delegates.search_mode == 'subject' %}
-                    <input type="checkbox" id="subject-search-item" checked />
-                {% endif %}
-                <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
-                    <input type="hidden" name="fako" id="subject-search-subjects" value="{{akso_delegates.search_subjects|default(['*'])|join(',')}}">
-                    {% if akso_delegates.search_mode == 'subject' %}
-                        <div class="subject-search">
-                            <div class="search-header">
-                                <label
-                                    for="subject-search-item"
-                                    class="search-cancel"
-                                    aria-label="{{akso_locale.delegates.search_subjects_cancel}}"
-                                    role="button">
-                                </label>
-                                <h2 class="search-title">
-                                    {% if akso_delegates.search_subjects|count == 1 %}
-                                        {{akso_locale.delegates.search_subject_one}}
-                                    {% else %}
-                                        {{akso_locale.delegates.search_subjects}}
-                                    {% endif %}
-                                </h2>
-                            </div>
-                            <ul class="subject-search-items">
-                                {% for subjectId in akso_delegates.search_subjects %}
-                                    {{_self.subject_item(akso_delegates.subjects[subjectId], akso_delegates)}}
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
-                    <div class="inner-search inline-search-form">
-                        <input
-                            class="search-query"
-                            type="text"
-                            name="q"
-                            placeholder="{{akso_locale.delegates.subject_search_placeholder}}"
-                            value="{{akso_delegates.search_query}}" />
-                        <button type="submit" class="search-submit">
-                            <img
-                                class="search-icon"
-                                role="presentation"
-                                aria-label="{{akso_locale.delegate.subject_search_label}}"
-                                src="/user/themes/uea/images/search.svg" />
-                        </button>
-                    </div>
             {% elseif akso_delegates.common.view_mode == 'codeholder' %}
                 <form class="delegate-search-form" action="{{akso_delegates.form_target}}">
                     <div class="inner-search inline-search-form">
@@ -296,6 +299,8 @@
                         </div>
                     </div>
                 </form>
+        {% elseif akso_delegates.common.view_mode == 'subject' %}
+            </form>
         {% endif %}
 
         {% macro delegate_item(akso_locale, akso_delegates, delegation) %}

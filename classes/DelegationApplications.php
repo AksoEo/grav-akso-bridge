@@ -97,7 +97,7 @@ class DelegationApplications {
         );
         if (!empty($query)) {
             $options['search'] = array(
-                'str' => $query . '*',
+                'str' => $this->bridge->transformSearch($query)['s'],
                 'cols' => ['searchLabel'],
             );
             //$options['order'] = [['_relevance', 'desc']]; // makes it worse
@@ -135,7 +135,7 @@ class DelegationApplications {
         );
         if (!empty(trim($query))) {
             $options['search'] = array(
-                'str' => trim($query) . '*',
+                'str' => $this->bridge->transformSearch(trim($query))['s'],
                 'cols' => ['name'],
             );
             $options['order'] = [['_relevance', 'desc']];

@@ -358,4 +358,12 @@ class AksoBridge {
     public function generateTotp(string $ueaCode) {
         return $this->request('generate_totp', array('u' => $ueaCode));
     }
+
+    public function isValidSearch(string $str) {
+        return $this->request('valid_search', array('s' => $str));
+    }
+
+    public function transformSearch(string $str) {
+        return $this->request('trf_search', array('s' => $str));
+    }
 }

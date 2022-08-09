@@ -320,8 +320,14 @@ class Delegates {
                     'limit' => $itemsPerPage,
                 );
                 if (!empty($search_query)) {
-                    // FIXME: we need to validate the search query
-                    $options['search'] = array('cols' => ['name'], 'str' => $search_query);
+                    if (!$this->bridge->isValidSearch($search_query)['v']) {
+                        // error handling is too hard so we'll just fix the input!
+                        $search_query = preg_replace('/[^\w]/', '', $search_query);
+                    }
+                    $options['search'] = array(
+                        'cols' => ['name'],
+                        'str' => $this->bridge->transformSearch($search_query)['s'],
+                    );
                 }
                 $res = $this->bridge->get('/delegations/subjects', $options);
                 if (!$res['k']) {
@@ -403,8 +409,16 @@ class Delegates {
                 );
             }
 
+            if (!$this->bridge->isValidSearch($search_query)['v']) {
+                // error handling is too hard so we'll just fix the input!
+                $search_query = preg_replace('/[^\w]/', '', $search_query);
+            }
+
             $res = $this->bridge->get('/codeholders', array(
-                'search' => array('cols' => ['searchName'], 'str' => $search_query . '*'),
+                'search' => array(
+                    'cols' => ['searchName'],
+                    'str' => $this->bridge->transformSearch($search_query)['s'],
+                ),
                 'filter' => array('$delegations' => array('org' => $org)),
                 'offset' => $page * $itemsPerPage,
                 'fields' => self::CODEHOLDER_FIELDS,

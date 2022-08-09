@@ -253,6 +253,24 @@ Additional fields:
 
 - `v`: (num) converted value (float)
 
+##### type `valid_search`
+Returns whether a search string is valid for the API (see akso client).
+
+Additional fields:
+
+- `s`: (str) search string
+
+Returns a bool `v`.
+
+##### type `trf_search`
+Transforms a search string for the API (see akso client).
+
+Additional fields:
+
+- `s`: (str) search string
+
+Returns a transformed string `s`.
+
 ##### type `x`
 ACK.
 

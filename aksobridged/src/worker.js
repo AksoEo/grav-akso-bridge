@@ -1,6 +1,6 @@
 import { Server } from 'net';
 import { workerData, parentPort } from 'worker_threads';
-import { AppClient, UserClient, generateTotp } from '@tejo/akso-client';
+import { AppClient, UserClient, generateTotp, util } from '@tejo/akso-client';
 import { evaluate, currencies } from '@tejo/akso-script';
 import '@tejo/akso-script/country_fmt.js';
 import '@tejo/akso-script/phone_fmt.js';
@@ -964,6 +964,23 @@ const messageHandlers = {
     generate_totp: async (conn, { u }) => {
         assertType(u, 'string', 'expected u to be a string');
         return await generateTotp(u);
+    },
+    valid_search: async (conn, { s }) => {
+        assertType(s, 'string', 'expected s to be a string');
+        try {
+            return { v: util.isValidSearch(s) };
+        } catch {
+            return { v: false };
+        }
+    },
+    trf_search: async (conn, { s }) => {
+        assertType(s, 'string', 'expected s to be a string');
+        try {
+            return { s: util.transformSearch(s) };
+        } catch {
+            // fall back to identity
+            return { s };
+        }
     },
     flush_cookies: async (conn) => {
         conn.flushSendCookies();
