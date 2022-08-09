@@ -36,7 +36,7 @@
                 {% set zoom = "8" %}
             {% endif %}
             <a data-area={{item.area}} target="_blank" rel="noopener noreferrer" class="item-location-link" href="{{
-                akso_locale.account.logins_osm_link|e('html_attr') ~ zoom ~ "/" ~ item.ll[0] ~ "/" ~ item.ll[1]
+                akso_locale.account.logins_osm_link|e ~ zoom ~ "/" ~ item.ll[0] ~ "/" ~ item.ll[1]
             }}">
                 {{akso_locale.account.logins_show_map}}
             </a>
