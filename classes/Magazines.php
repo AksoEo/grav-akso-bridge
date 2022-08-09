@@ -334,6 +334,10 @@ class Magazines {
             foreach ($res['b'] as $entry) {
                 if ($entry['highlighted']) $hasHighlighted = true;
                 $entry = $this->addEntryDownloadUrl($magazine, $edition, $entry, $magazineName, $editionName);
+                $entry['title_rendered'] = $this->bridge->renderMarkdown(
+                    $entry['title'] ? $entry['title'] : '',
+                    ['emphasis', 'strikethrough'],
+                )['c'];
                 $allEntries[] = $entry;
             }
             if (!$hasHighlighted) {

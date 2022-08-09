@@ -141,7 +141,7 @@
                 <li class="content-list-item {{entry.highlighted ? 'is-highlighted' : ''}} {{entry.author ? 'has-author' : ''}} {{showRecitation ? 'has-recitation' : ''}}">
                 <div class="entry-title-line">
                     {% if akso_magazines.can_read %}
-                    <a href="{{toc_path}}" class="entry-title">{{entry.title}}</a>
+                    <a href="{{toc_path}}" class="entry-title">{{entry.title_rendered|raw}}</a>
                     {% else %}
                     <span class="entry-title">{{entry.title}}</span>
                     {% endif %}
