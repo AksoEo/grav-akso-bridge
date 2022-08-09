@@ -627,8 +627,11 @@ class AksoBridgePlugin extends Plugin {
             $this->pageState = $acc->run();
             $app->close();
         } else if ($this->pathStartsWithComponent($this->path, self::MAGAZINE_DOWNLOAD_PATH)) {
-            $magazines = new Magazines($this, $this->bridge);
+            $app = new AppBridge($this->grav);
+            $app->open();
+            $magazines = new Magazines($this, $app->bridge);
             $magazines->runDownload();
+            $app->close();
         }
     }
 

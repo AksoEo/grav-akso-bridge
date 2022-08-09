@@ -70,6 +70,9 @@ class Magazines {
             $tryStream = true;
         } else {
             $path = "/magazines/$magazine/editions/$edition/files/$format";
+
+            // bump download count
+            $this->bridge->post("/magazines/$magazine/editions/$edition/files/$format/!bump", [], [], []);
         }
 
         $res = null;
