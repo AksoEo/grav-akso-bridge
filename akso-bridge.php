@@ -252,6 +252,7 @@ class AksoBridgePlugin extends Plugin {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/registration.js');
             $state['akso_login_path'] = $this->loginPath;
             $state['akso_account_path'] = $this->accountPath;
+            $state['akso_account_edit_path'] = $this->accountPath . '?redakti';
             $state['uea_hide_support_button'] = true;
 
             $head = $this->grav['page']->header();
