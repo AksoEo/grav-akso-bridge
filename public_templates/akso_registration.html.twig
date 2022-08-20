@@ -416,7 +416,7 @@
                         <input
                             class="offer-item-selection"
                             aria-label="{{akso_locale.registration.offers_select_0}}{{offerItemName|e}}{{akso_locale.registration.offers_select_1}}"
-                            {% if akso_registration.categories[offer.id].givesMembership %}
+                            {% if offer.type == 'membership' and akso_registration.categories[offer.id].givesMembership %}
                             type="radio"
                             name="offers[{{offerYear.year|e}}][membership]"
                             value="{{groupIndex}}-{{offerIndex}}-{{offer.type}}-{{offer.id}}"
