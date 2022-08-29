@@ -463,7 +463,11 @@ class MarkdownExt {
             }
             // A blank newline has occurred.
             if (isset($block['interrupted'])) {
-                array_push($block['element']['text'], "\n");
+                if (isset($block['in_else_clause'])) {
+                    array_push($block['element']['text'][1]['text'], "\n");
+                } else {
+                    array_push($block['element']['text'][0]['text'], "\n");
+                }
                 unset($block['interrupted']);
             }
             // Check for end of the block.
@@ -543,7 +547,11 @@ class MarkdownExt {
             }
             // A blank newline has occurred.
             if (isset($block['interrupted'])) {
-                array_push($block['element']['text'], "\n");
+                if (isset($block['in_else_clause'])) {
+                    array_push($block['element']['text'][1]['text'], "\n");
+                } else {
+                    array_push($block['element']['text'][0]['text'], "\n");
+                }
                 unset($block['interrupted']);
             }
             // Check for end of the block.
