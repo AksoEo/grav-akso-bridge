@@ -156,7 +156,7 @@ function openTocPreview(originalCoverNode, editionName, originalPath) {
                 <span class="item-page"></span>
             </div>
             `;
-            node.querySelector('.item-title').textContent = item.title;
+            node.querySelector('.item-title').innerHTML = item.title_rendered;
             node.querySelector('.item-page').textContent = item.page;
         }
 

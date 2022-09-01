@@ -337,6 +337,7 @@ class Magazines {
                 $entry['title_rendered'] = $this->bridge->renderMarkdown(
                     $entry['title'] ? $entry['title'] : '',
                     ['emphasis', 'strikethrough'],
+                    true,
                 )['c'];
                 $allEntries[] = $entry;
             }
@@ -359,6 +360,11 @@ class Magazines {
         ), 240);
         if ($res['k']) {
             $entry = $res['b'];
+            $entry['title_rendered'] = $this->bridge->renderMarkdown(
+                $entry['title'] ? $entry['title'] : '',
+                ['emphasis', 'strikethrough'],
+                true,
+            )['c'];
             $entry['text_rendered'] = $this->bridge->renderMarkdown(
                 $entry['text'] ? $entry['text'] : '',
                 ['emphasis', 'strikethrough', 'link', 'list', 'table', 'image'],

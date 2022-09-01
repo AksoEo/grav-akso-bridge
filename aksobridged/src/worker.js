@@ -924,14 +924,18 @@ const messageHandlers = {
         // TODO: deprecate this
         return {};
     },
-    render_md: async (conn, { c, r }) => {
+    render_md: async (conn, { c, r, i }) => {
         assertType(c, 'string', 'expected c to be a string');
         assertType(r, 'array', 'expected r to be an array');
 
         const md = new Markdown('zero').use(MarkdownMultiMdTable);
         md.enable('newline');
         md.enable(r);
-        return { c: md.render(c) };
+        if (i) {
+            return { c: md.renderInline(c) };
+        } else {
+            return { c: md.render(c) };
+        }
     },
     absolute_md_urls: async (conn, { c, u }) => {
         assertType(c, 'string', 'expected v to be a string');

@@ -576,6 +576,10 @@
             margin-bottom: 0.5em;
             .entry-title {
                 margin-bottom: 0;
+
+                strong {
+                    font-weight: bolder;
+                }
             }
             .entry-author {
                 margin-top: 0.5em;
@@ -614,6 +618,13 @@
             border-radius: var(--radius);
             padding: 1em;
             box-shadow: @shade-both;
+
+            p:first-child {
+                margin-top: 0;
+            }
+            p:last-child {
+                margin-bottom: 0;
+            }
 
             &.requires-perms {
                 background: var(--error-bg);

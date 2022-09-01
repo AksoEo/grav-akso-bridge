@@ -329,10 +329,11 @@ class AksoBridge {
         ), $onStreamChunk);
     }
 
-    public function renderMarkdown(string $contents, array $rules) {
+    public function renderMarkdown(string $contents, array $rules, $inline = false) {
         return $this->request('render_md', array(
             'c' => $contents,
             'r' => $rules,
+            'i' => $inline,
         ));
     }
 
