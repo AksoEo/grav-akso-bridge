@@ -994,6 +994,9 @@ class MarkdownExt {
             if ($self->plugin->aksoUser) {
                 $preferredLang = 'eo';
             }
+            if (isset($_GET['lang']) && gettype($_GET['lang']) === 'string') {
+                $preferredLang = substr($_GET['lang'], 0, 2);
+            }
             if (!isset($block['element']['text']['variants'][$preferredLang])) {
                 $preferredLang = 'eo';
             }
