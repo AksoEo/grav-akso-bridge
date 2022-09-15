@@ -2224,14 +2224,6 @@ class MarkdownExt {
             $snonces[]= $nonce;
         }
 
-        // styles, too
-        /* $styles = $doc->find('.page-container style');
-        foreach ($styles as $style) {
-            $replacement = new Element('div', '<style>' . $style->text() . '</style>');
-            $replacement->class = 'illegal-style-tag';
-            $style->replace($replacement);
-        } */
-
         $styles = $doc->find('style');
         $cnonces = [];
         foreach ($styles as $style) {
