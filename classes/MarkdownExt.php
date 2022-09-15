@@ -598,8 +598,22 @@ class MarkdownExt {
         // string for the HTML handler below to *actually* render
         $markdown->addBlockType('[', 'AksoList');
         $markdown->blockAksoList = function($line, $block) use ($self) {
-            if (preg_match('/^\[\[listo\s+(\d+)\]\]/', $line['text'], $matches)) {
+            if (preg_match('/^\[\[listo\s+(\d+)(?:\s+lau-(\w+)-en-rolo\s+((?:\d+(?:,\s*|\s+))*\d+))?\]\]/i', $line['text'], $matches)) {
                 $listId = $matches[1];
+                $sortBy = null;
+                $sortByRoles = [];
+
+                if (isset($matches[2]) && $matches[2] === 'lando') {
+                    $sortBy = 'dataCountry';
+                } else if (isset($matches[2]) && $matches[2] === 'teksto') {
+                    $sortBy = 'dataString';
+                } else {
+                    throw new Error('unknown sorting method ' . $sortBy . ' in list ' . $listId);
+                }
+
+                if ($sortBy) {
+                    $sortByRoles = array_map(function($f) { return (int) $f; }, preg_split('/,\s*|\s+/', $matches[3]));
+                }
 
                 $error = null;
                 $codeholders = [];
@@ -644,7 +658,7 @@ class MarkdownExt {
 
                         // FIXME: do not do this (sending a request for each codeholder)
                         $res2 = $this->bridge->get("/codeholders/$id/roles", array(
-                            'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString'],
+                            'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString', 'role.id'],
                             'filter' => array('isActive' => true, 'role.public' => true),
                             'order' => [['role.name', 'asc']],
                             'limit' => 100
@@ -698,6 +712,10 @@ class MarkdownExt {
                     $text = json_encode(array(
                         'codeholders' => $codeholders,
                         'data_orgs' => $dataOrgCodeholders,
+                        'sorting' => $sortBy ? array(
+                            'field' => $sortBy,
+                            'roles' => $sortByRoles,
+                        ) : null,
                         'id' => $listId
                     ));
                 }
@@ -1648,9 +1666,88 @@ class MarkdownExt {
                 $listId = $data['id'];
                 $codeholders = $data['codeholders'];
                 $dataOrgs = $data['data_orgs'];
+                $sorting = $data['sorting'];
 
-                foreach ($codeholders as $codeholder) {
-                    $newList->appendChild(CodeholderLists::renderCodeholder($this->bridge, $codeholder, $dataOrgs, $isMember));
+                if ($sorting) {
+                    $field = $sorting['field'];
+                    $sortByRoles = $sorting['roles'];
+
+                    $sortedItems = array();
+                    $restItems = [];
+                    $sortingKeys = [];
+
+                    foreach ($codeholders as $codeholder) {
+                        if (isset($codeholder['activeRoles'])) {
+                            $sortingKey = null;
+                            foreach ($codeholder['activeRoles'] as $role) {
+                                if (in_array($role['role']['id'], $sortByRoles)) {
+                                    $sortingKey = $role[$field];
+                                    break;
+                                }
+                            }
+                            if ($sortingKey) {
+                                if (!isset($sortedItems[$sortingKey])) {
+                                    $sortedItems[$sortingKey] = [];
+                                    $sortingKeys[] = $sortingKey;
+                                }
+                                $sortedItems[$sortingKey][] = $codeholder;
+                            } else {
+                                $restItems[] = $codeholder;
+                            }
+                        }
+                    }
+
+                    sort($sortingKeys);
+
+                    foreach ($sortingKeys as $key) {
+                        $items = $sortedItems[$key];
+                        $section = new Element('li');
+                        $section->class = 'codeholder-list-category';
+                        $sectionTitle = new Element('h4');
+                        $sectionTitle->class = 'category-label';
+
+                        if ($field === 'dataCountry') {
+                            $emoji = Utils::getEmojiForFlag($key);
+                            $flag = new Element('img');
+                            $flag->class = 'inline-flag-icon';
+                            $flag->src = $emoji['src'];
+                            $flag->alt = $emoji['alt'];
+                            $countryName = new Element('span', ' ' . Utils::formatCountry($this->bridge, $key));
+                            $sectionTitle->appendChild($flag);
+                            $sectionTitle->appendChild($countryName);
+                        } else if ($field === 'dataString') {
+                            $tagName = new Element('span', $key);
+                            $sectionTitle->appendChild($tagName);
+                        }
+
+                        $section->appendChild($sectionTitle);
+                        $sectionItems = new Element('ul');
+                        $sectionItems->class = 'category-inner-items';
+                        foreach ($items as $item) {
+                            $sectionItems->appendChild(CodeholderLists::renderCodeholder($this->bridge, $item, $dataOrgs, $isMember));
+                        }
+                        $section->appendChild($sectionItems);
+                        $newList->appendChild($section);
+                    }
+
+                    if (count($restItems)) {
+                        $restSection = new Element('li');
+                        $restSection->class = 'codeholder-list-category';
+                        $sectionTitle = new Element('h4', $this->plugin->locale['content']['codeholder_list_sorted_rest']);
+                        $sectionTitle->class = 'category-label';
+                        $restSection->appendChild($sectionTitle);
+                        $sectionItems = new Element('ul');
+                        $sectionItems->class = 'category-inner-items';
+                        foreach ($restItems as $item) {
+                            $sectionItems->appendChild(CodeholderLists::renderCodeholder($this->bridge, $item, $dataOrgs, $isMember));
+                        }
+                        $restSection->appendChild($sectionItems);
+                        $newList->appendChild($restSection);
+                    }
+                } else {
+                    foreach ($codeholders as $codeholder) {
+                        $newList->appendChild(CodeholderLists::renderCodeholder($this->bridge, $codeholder, $dataOrgs, $isMember));
+                    }
                 }
 
                 $list->replace($newList);
