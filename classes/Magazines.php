@@ -170,7 +170,7 @@ class Magazines {
 
     function getLatestEditions($magazine, $n) {
         $res = $this->bridge->get("/magazines/$magazine/editions", array(
-            'fields' => ['id', 'idHuman', 'date', 'description', 'hasThumbnail'],
+            'fields' => ['id', 'idHuman', 'date', 'description', 'hasThumbnail', 'subscribers', 'subscriberFiltersCompiled'],
             'filter' => ['published' => true],
             'order' => [['date', 'desc']],
             'offset' => 0,
@@ -196,7 +196,7 @@ class Magazines {
             $this->cachedMagazines = [];
             // TODO: handle case where there are more than 100 magazines
             $res = $this->bridge->get('/magazines', array(
-                'fields' => ['id', 'name'],
+                'fields' => ['id', 'name', 'subscribers', 'subscriberFiltersCompiled'],
                 'limit' => 100,
             ), 240);
             if ($res['k']) {
@@ -469,10 +469,25 @@ class Magazines {
                 $list = $magazines;
             }
 
+            $showAccessBanner = true;
+            if ($this->plugin->aksoUser) {
+                // check if user can access all these magazines. if not, show banner
+                $canAccessAll = true;
+                foreach ($list as $item) {
+                    $canRead = $this->canUserReadMagazine($this->plugin->aksoUser, $item, $item['latest'], 'access');
+                    if (!$canRead) {
+                        $canAccessAll = false;
+                        break;
+                    }
+                }
+                $showAccessBanner = !$canAccessAll;
+            }
+
             return array(
                 'path_components' => $pathComponents,
                 'type' => 'list',
                 'magazines' => $list,
+                'show_access_banner' => $showAccessBanner,
             );
         } else if ($route['type'] === 'magazine') {
             $magazine = $this->getMagazine($route['magazine']);

@@ -270,6 +270,7 @@ class AksoBridgePlugin extends Plugin {
             $app->open();
             $magazines = new Magazines($this, $app->bridge);
             $state['akso_magazine_cover_path'] = self::MAGAZINE_COVER_PATH;
+            $state['akso_registration_path'] = $this->registrationPath;
             $state['akso_magazines'] = $magazines->run();
             $app->close();
         } else if ($templateId === 'akso_country_org_list') {

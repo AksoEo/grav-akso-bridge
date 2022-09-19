@@ -2,6 +2,19 @@
 {% block content %}
     {{page.content|raw}}
 <div class="akso-magazines">
+    {% if akso_magazines.show_access_banner %}
+    <div class="magazines-access-banner">
+        <h3>{{akso_locale.magazines.access_all_banner_title}}</h3>
+        <p>
+            {{akso_locale.magazines.access_all_banner_body}}
+        </p>
+        <div class="inner-actions">
+            <a class="link-button is-primary" href="{{akso_registration_path}}">
+                {{akso_locale.magazines.access_all_banner_subscribe}}
+            </a>
+        </div>
+    </div>
+    {% endif %}
     <ul class="magazines-cover-gallery">
         {% for magazine in akso_magazines.magazines %}
         <li class="magazine-item">
