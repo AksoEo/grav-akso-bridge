@@ -261,6 +261,35 @@
         .settings-field.is-address-field.is-hidden-address-field {
             display: none;
         }
+        .settings-field.is-address-field.is-loading {
+            position: relative;
+
+            &::before {
+                content: '';
+                position: absolute;
+                top: 0.3em;
+                right: 0.4em;
+                width: 0.6em;
+                height: 0.6em;
+                border-radius: 50%;
+                border: 2px solid var(--accent);
+                border-right-color: transparent;
+                animation: settings-field-address-field-loading 1s infinite linear;
+                @keyframes settings-field-address-field-loading {
+                    from { transform: none }
+                    to { transform: rotate(360deg) }
+                }
+            }
+        }
+        .settings-field.is-address-field .address-field-error {
+            color: var(--error);
+            font-size: smaller;
+        }
+        .settings-field.is-address-field .js-select-container {
+            input {
+                display: none;
+            }
+        }
 
         #split-name-checkbox,
         #split-country-checkbox {
