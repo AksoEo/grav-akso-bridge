@@ -4,13 +4,11 @@ import 'regenerator-runtime/runtime.js';
 
 function initEdition(edition) {
     const innerCard = edition.querySelector('.item-inner-card');
-    const previewButtonContainer = document.createElement('div');
-    previewButtonContainer.className = 'toc-preview-button-container';
+    const buttonContainer = innerCard.querySelector('.item-actions');
     const previewButton = document.createElement('button');
     previewButton.textContent = locale.magazines.edition_toc_preview_button;
     previewButton.className = 'toc-preview-button';
-    previewButtonContainer.appendChild(previewButton);
-    innerCard.appendChild(previewButtonContainer);
+    buttonContainer.appendChild(previewButton);
 
     previewButton.addEventListener('click', () => {
         openTocPreview(edition.querySelector('.magazine-cover-container'), edition.dataset.name, edition.dataset.path);

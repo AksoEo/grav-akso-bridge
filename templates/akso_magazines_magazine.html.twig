@@ -38,6 +38,26 @@
                 <a class="item-cover-link" href="{{edition_path}}">
                     {% include 'partials/akso_magazine_cover.html.twig' with { magazine: akso_magazines.magazine, edition: edition } %}
                 </a>
+                <div class="item-actions">
+                    {% set has_download = edition.downloads.pdf or edition.downloads.epub %}
+                    {% if edition.can_read and has_download %}
+                        {% if edition.downloads.pdf %}
+                            <a class="download-button link-button" href="{{edition.downloads.pdf.link}}">
+                                <img class="download-icon" src="/user/plugins/akso-bridge/assets/files/pdf.svg" draggable="false" aria-hidden="true" />
+                                <span class="download-label">
+                                    {{akso_locale.magazines.edition_downloads_download_pdf}}
+                                </span>
+                            </a>
+                        {% elseif edition.downloads.epub %}
+                            <a class="download-button link-button" href="{{edition.downloads.epub.link}}">
+                                <img class="download-icon" src="/user/plugins/akso-bridge/assets/files/epub.svg" draggable="false" aria-hidden="true" />
+                                <span class="download-label">
+                                    {{akso_locale.magazines.edition_downloads_download_epub}}
+                                </span>
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
             </div>
         </li>
         {% endfor %}

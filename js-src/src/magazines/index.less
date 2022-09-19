@@ -101,12 +101,26 @@
                     }
                 }
 
-                .toc-preview-button-container {
-                    text-align: center;
+                .item-actions {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: center;
                     padding-bottom: 0.2em;
+                    gap: 0.5em;
 
-                    .toc-preview-button {
+                    .toc-preview-button, .download-button {
                         font-size: smaller;
+                    }
+
+                    .download-button {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.3em;
+                        padding-left: 0.5em;
+
+                        .download-icon {
+                            height: 1em;
+                        }
                     }
                 }
             }

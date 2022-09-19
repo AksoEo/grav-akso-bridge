@@ -238,11 +238,11 @@ class Magazines {
         return null;
     }
 
-    function getMagazineEditions($magazine, $offset = 0) {
+    function getMagazineEditions($magazine, $magazineName, $offset = 0) {
         $allEditions = [];
         while (true) {
             $res = $this->bridge->get("/magazines/$magazine/editions", array(
-                'fields' => ['id', 'idHuman', 'date', 'hasThumbnail'],
+                'fields' => ['id', 'idHuman', 'date', 'hasThumbnail', 'subscribers', 'subscriberFiltersCompiled'],
                 'filter' => ['published' => true],
                 'order' => [['date', 'desc']],
                 'offset' => count($allEditions),
@@ -253,6 +253,7 @@ class Magazines {
                 throw new \Exception("Failed to fetch magazine editions for $magazine:\n" . $res['b']);
             }
             foreach ($res['b'] as $edition) {
+                $edition = $this->addEditionDownloadLinks($magazine, $edition, $magazineName);
                 $allEditions[] = $edition;
             }
 
@@ -492,7 +493,13 @@ class Magazines {
         } else if ($route['type'] === 'magazine') {
             $magazine = $this->getMagazine($route['magazine']);
             if (!$magazine) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
-            $editions = $this->getMagazineEditions($route['magazine']);
+            $editions = $this->getMagazineEditions($route['magazine'], $magazine['name']);
+
+            foreach ($editions as &$year) {
+                foreach ($year as &$edition) {
+                    $edition['can_read'] = $this->canUserReadMagazine($this->plugin->aksoUser, $magazine, $edition, 'access');
+                }
+            }
 
             return array(
                 'path_components' => $pathComponents,
