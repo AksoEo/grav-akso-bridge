@@ -160,7 +160,11 @@ class AksoBridgePlugin extends Plugin {
             $mag->runThumbnail();
             $app->close();
         } else if ($this->pathStartsWithComponent($this->path, self::MAGAZINE_DOWNLOAD_PATH)) {
-            $this->grav->redirectLangSafe($this->loginPath, 302);
+            $app = new AppBridge($this->grav);
+            $app->open();
+            $magazines = new Magazines($this, $app->bridge);
+            $magazines->runDownload();
+            $app->close();
         }
 
         $this->addPages();
@@ -627,12 +631,6 @@ class AksoBridgePlugin extends Plugin {
             $app->open();
             $acc = new UserAccount($this, $app, $this->bridge, $this->path);
             $this->pageState = $acc->run();
-            $app->close();
-        } else if ($this->pathStartsWithComponent($this->path, self::MAGAZINE_DOWNLOAD_PATH)) {
-            $app = new AppBridge($this->grav);
-            $app->open();
-            $magazines = new Magazines($this, $app->bridge);
-            $magazines->runDownload();
             $app->close();
         }
     }
