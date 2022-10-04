@@ -1,9 +1,11 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Common\Helpers\Excerpts;
 use Grav\Plugin\AksoBridge\CongressRegistration;
 use Grav\Plugin\AksoBridge\Utils;
+use Grav\Plugin\AksoBridgePlugin;
 
 class CongressInstance {
     private $plugin;
@@ -22,7 +24,7 @@ class CongressInstance {
         $congressId = $this->congressId;
         $instanceId = $this->instanceId;
         $app = $this->app;
-        $head = $this->plugin->getGrav()['page']->header();
+        $head = Grav::instance()['page']->header();
 
         $res = $app->bridge->get('/congresses/' . $congressId . '/instances/' . $instanceId, array(
             'fields' => [
@@ -50,14 +52,14 @@ class CongressInstance {
             if (!$res['k']) {
                 $state['akso_congress_error'] = $this->plugin->locale['content']['render_error'];
                 if ($res['sc'] == 404) {
-                    $this->plugin->getGrav()->fireEvent('onPageNotFound');
+                    Grav::instance()->fireEvent('onPageNotFound');
                 }
                 break;
             }
 
             $congressName = $res['b']['name'];
 
-            $state['akso_congress_registration_link'] = $this->plugin->getGrav()['page']->route() . '/alighilo';
+            $state['akso_congress_registration_link'] = Grav::instance()['page']->route() . '/' . AksoBridgePlugin::CONGRESS_REGISTRATION_PATH;
 
             $congressStartTime = null;
             if ($firstEventRes['k'] && sizeof($firstEventRes['b']) > 0) {
@@ -82,7 +84,7 @@ class CongressInstance {
                             'href' => htmlspecialchars(urlencode($head->header_url)),
                         ),
                     ),
-                ), $this->plugin->getGrav()["page"], 'image');
+                ), Grav::instance()["page"], 'image');
                 $imageUrl = $processed['element']['attributes']['href'];
                 $state['akso_congress_header_url'] = $imageUrl;
             }
@@ -93,7 +95,7 @@ class CongressInstance {
                             'href' => htmlspecialchars(urlencode($head->logo_url)),
                         ),
                     ),
-                ), $this->plugin->getGrav()["page"], 'image');
+                ), Grav::instance()["page"], 'image');
                 $imageUrl = $processed['element']['attributes']['href'];
                 $state['akso_congress_logo_url'] = $imageUrl;
             }
@@ -119,7 +121,7 @@ class CongressInstance {
             $state['akso_congress_user_is_org'] = $this->plugin->aksoUser && str_starts_with($this->plugin->aksoUser['uea'], 'xx');
             $state['akso_congress_registration_enabled'] = true;
             $state['akso_congress_registration_allowed'] = $formRes['b']['allowUse'];
-            $state['akso_congress_registration_guest_not_allowed'] = !$formRes['b']['allowGuests'] && !$this->aksoUser;
+            $state['akso_congress_registration_guest_not_allowed'] = !$formRes['b']['allowGuests'] && !$this->plugin->aksoUser;
 
             if (!$isRegistration && $this->plugin->aksoUser) {
                 // show "view my registration" instead of "register" if user is logged in & has registered
@@ -132,12 +134,12 @@ class CongressInstance {
 
             if ($isRegistration && !$formRes['b']['allowGuests'] && !$this->plugin->aksoUser) {
                 // user needs to log in to use this!
-                $this->plugin->getGrav()->redirectLangSafe($this->plugin->loginPath, 303);
+                Grav::instance()->redirectLangSafe($this->plugin->loginPath, 303);
             }
 
             if ($isRegistration) {
-                $this->plugin->getGrav()['assets']->add('plugin://akso-bridge/css/registration-form.css');
-                $this->plugin->getGrav()['assets']->add('plugin://akso-bridge/js/dist/form.js');
+                Grav::instance()['assets']->add('plugin://akso-bridge/css/registration-form.css');
+                Grav::instance()['assets']->add('plugin://akso-bridge/js/dist/form.js');
 
                 $registration = new CongressRegistration($this->plugin, $app, $congressId, $instanceId, $paymentOrg, $formRes['b'], $congressName);
                 $state['akso_congress_registration'] = $registration->run();

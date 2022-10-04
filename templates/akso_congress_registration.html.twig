@@ -311,7 +311,9 @@
         method="POST"
         action="{{ akso_congress_registration.submit_target|e('html_attr') }}">
         <div class="registration-congress-name">
-            {{ akso_congress.name|e }}
+            <a href="{{ akso_congress_registration.back_target|e('html_attr') }}">
+                {{ akso_congress.name|e }}
+            </a>
         </div>
         {% if akso_congress_registration.data_id %}
             <div class="registration-editing-title">
@@ -335,7 +337,7 @@
             class="hidden-input"
             name="nonce"
             value="{{akso_congress_registration.form_nonce|e('html_attr')}}" />
-        {{ akso_congress_registration.form }}
+        {{ akso_congress_registration.form|raw }}
         <div class="form-footer">
             {% if akso_congress_registration.data_id %}
                 {% if akso_congress_registration.cancelable %}

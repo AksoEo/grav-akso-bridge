@@ -602,6 +602,7 @@ class CongressRegistration {
                 'payment' => $payment,
                 'editable' => $this->isEditable,
                 'cancelable' => $this->isCancelable,
+                'back_target' => $backTarget,
                 'cancel_target' => $cancelTarget,
                 'validate_target' => $validateTarget,
                 'submit_target' => $submitTarget,

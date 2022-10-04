@@ -697,7 +697,7 @@ class AksoBridgePlugin extends Plugin {
                 // you can't add more than 1 page with the same SplFileInfo, otherwise *weird*
                 // *things* will happen.
                 // so we'll only add the registration page if we're currently *on* that page
-                if (!isset($page->header()->congress_instance) || !isset($page->header()->payment_org)) {
+                if (!isset($page->header()->congress_instance)) {
                     // no page params; skip
                     continue;
                 }
@@ -711,7 +711,9 @@ class AksoBridgePlugin extends Plugin {
                 $regPageHeader = $regPage->header();
                 // copy congress instance id from the congress page into the sign-up page
                 $regPageHeader->congress_instance = $page->header()->congress_instance;
-                $regPageHeader->payment_org = $page->header()->payment_org;
+                if (isset($page->header()->payment_org)) {
+                    $regPageHeader->payment_org = $page->header()->payment_org;
+                }
                 $pages->addPage($regPage, $regPath);
                 break;
             }
