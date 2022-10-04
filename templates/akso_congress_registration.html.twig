@@ -34,6 +34,10 @@
                 ({{payment.total_rendered|e}})
             </h3>
         </div>
+    {% else %}
+        <div class="registration-payment all-paid">
+            {{akso_locale.registration_form.payment_box_no_payment}}
+        </div>
     {% endif %}
 {% endmacro %}
 

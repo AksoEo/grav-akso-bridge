@@ -128,7 +128,7 @@
 .registration-form .registration-payment {
     margin-top: 1em;
     margin-bottom: 1em;
-    padding: 1em;
+    padding: 0.5em 1em;
     border-radius: var(--radius);
     background: var(--bg2);
 }
