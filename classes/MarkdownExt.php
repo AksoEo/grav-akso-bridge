@@ -607,7 +607,7 @@ class MarkdownExt {
                     $sortBy = 'dataCountry';
                 } else if (isset($matches[2]) && $matches[2] === 'teksto') {
                     $sortBy = 'dataString';
-                } else {
+                } else if (isset($matches[2])) {
                     throw new Error('unknown sorting method ' . $sortBy . ' in list ' . $listId);
                 }
 
@@ -1245,7 +1245,7 @@ class MarkdownExt {
             return;
         }
         $grav = $this->plugin->getGrav();
-        $grav->output = $this->performHTMLPostProcessingTasks($grav->output);
+        $grav->output = \Normalizer::normalize($this->performHTMLPostProcessingTasks($grav->output));
         return $this->nonces;
     }
 
