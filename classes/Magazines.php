@@ -1,6 +1,7 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridgePlugin;
 use Grav\Plugin\AksoBridge\Utils;
 use diversen\sendfile;
@@ -418,41 +419,63 @@ class Magazines {
     }
 
     public function run() {
-        $path = $this->plugin->getGrav()['page']->header()->path_subroute;
+        $header = $this->plugin->getGrav()['page']->header();
+        $path = $header->path_subroute;
         $route = ['type' => 'error'];
+
+        $isSingleMagazine = false;
+
+        $magazines = null;
+        if (isset($header->magazines)) {
+            $magazines = explode(',', $header->magazines);
+            $isSingleMagazine = count($magazines) == 1;
+        }
+
         if (!$path) {
-            $header = $this->plugin->getGrav()['page']->header();
-            $magazines = null;
-            if (isset($header->magazines)) {
-                $magazines = explode(',', $header->magazines);
+            if (count($magazines) == 1) {
+                // just one magazine; show the detail view directly
+                $route = [
+                    'type' => 'magazine-single',
+                    'magazine' => $magazines[0],
+                ];
+            } else {
+                $route = [
+                    'type' => 'list',
+                    'magazines' => $magazines,
+                ];
             }
-            $route = [
-                'type' => 'list',
-                'magazines' => $magazines,
-            ];
         } else if (preg_match('/^(\d+)$/', $path, $matches)) {
-            $route = [
-                'type' => 'magazine',
-                'magazine' => $matches[1],
-            ];
+            if ($isSingleMagazine) {
+                Grav::instance()->redirectLangSafe($header->path_base, 302);
+            }
+            if (in_array($matches[1], $magazines)) {
+                $route = [
+                    'type' => 'magazine',
+                    'magazine' => $matches[1],
+                ];
+            }
         } else if (preg_match('/^(\d+)\/' . self::EDITION . '\/(\d+)$/', $path, $matches)) {
-            $route = [
-                'type' => 'edition',
-                'magazine' => $matches[1],
-                'edition' => $matches[2],
-            ];
+            if (in_array($matches[1], $magazines)) {
+                $route = [
+                    'type' => 'edition',
+                    'magazine' => $matches[1],
+                    'edition' => $matches[2],
+                ];
+            }
         } else if (preg_match('/^(\d+)\/' . self::EDITION . '\/(\d+)\/' . self::TOC . '\/(\d+)$/', $path, $matches)) {
-            $route = [
-                'type' => 'toc_entry',
-                'magazine' => $matches[1],
-                'edition' => $matches[2],
-                'entry' => $matches[3],
-            ];
+            if (in_array($matches[1], $magazines)) {
+                $route = [
+                    'type' => 'toc_entry',
+                    'magazine' => $matches[1],
+                    'edition' => $matches[2],
+                    'entry' => $matches[3],
+                ];
+            }
         }
 
         $pathComponents = array(
             'login_path' => $this->plugin->loginPath,
-            'base' => $this->plugin->getGrav()['page']->header()->path_base,
+            'base' => $header->path_base,
             'magazine' => self::MAGAZINE,
             'edition' => self::EDITION,
             'toc' => self::TOC,
@@ -490,7 +513,7 @@ class Magazines {
                 'magazines' => $list,
                 'show_access_banner' => $showAccessBanner,
             );
-        } else if ($route['type'] === 'magazine') {
+        } else if ($route['type'] === 'magazine' || $route['type'] === 'magazine-single') {
             $magazine = $this->getMagazine($route['magazine']);
             if (!$magazine) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
             $editions = $this->getMagazineEditions($route['magazine'], $magazine['name']);
@@ -503,7 +526,7 @@ class Magazines {
 
             return array(
                 'path_components' => $pathComponents,
-                'type' => 'magazine',
+                'type' => $route['type'],
                 'magazine' => $magazine,
                 'editions' => $editions,
             );
@@ -540,6 +563,7 @@ class Magazines {
                     $route['magazine'], $route['edition'], $magazine['name'], $edition['idHuman']
                 ),
                 'can_read' => $canRead,
+                'is_single_magazine' => $isSingleMagazine,
             );
         } else if ($route['type'] === 'toc_entry') {
             $magazine = $this->getMagazine($route['magazine']);

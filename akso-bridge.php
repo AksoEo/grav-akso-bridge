@@ -729,6 +729,9 @@ class AksoBridgePlugin extends Plugin {
                 $generatedPage->slug(basename($currentPath));
                 $generatedPage->header()->path_base = $page->route();
                 $generatedPage->header()->path_subroute = substr($currentPath, strlen($generatedPagePrefix));
+                if (isset($page->header()->magazines)) {
+                    $generatedPage->header()->magazines = $page->header()->magazines;
+                }
                 $pages->addPage($generatedPage, $currentPath);
             }
         }

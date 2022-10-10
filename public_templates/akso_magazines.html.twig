@@ -1,6 +1,7 @@
 {% extends 'partials/base.html.twig' %}
 {% block content %}
     {{page.content|raw}}
+
 <div class="akso-magazines">
     {% if akso_magazines.show_access_banner %}
     <div class="magazines-access-banner">
@@ -15,27 +16,32 @@
         </div>
     </div>
     {% endif %}
-    <ul class="magazines-cover-gallery">
-        {% for magazine in akso_magazines.magazines %}
-        <li class="magazine-item">
-            {% set magazine_path = akso_magazines.path_components.base ~ '/' ~ akso_magazines.path_components.magazine ~ '/' ~ magazine.id %}
-            {% set magazine_latest_edition_path = magazine_path ~ '/' ~ akso_magazines.path_components.edition ~ '/' ~ magazine.latest.id %}
-            <div class="item-inner-card">
-                <a class="item-title" href="{{magazine_path}}">
-                    <h3 class="inner-title">{{magazine.name}}</h3>
-                </a>
-                <h4 class="item-subtitle">{{magazine.latest.idHuman}}</h4>
-                <a class="item-cover-link" href="{{magazine_latest_edition_path}}">
-                    {% if magazine.previous %}
-                    <div class="item-cover-stack-item">
-                        {% include 'partials/akso_magazine_cover.html.twig' with { magazine: magazine, edition: magazine.previous } %}
-                    </div>
-                    {% endif %}
-                    {% include 'partials/akso_magazine_cover.html.twig' with { magazine: magazine, edition: magazine.latest } %}
-                </a>
-            </div>
-        </li>
-        {% endfor %}
-    </ul>
+
+    {% if akso_magazines.type == 'list' %}
+        <ul class="magazines-cover-gallery">
+            {% for magazine in akso_magazines.magazines %}
+            <li class="magazine-item">
+                {% set magazine_path = akso_magazines.path_components.base ~ '/' ~ akso_magazines.path_components.magazine ~ '/' ~ magazine.id %}
+                {% set magazine_latest_edition_path = magazine_path ~ '/' ~ akso_magazines.path_components.edition ~ '/' ~ magazine.latest.id %}
+                <div class="item-inner-card">
+                    <a class="item-title" href="{{magazine_path}}">
+                        <h3 class="inner-title">{{magazine.name}}</h3>
+                    </a>
+                    <h4 class="item-subtitle">{{magazine.latest.idHuman}}</h4>
+                    <a class="item-cover-link" href="{{magazine_latest_edition_path}}">
+                        {% if magazine.previous %}
+                        <div class="item-cover-stack-item">
+                            {% include 'partials/akso_magazine_cover.html.twig' with { magazine: magazine, edition: magazine.previous } %}
+                        </div>
+                        {% endif %}
+                        {% include 'partials/akso_magazine_cover.html.twig' with { magazine: magazine, edition: magazine.latest } %}
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        {% include 'partials/akso_magazine.html.twig' %}
+    {% endif %}
 </div>
 {% endblock %}
