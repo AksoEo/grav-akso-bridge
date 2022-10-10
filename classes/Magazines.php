@@ -481,18 +481,8 @@ class Magazines {
             'toc' => self::TOC,
         );
 
-        if ($route['type'] === 'list') {
-            $magazines = $this->listMagazines();
-            $list = null;
-            if ($route['magazines']) {
-                $list = [];
-                foreach ($route['magazines'] as $id) {
-                    if (isset($magazines[$id])) $list[] = $magazines[$id];
-                }
-            } else {
-                $list = $magazines;
-            }
-
+        $showAccessBanner = false;
+        if ($route['type'] === 'list' || $route['type'] === 'magazine-single') {
             $showAccessBanner = true;
             if ($this->plugin->aksoUser) {
                 // check if user can access all these magazines. if not, show banner
@@ -505,6 +495,19 @@ class Magazines {
                     }
                 }
                 $showAccessBanner = !$canAccessAll;
+            }
+        }
+
+        if ($route['type'] === 'list') {
+            $magazines = $this->listMagazines();
+            $list = null;
+            if ($route['magazines']) {
+                $list = [];
+                foreach ($route['magazines'] as $id) {
+                    if (isset($magazines[$id])) $list[] = $magazines[$id];
+                }
+            } else {
+                $list = $magazines;
             }
 
             return array(
@@ -529,6 +532,7 @@ class Magazines {
                 'type' => $route['type'],
                 'magazine' => $magazine,
                 'editions' => $editions,
+                'show_access_banner' => $showAccessBanner,
             );
         } else if ($route['type'] === 'edition') {
             $magazine = $this->getMagazine($route['magazine']);
