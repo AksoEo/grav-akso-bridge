@@ -25,7 +25,7 @@ export default function init() {
             searchBox.className = 'list-search-box';
             const searchIcon = document.createElement('img');
             searchIcon.className = 'search-icon';
-            searchIcon.src = '/user/themes/uea/images/search.svg';
+            searchIcon.src = '/user/themes/akso/images/search.svg';
             searchIcon.ariaHidden = true;
             searchBox.appendChild(searchIcon);
             const searchInput = document.createElement('input');

@@ -3,7 +3,7 @@
     text-align: left;
     @view-height: 70vh;
     margin: 1em 0;
-    background: var(--bg);
+    background: rgb(var(--bg));
     border-radius: var(--radius);
     overflow: hidden;
 
@@ -147,7 +147,7 @@
                         padding: 0.2em 0.4em;
                         background: none;
                         box-shadow: none;
-                        border: 1px solid var(--light-accent);
+                        border: 1px solid rgb(var(--light-accent));
                         border-radius: var(--radius);
                         font-size: 0.87em;
                         cursor: default;
@@ -161,8 +161,8 @@
                         }
 
                         &.is-active {
-                            background: var(--light-accent);
-                            color: var(--light-accent-fg);
+                            background: rgb(var(--light-accent));
+                            color: rgb(var(--light-accent-fg));
 
                             &::before {
                                 content: '✓';
@@ -216,7 +216,7 @@
 
                 &.full-filters-open {
                     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.2);
-                    background: var(--bg2);
+                    background: rgb(var(--bg2));
 
                     .filter-bar-inner {
                         .filter-blob {
@@ -228,7 +228,7 @@
 
             .full-filters {
                 box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.2);
-                background: var(--bg2);
+                background: rgb(var(--bg2));
                 animation: full-filters-in 0.2s;
 
                 @keyframes full-filters-in {
@@ -242,7 +242,7 @@
 
                     .state-switch {
                         display: flex;
-                        border: 1px solid var(--light-accent);
+                        border: 1px solid rgb(var(--light-accent));
                         border-radius: var(--radius);
 
                         button {
@@ -258,7 +258,7 @@
                             border-radius: 0;
 
                             &.is-selected {
-                                background: var(--light-accent);
+                                background: rgb(var(--light-accent));
                             }
                         }
                     }
@@ -292,7 +292,7 @@
 
                         .location-rating {
                             display: inline-block;
-                            background: var(--bg);
+                            background: rgb(var(--bg));
                             line-height: 0;
                             padding: 0.2em;
                             border-radius: 100px;
@@ -318,12 +318,12 @@
             padding: 0;
             margin: 0;
             list-style-type: none;
-            background: var(--bg);
+            background: rgb(var(--bg));
             border-radius: var(--radius);
 
             .location-list-item {
                 padding: 0.5em 1em;
-                border-bottom: 1px solid var(--light-separator);
+                border-bottom: 1px solid rgb(var(--light-separator));
                 transition: background 0.3s;
 
                 &:last-child {
@@ -359,11 +359,11 @@
                         opacity: 1;
                     }
 
-                    background: var(--bg2);
+                    background: rgb(var(--bg2));
                 }
 
                 &.is-highlighted {
-                    background: var(--bg2);
+                    background: rgb(var(--bg2));
                 }
             }
         }
@@ -375,7 +375,7 @@
             list-style-type: none;
 
             .internal-location-list-item {
-                border-top: 1px solid var(--light-separator);
+                border-top: 1px solid rgb(var(--light-separator));
                 padding: 0.5em 1em;
             }
         }
@@ -428,7 +428,7 @@
                         left: 50%;
                         width: 0.4em;
                         height: 0.1em;
-                        background: var(--accent);
+                        background: rgb(var(--accent));
                         transform-origin: 0.05em 0.05em;
                         transform: translate(-0.4em, -0.05em) rotate(45deg);
                     }
@@ -497,7 +497,7 @@
             .internal-locations-list {
                 margin: 1em;
                 margin-top: 0;
-                background: var(--bg1);
+                background: rgb(var(--bg1));
                 border-radius: var(--radius);
 
                 .internal-location-list-item:first-child {
@@ -511,7 +511,7 @@
 
             .location-open-hours-container {
                 margin: 1em;
-                background: var(--bg1);
+                background: rgb(var(--bg1));
                 padding: 0.5em 1em;
 
                 .open-hours-title {
@@ -534,7 +534,7 @@
 
             .address-container {
                 margin: 1em;
-                background: var(--bg1);
+                background: rgb(var(--bg1));
                 border-radius: var(--radius);
                 padding: 0.5em 1em;
 

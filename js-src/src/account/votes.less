@@ -6,12 +6,12 @@
     border-radius: var(--radius);
 }
 .vote-message {
-    background: var(--light-accent);
-    color: var(--light-accent-fg);
+    background: rgb(var(--light-accent));
+    color: rgb(var(--light-accent-fg));
 }
 .vote-error {
-    background: var(--error-bg);
-    color: var(--error-fg);
+    background: rgb(var(--error-bg));
+    color: rgb(var(--error-fg));
 }
 
 .account-vote-list {
@@ -22,7 +22,7 @@
     .vote-item {
         padding: 0.5em 1em;
         margin: 1em;
-        background: var(--bg);
+        background: rgb(var(--bg));
         border-radius: var(--radius);
         box-shadow: @shade-both;
 
@@ -33,7 +33,7 @@
                 font-size: smaller;
                 text-transform: uppercase;
                 opacity: 0.7;
-                border: 1px solid var(--light-separator);
+                border: 1px solid rgb(var(--light-separator));
                 border-radius: var(--radius);
                 padding: 0 0.2em;
             }
@@ -46,7 +46,7 @@
         .vote-time {
             font-size: 0.9em;
             opacity: 0.8;
-            border-bottom: 1px solid var(--light-separator);
+            border-bottom: 1px solid rgb(var(--light-separator));
         }
 
         .vote-description {
@@ -107,7 +107,7 @@
 }
 
 .vote-review {
-    background: var(--bg);
+    background: rgb(var(--bg));
     border-radius: var(--radius);
     margin: 1em 0;
     padding: 0.5em 1em;
@@ -158,7 +158,7 @@
 
 .vote-form {
     margin-top: 4em;
-    border: 1px solid var(--light-separator);
+    border: 1px solid rgb(var(--light-separator));
     border-radius: var(--radius);
     padding: 0.5em 1em;
 
@@ -178,12 +178,12 @@
 
 .rank-diagram {
     padding-bottom: 1em;
-    border-bottom: 1px solid var(--light-separator);
+    border-bottom: 1px solid rgb(var(--light-separator));
     margin: 1em 0;
 
     .rank-container {
         .inner-rank {
-            background: var(--bg);
+            background: rgb(var(--bg));
             border-radius: var(--radius);
             display: flex;
             border: 2px solid transparent;
@@ -200,14 +200,14 @@
                 .rank-placeholder {
                     opacity: 0.6;
                     font-size: smaller;
-                    border: 2px dashed var(--light-separator);
+                    border: 2px dashed rgb(var(--light-separator));
                     padding: 0.2em 0.4em;
                     border-radius: var(--radius);
                 }
             }
 
             &.is-dragging-over {
-                border: 2px dashed var(--accent);
+                border: 2px dashed rgb(var(--accent));
             }
         }
 
@@ -217,7 +217,7 @@
 
             .space-drag-effect {
                 position: absolute;
-                background: var(--accent);
+                background: rgb(var(--accent));
                 width: 100%;
                 height: 1px;
                 top: 50%;
@@ -231,12 +231,12 @@
                 position: absolute;
                 top: 50%;
                 left: 50%;
-                background: var(--accent);
+                background: rgb(var(--accent));
                 width: 1.2em;
                 height: 1.2em;
                 border-radius: 1em;
                 z-index: 2;
-                color: var(--accent-fg);
+                color: rgb(var(--accent-fg));
                 transform: translate(-50%, -50%) scale(0.00001);
                 transition: transform 0.1s;
                 pointer-events: none;
@@ -283,7 +283,7 @@
         }
 
         .unranked-items {
-            background: var(--bg);
+            background: rgb(var(--bg));
             border: 2px solid transparent;
             border-radius: var(--radius);
             padding: 0.5em 1em;
@@ -292,14 +292,14 @@
 
         &.is-dragging-over {
             .unranked-items {
-                border: 2px dashed var(--accent);
+                border: 2px dashed rgb(var(--accent));
             }
         }
     }
 
     .option-card {
         display: inline-block;
-        background: var(--bg2);
+        background: rgb(var(--bg2));
         border-radius: var(--radius);
         -webkit-user-select: none;
         user-select: none;
@@ -317,7 +317,7 @@
     padding: 0;
 
     .ranked-option {
-        background: var(--bg);
+        background: rgb(var(--bg));
         border-radius: var(--radius);
         padding: 0.5em 1em;
         margin: 0.5em 0;
@@ -359,7 +359,7 @@
 }
 
 .vote-results {
-    background: var(--bg);
+    background: rgb(var(--bg));
     border-radius: var(--radius);
     padding: 0.5em 1em;
 
@@ -377,7 +377,7 @@
     }
 
     .result-status {
-        background: var(--bg1);
+        background: rgb(var(--bg1));
         padding: 0.2em 0.5em;
         display: inline-block;
         border-radius: var(--radius);
@@ -417,7 +417,7 @@
     .stv-rounds-container {
         margin-top: 0.5em;
         padding: 0.2em 0.5em;
-        background: var(--bg1);
+        background: rgb(var(--bg1));
         border-radius: var(--radius);
 
         summary {
@@ -431,7 +431,7 @@
 
             .stv-round {
                 border-radius: var(--radius);
-                border: 1px solid var(--light-separator);
+                border: 1px solid rgb(var(--light-separator));
                 margin-top: 0.5em;
 
                 .round-title {

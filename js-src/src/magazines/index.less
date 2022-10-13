@@ -3,7 +3,7 @@
 
 .akso-magazines {
     .magazines-access-banner {
-        background: var(--bg2);
+        background: rgb(var(--bg2));
         border-radius: var(--radius);
         box-shadow: @inset-both;
         padding: 1em;
@@ -35,12 +35,12 @@
 
             .item-inner-card {
                 position: relative;
-                background: var(--bg);
+                background: rgb(var(--bg));
                 border-radius: var(--radius);
                 box-shadow: @shade-both;
                 overflow: hidden;
                 padding-bottom: 0.5em;
-                border-bottom: 0.5em solid var(--accent);
+                border-bottom: 0.5em solid rgb(var(--accent));
 
                 .item-title {
                     display: block;
@@ -136,7 +136,7 @@
             padding: 1em;
             box-shadow: @shade-both;
             border-radius: var(--radius);
-            background: var(--bg);
+            background: rgb(var(--bg));
             list-style-type: none;
 
             .edition-year-item {
@@ -179,7 +179,7 @@
                     top: 50%;
                     left: 0;
                     transform-origin: 100% 0;
-                    background: var(--bg);
+                    background: rgb(var(--bg));
                     animation: magazine-edition-year-header-pulse-a 0.5s 0.5s ease-out both;
                     @keyframes magazine-edition-year-header-pulse-a {
                         0% {
@@ -204,7 +204,7 @@
                         left: 0;
                         right: 0;
                         bottom: 0;
-                        background: var(--bg);
+                        background: rgb(var(--bg));
                         transform-origin: 0 0;
                         animation: magazine-edition-year-header-pulse-mf 1s 0.5s ease-out both;
 
@@ -237,7 +237,7 @@
         .edition-page-content-split {
             display: flex;
             align-items: flex-start;
-            background: var(--bg);
+            background: rgb(var(--bg));
             border-radius: var(--radius);
             box-shadow: @shade-both;
 
@@ -287,7 +287,7 @@
             }
             .edition-downloads {
                 display: flex;
-                border-top: 1px solid var(--accent);
+                border-top: 1px solid rgb(var(--accent));
                 padding: 1em;
 
                 .download-button {
@@ -303,7 +303,7 @@
                     }
                     .download-label {
                         flex: 1;
-                        border-left: 1px solid var(--light-separator);
+                        border-left: 1px solid rgb(var(--light-separator));
                         padding: 0.5em;
                         text-align: left;
                     }
@@ -362,7 +362,7 @@
 
         .edition-contents {
             border-radius: var(--radius);
-            background: var(--bg2);
+            background: rgb(var(--bg2));
             margin-top: 1em;
             box-shadow: @inset-both;
 
@@ -444,7 +444,7 @@
                     height: 4px;
                     padding-top: 0;
                     padding-bottom: 0;
-                    background: var(--light-separator);
+                    background: rgb(var(--light-separator));
                     animation: magazine-edition-content-list-item-collapse 0.3s cubic-bezier(.2, .3, 0, 1);
 
                     @keyframes magazine-edition-content-list-item-collapse {
@@ -469,13 +469,13 @@
                 padding: 0.5em 1em;
                 text-align: center;
                 transition: margin-top 0.3s cubic-bezier(.2, .3, 0, 1);
-                color: var(--accent);
+                color: rgb(var(--accent));
                 border-radius: var(--radius);
 
                 &::before {
                     content: '';
                     position: absolute;
-                    background: linear-gradient(to top, var(--bg2), var(--bg2-0));
+                    background: ~"linear-gradient(to top, rgb(var(--bg2)), rgb(var(--bg2)/0))";
                     pointer-events: none;
                     height: 200%;
                     left: 0;
@@ -533,7 +533,7 @@
 
                 &:focus {
                     outline: none;
-                    box-shadow: 0 0 0 var(--border-width) var(--accent-50);
+                    box-shadow: ~"0 0 0 var(--border-width) rgb(var(--accent)/0.5)";
                     transition: margin-top 0.3s cubic-bezier(.2, .3, 0, 1);
                 }
             }
@@ -571,7 +571,7 @@
     .entry-recitation {
         font-size: 0.875em;
         margin-top: 0.5em;
-        border: 1px solid var(--light-separator);
+        border: 1px solid rgb(var(--light-separator));
         border-radius: var(--radius);
         padding: 0.5em;
         display: flex;
@@ -618,7 +618,7 @@
         }
 
         .toc-sticky-recitation {
-            background: var(--bg);
+            background: rgb(var(--bg));
 
             &.is-sticky {
                 position: sticky;
@@ -643,7 +643,7 @@
         }
 
         .toc-entry-text {
-            background: var(--bg);
+            background: rgb(var(--bg));
             border-radius: var(--radius);
             padding: 1em;
             box-shadow: @shade-both;
@@ -656,8 +656,8 @@
             }
 
             &.requires-perms {
-                background: var(--error-bg);
-                color: var(--error-fg);
+                background: rgb(var(--error-bg));
+                color: rgb(var(--error-fg));
                 --accent: var(--error-fg);
             }
         }

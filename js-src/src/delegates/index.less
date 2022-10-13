@@ -8,9 +8,9 @@
         display: inline-block;
         width: 1.2em;
         height: 1.2em;
-        background-color: var(--bg);
+        background-color: rgb(var(--bg));
         border-radius: 50%;
-        background-image: url(/user/themes/uea/images/search.svg);
+        background-image: url(/user/themes/akso/images/search.svg);
         background-size: 80%;
         background-repeat: no-repeat;
         background-position: center;
@@ -40,7 +40,7 @@
 
 .delegates-filter-picker {
     display: flex;
-    background: var(--bg2);
+    background: rgb(var(--bg2));
     border-radius: calc(var(--radius) + 4px);
     padding: 4px;
     margin: 1em 0;
@@ -61,8 +61,8 @@
         }
 
         &.selected a {
-            background: linear-gradient(to bottom, var(--light-accent), var(--light-accent1));
-            color: var(--light-accent-fg);
+            background: linear-gradient(to bottom, rgb(var(--light-accent)), rgb(var(--light-accent-grad1)));
+            color: rgb(var(--light-accent-fg));
             font-weight: bold;
             border-radius: var(--radius);
             box-shadow: @shade-both;
@@ -91,7 +91,7 @@
     }
 
     .subject-search {
-        background: var(--bg);
+        background: rgb(var(--bg));
         border-radius: var(--radius);
         box-shadow: @shade-both;
         margin-bottom: 1em;
@@ -141,7 +141,7 @@
 
     .delegates-additional-filters {
         .filter-item {
-            background: var(--bg);
+            background: rgb(var(--bg));
             border-radius: var(--radius);
             box-shadow: @shade-both;
             margin: 0.1em 0;
@@ -194,7 +194,7 @@
 .subject-list .subject-item {
     margin: 0.5em 0;
     padding: 0.5em 1em;
-    background: var(--bg);
+    background: rgb(var(--bg));
     border-radius: var(--radius);
     box-shadow: @shade-both;
 
@@ -212,7 +212,7 @@
 .subject-list-selection-bar {
     position: static;
     top: 1em;
-    background: var(--bg2);
+    background: rgb(var(--bg2));
     box-shadow: @shade-both;
     border-radius: var(--radius);
     display: flex;
@@ -277,7 +277,7 @@
 }
 
 .delegate-item {
-    background: var(--bg);
+    background: rgb(var(--bg));
     border-radius: var(--radius);
     margin: 1em 0;
     padding: 0.5em 1em;
@@ -319,7 +319,7 @@
         margin-top: 0.5em;
         font-size: smaller;
         font-weight: bold;
-        border-bottom: 1px solid var(--light-separator);
+        border-bottom: 1px solid rgb(var(--light-separator));
     }
     .delegate-subjects {
         padding: 0;
@@ -329,7 +329,7 @@
     .delegate-hosting-stub {
         display: inline-block;
         font-size: smaller;
-        border: 1px solid var(--accent);
+        border: 1px solid rgb(var(--accent));
         border-radius: var(--radius);
         padding: 0 0.4em;
         float: right;
@@ -350,7 +350,7 @@
     }
 
     & + .subject-item {
-        border-top: 1px solid var(--light-separator);
+        border-top: 1px solid rgb(var(--light-separator));
     }
 }
 
@@ -375,7 +375,7 @@
     }
 
     & + .delegation-cities {
-        border-top: 1px solid var(--light-separator);
+        border-top: 1px solid rgb(var(--light-separator));
     }
 }
 
@@ -396,8 +396,8 @@
                     box-shadow: 0 0 0 40px transparent;
                 }
                 60% {
-                    background: var(--light-accent);
-                    box-shadow: 0 0 0 8px var(--light-accent);
+                    background: rgb(var(--light-accent));
+                    box-shadow: 0 0 0 8px rgb(var(--light-accent));
                 }
             }
         }
@@ -445,7 +445,7 @@
 .delegate-additional-details {
     .codeholder-details {
         .akso-codeholder-factoids {
-            background: var(--bg2);
+            background: rgb(var(--bg2));
             overflow: hidden;
             border-radius: var(--radius);
         }
@@ -456,7 +456,7 @@
         margin-bottom: 0.5em;
     }
     .delegate-hosting {
-        background: var(--bg);
+        background: rgb(var(--bg));
         border-radius: var(--radius);
         box-shadow: @shade-both;
         padding-top: 0.5em;
@@ -469,7 +469,7 @@
         .hosting-description {
             margin: 0.5em 1em;
             padding: 0.5em 1em;
-            background: var(--bg2);
+            background: rgb(var(--bg2));
             border-radius: var(--radius);
         }
         .hosting-ps-profile {
@@ -512,7 +512,7 @@
 
         .country-item {
             margin: 0.2em 0;
-            background: var(--bg);
+            background: rgb(var(--bg));
             border-radius: var(--radius);
             box-shadow: @shade-both;
             padding: 0.5em 1em;
@@ -533,7 +533,7 @@
 
         .city-item {
             margin: 0.2em 0;
-            background: var(--bg);
+            background: rgb(var(--bg));
             border-radius: var(--radius);
             box-shadow: @shade-both;
             padding: 0.5em 1em;
@@ -546,8 +546,8 @@
                         box-shadow: 0 0 0 40px transparent, @shade-both;
                     }
                     60% {
-                        background: var(--light-accent);
-                        box-shadow: 0 0 0 8px var(--light-accent), @shade-both;
+                        background: rgb(var(--light-accent));
+                        box-shadow: 0 0 0 8px rgb(var(--light-accent)), @shade-both;
                     }
                 }
             }

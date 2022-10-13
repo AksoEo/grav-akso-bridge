@@ -4,7 +4,7 @@
 .registration-form .noscript-note {
     display: block;
     padding: 0.5em 1em;
-    background: var(--bg2);
+    background: rgb(var(--bg2));
     font-size: 0.9em;
     margin: 1em;
     border-radius: var(--radius);
@@ -18,7 +18,7 @@
     text-align: center;
     font-size: 1.5em;
     font-weight: bold;
-    border-bottom: 2px solid var(--accent);
+    border-bottom: 2px solid rgb(var(--accent));
 }
 .registration-form .form-item {
     padding: 0.5em 1em;
@@ -90,28 +90,28 @@
     justify-content: space-between;
 }
 .registration-form .registration-message {
-    background: var(--light-accent);
-    color: var(--light-accent-fg);
+    background: rgb(var(--light-accent));
+    color: rgb(var(--light-accent-fg));
     border-radius: var(--radius);
     margin-bottom: 1em;
     padding: 0.5em 1em;
 }
 .registration-form .registration-error {
-    background: var(--error-bg);
-    color: var(--error-fg);
+    background: rgb(var(--error-bg));
+    color: rgb(var(--error-fg));
     border-radius: var(--radius);
     margin-bottom: 1em;
     padding: 0.5em 1em;
 }
 .registration-form .registration-suggestion-banner {
-    background: var(--bg2);
+    background: rgb(var(--bg2));
     border-radius: var(--radius);
     margin-bottom: 1em;
     padding: 0.5em 1em;
 }
 .registration-form .field-error {
-    background: var(--error-bg);
-    color: var(--error-fg);
+    background: rgb(var(--error-bg));
+    color: rgb(var(--error-fg));
     border-radius: var(--radius);
     font-size: 0.9em;
     margin-top: 0.3em;
@@ -130,7 +130,7 @@
     margin-bottom: 1em;
     padding: 0.5em 1em;
     border-radius: var(--radius);
-    background: var(--bg2);
+    background: rgb(var(--bg2));
 }
 .registration-form .registration-payment h3 {
     display: flex;
@@ -140,8 +140,8 @@
     margin-bottom: 0.5em;
 }
 .registration-form .registration-payment.all-paid {
-    background: var(--light-accent);
-    color: var(--light-accent-fg);
+    background: rgb(var(--light-accent));
+    color: rgb(var(--light-accent-fg));
 }
 .registration-form .registration-payment .all-paid-title {
     margin-bottom: 0;
@@ -168,8 +168,8 @@
     list-style-type: none;
 }
 .registration-form.is-payment .payment-methods .payment-method {
-    background: var(--bg2);
-    border-radius: var(--radius);
+    background: rgb(var(--bg2));
+    border-radius: rgb(var(--radius));
     padding: 1em;
     margin: 1em 0;
     text-align: left;

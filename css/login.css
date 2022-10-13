@@ -2,8 +2,8 @@
     margin: 1em auto;
     padding: 0.3em 0.5em;
     text-align: center;
-    background: var(--error-bg);
-    color: var(--error-fg);
+    background: rgb(var(--error-bg));
+    color: rgb(var(--error-fg));
     border-radius: var(--radius);
     max-width: 32ch;
 
@@ -17,9 +17,8 @@
 }
 
 #akso-login {
-    /* TODO: move this into LESS and use variables */
     margin: 1em auto;
-    background: var(--bg);
+    background: rgb(var(--bg));
     border-radius: var(--radius);
     padding: 1em;
     max-width: 32ch;
@@ -113,9 +112,9 @@
 /* totp setup */
 #akso-login .totp-setup-alert {
     padding: 0.5em 1em;
-    background: var(--bg1);
+    background: rgb(var(--bg1));
     border-radius: var(--radius);
-    border-left: 4px solid var(--accent);
+    border-left: 4px solid rgb(var(--accent));
 }
 #akso-login .totp-setup-description {
     font-size: 0.9em;
@@ -123,12 +122,12 @@
 #akso-login .totp-setup-code-container {
     margin: 1em -0.5em;
     padding: 1em;
-    border: 1px solid var(--light-separator);
+    border: 1px solid rgb(var(--light-separator));
     border-radius: var(--radius);
     --bg: #fff;
     --fg: #000;
-    background: var(--bg);
-    color: var(--fg);
+    background: rgb(var(--bg));
+    color: rgb(var(--fg));
 }
 #akso-login .totp-setup-instruction {
     text-align: center;

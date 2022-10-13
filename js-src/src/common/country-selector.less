@@ -1,7 +1,7 @@
 @import '../prelude';
 
 .country-overview-selector {
-    background: var(--bg);
+    background: rgb(var(--bg));
     border-radius: var(--radius);
     padding: 1em;
     box-shadow: @shade-both;
@@ -28,13 +28,13 @@
     .list-search-box-container {
         position: sticky;
         top: 0;
-        background: var(--bg);
-        box-shadow: 0 -0.5em 0 1em var(--bg);
+        background: rgb(var(--bg));
+        box-shadow: 0 -0.5em 0 1em rgb(var(--bg));
     }
     .list-search-box {
         display: flex;
         align-items: center;
-        background: linear-gradient(to bottom, var(--button1), var(--button));
+        background: linear-gradient(to bottom, rgb(var(--button-grad1)), rgb(var(--button)));
         border-radius: var(--radius);
         box-shadow: @shade-both;
         padding-left: 0.6em;
@@ -78,7 +78,7 @@
         }
 
         .country-item {
-            background: var(--bg1);
+            background: rgb(var(--bg1));
             border-radius: var(--radius);
             box-shadow: @shade-both;
 
@@ -95,10 +95,10 @@
             }
 
             &.is-current {
-                background: var(--accent);
+                background: rgb(var(--accent));
 
                 .inner-item {
-                    color: var(--accent-fg);
+                    color: rgb(var(--accent-fg));
                 }
             }
         }

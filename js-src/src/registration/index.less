@@ -33,9 +33,9 @@
     }
 }
 .checkbox-checked() {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-fg);
+    background: rgb(var(--accent));
+    border-color: rgb(var(--accent));
+    color: rgb(var(--accent-fg));
 
     &::before {
         transform: rotate(-45deg);
@@ -49,15 +49,15 @@
     text-align: left;
 
     .error-banner {
-        background: var(--error-bg);
-        color: var(--error-fg);
+        background: rgb(var(--error-bg));
+        color: rgb(var(--error-fg));
         border-radius: var(--radius);
         padding: 1em;
         margin-bottom: 1em;
     }
     .message-banner {
-        background: var(--light-accent);
-        color: var(--light-accent-fg);
+        background: rgb(var(--light-accent));
+        color: rgb(var(--light-accent-fg));
         border-radius: var(--radius);
         padding: 1em;
         margin-bottom: 1em;
@@ -77,17 +77,17 @@
         // the version tag on magazines
         font-size: smaller;
         opacity: 0.7;
-        border: 1px solid var(--light-separator);
+        border: 1px solid rgb(var(--light-separator));
         border-radius: var(--radius);
         padding: 0.1em 0.2em;
     }
 
     .registration-notice {
-        border: 1px solid var(--accent);
+        border: 1px solid rgb(var(--accent));
         border-radius: var(--radius);
         padding: 1em;
         margin: 1em 0;
-        background: var(--bg);
+        background: rgb(var(--bg));
 
         .notice-buttons {
             margin-top: 0.5em;
@@ -103,12 +103,12 @@
         }
         .summary-name {
             font-size: 1.1em;
-            border-bottom: 1px solid var(--light-separator);
+            border-bottom: 1px solid rgb(var(--light-separator));
             margin-bottom: 0.2em;
         }
 
         .offers-summary {
-            border-top: 1px solid var(--light-separator);
+            border-top: 1px solid rgb(var(--light-separator));
             padding-top: 0.5em;
 
             .offer-year {
@@ -119,7 +119,7 @@
                 }
 
                 .offer-item {
-                    background: var(--bg2);
+                    background: rgb(var(--bg2));
                     border-radius: var(--radius);
                     margin: 0.5em 0;
                     padding: 0.5em;
@@ -171,15 +171,14 @@
     }
 
     .registration-settings {
-        background: var(--bg);
+        background: rgb(var(--bg));
         padding: 1em;
         margin: 1em 0;
-        background: var(--bg);
         border-radius: var(--radius);
         box-shadow: @shade-both;
 
         .required-star {
-            color: var(--error);
+            color: rgb(var(--error));
         }
 
         .settings-section {
@@ -247,7 +246,7 @@
 
             .own-field-ask {
                 font-size: smaller;
-                color: var(--accent);
+                color: rgb(var(--accent));
                 margin-bottom: 0.5em;
             }
         }
@@ -272,7 +271,7 @@
                 width: 0.6em;
                 height: 0.6em;
                 border-radius: 50%;
-                border: 2px solid var(--accent);
+                border: 2px solid rgb(var(--accent));
                 border-right-color: transparent;
                 animation: settings-field-address-field-loading 1s infinite linear;
                 @keyframes settings-field-address-field-loading {
@@ -282,7 +281,7 @@
             }
         }
         .settings-field.is-address-field .address-field-error {
-            color: var(--error);
+            color: rgb(var(--error));
             font-size: smaller;
         }
         .settings-field.is-address-field .js-select-container {
@@ -328,7 +327,7 @@
                     max-width: 500px;
                     padding: 0.5em 1em;
                     border-radius: var(--radius);
-                    background: var(--bg2);
+                    background: rgb(var(--bg2));
                     font-size: smaller;
                     text-align: left;
                 }
@@ -364,7 +363,7 @@
     }
 
     .form-summary {
-        background: var(--bg);
+        background: rgb(var(--bg));
         border-radius: var(--radius);
         box-shadow: @shade-both;
         margin: 1em 0;
@@ -379,7 +378,7 @@
 
         .offer-year {
             margin-top: 1em;
-            background: var(--bg);
+            background: rgb(var(--bg));
             border-radius: var(--radius);
             box-shadow: @shade-both;
 
@@ -426,7 +425,7 @@
             }
 
             .year-expansion-switch:checked ~ .year-title {
-                border-bottom: 1px solid var(--accent);
+                border-bottom: 1px solid rgb(var(--accent));
 
                 .title-arrow {
                     transform: rotate(90deg);
@@ -436,8 +435,8 @@
             .year-already-registered {
                 margin: 0.5em;
                 border-radius: var(--radius);
-                background: var(--light-accent);
-                color: var(--light-accent-fg);
+                background: rgb(var(--light-accent));
+                color: rgb(var(--light-accent-fg));
                 padding: 0.5em 1em;
                 display: none;
 
@@ -480,7 +479,7 @@
                 .offer-item {
                     margin: 0.5em;
                     padding: 0.5em 1em;
-                    background: var(--bg2);
+                    background: rgb(var(--bg2));
                     border-radius: var(--radius);
 
                     .offer-item-inner {
@@ -520,7 +519,7 @@
                                 font-size: 0.9em;
                                 padding: 0.1em 0.2em;
                                 border-radius: var(--radius);
-                                border: 1px solid var(--light-separator);
+                                border: 1px solid rgb(var(--light-separator));
                             }
 
                             font-weight: bold;
@@ -719,7 +718,7 @@
 
                 .payment-method {
                     margin: 0.5em 0;
-                    background: var(--bg);
+                    background: rgb(var(--bg));
                     border-radius: var(--radius);
                     box-shadow: @shade-both;
 
@@ -743,7 +742,7 @@
                         }
 
                         .method-intermediary {
-                            background: var(--bg2);
+                            background: rgb(var(--bg2));
                             border-radius: var(--radius);
                             padding: 0.5em 1em;
 
@@ -759,7 +758,7 @@
                                 display: flex;
                                 justify-content: space-between;
                                 flex-wrap: wrap;
-                                border-top: 1px solid var(--light-separator);
+                                border-top: 1px solid rgb(var(--light-separator));
 
                                 &.is-total {
                                     font-weight: bold;
@@ -772,7 +771,7 @@
                         }
 
                         .method-intermediary-info {
-                            background: var(--bg2);
+                            background: rgb(var(--bg2));
                             border-radius: var(--radius);
                             padding: 0.5em 1em;
                             margin-top: 0.5em;
@@ -817,7 +816,7 @@
                             display: flex;
                             justify-content: space-between;
                             flex-wrap: wrap;
-                            border-top: 1px solid var(--light-separator);
+                            border-top: 1px solid rgb(var(--light-separator));
                             margin-top: 0.5em;
                         }
 
@@ -870,7 +869,7 @@
                 margin: 0;
                 padding: 0;
                 list-style-type: none;
-                background: var(--bg);
+                background: rgb(var(--bg));
                 border-radius: var(--radius);
                 padding: 0 1em;
                 overflow: hidden;
@@ -878,7 +877,7 @@
 
                 .org-year-state {
                     margin: 0.5em 0;
-                    background: var(--bg2);
+                    background: rgb(var(--bg2));
                     border-radius: var(--radius);
                     padding: 0.5em 1em;
                     display: flex;

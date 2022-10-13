@@ -2,7 +2,7 @@
 @import '../common/codeholder-factoids';
 
 .org-list-tags {
-    background: var(--bg);
+    background: rgb(var(--bg));
     border-radius: var(--radius);
     padding: 0.5em 1em;
     box-shadow: @shade-both;
@@ -34,8 +34,8 @@
 
         .tag-item {
             display: inline-flex;
-            background: var(--bg2);
-            color: var(--accent);
+            background: rgb(var(--bg2));
+            color: rgb(var(--accent));
             border-radius: var(--radius);
             box-shadow: @shade-both;
 
@@ -47,8 +47,8 @@
             }
 
             &.is-current {
-                background: var(--accent);
-                color: var(--accent-fg);
+                background: rgb(var(--accent));
+                color: rgb(var(--accent-fg));
             }
         }
     }
@@ -61,7 +61,7 @@
 
         .inner-org-card {
             margin-top: 0.5em;
-            background: var(--bg);
+            background: rgb(var(--bg));
             border-radius: var(--radius);
             box-shadow: @shade-both;
 
@@ -88,13 +88,13 @@
 
                     &:focus {
                         outline: none;
-                        color: var(--accent);
+                        color: rgb(var(--accent));
                     }
                 }
 
                 .akso-codeholder-factoids {
-                    border-top: 1px solid var(--light-separator);
-                    border-bottom: 1px solid var(--light-separator);
+                    border-top: 1px solid rgb(var(--light-separator));
+                    border-bottom: 1px solid rgb(var(--light-separator));
                 }
 
                 .org-post-info {

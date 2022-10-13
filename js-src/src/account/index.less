@@ -1,7 +1,7 @@
 @import '../registration/index.less';
 
 .account-details, .account-memberships, .account-profile-picture-page {
-    background: var(--bg);
+    background: rgb(var(--bg));
     border-radius: var(--radius);
     margin: 1em 0;
     text-align: left;
@@ -19,7 +19,7 @@
         img {
             width: 100%;
             height: 100%;
-            border: 1px solid var(--accent);
+            border: 1px solid rgb(var(--accent));
             object-fit: contain;
             border-radius: 50%;
             overflow: hidden;
@@ -48,7 +48,7 @@
 
     .field-visibility-item {
         padding: 0.1em 0.2em;
-        background: var(--bg1);
+        background: rgb(var(--bg1));
         border-radius: var(--radius);
 
         .visibility-icon {
@@ -79,7 +79,7 @@
                 display: block;
             }
             th {
-                border-top: 1px solid var(--light-separator);
+                border-top: 1px solid rgb(var(--light-separator));
                 padding-bottom: 0;
                 margin-bottom: 0;
             }
@@ -113,7 +113,7 @@
 
     .account-pending {
         --accent: var(--warning);
-        color: var(--warning);
+        color: rgb(var(--warning));
 
         .pending-mark {
             font-size: 0.8em;
@@ -167,7 +167,7 @@
 
         .membership-category {
             padding: 0.5em 1em;
-            border-bottom: 1px solid var(--light-separator);
+            border-bottom: 1px solid rgb(var(--light-separator));
 
             &:last-child {
                 border-bottom: none;
@@ -187,7 +187,7 @@
                     font-size: 0.8em;
                     padding: 0 0.2em;
                     border-radius: var(--radius);
-                    background: var(--bg2);
+                    background: rgb(var(--bg2));
 
                     &.is-lifetime {
                         display: block;
@@ -203,7 +203,7 @@
         text-align: center;
         padding: 0.5em 1em;
         font-size: 0.8em;
-        border-top: 1px solid var(--light-separator);
+        border-top: 1px solid rgb(var(--light-separator));
     }
 }
 
@@ -219,9 +219,9 @@
 
 .account-pending-request-banner, .account-cancel-change-request {
     --accent: var(--warning);
-    background: var(--bg);
+    background: rgb(var(--bg));
     border-radius: var(--radius);
-    border: 1px solid var(--accent);
+    border: 1px solid rgb(var(--accent));
     padding: 1em;
     margin: 1em 0;
 
@@ -253,7 +253,7 @@
 
     .cancel-button {
         font-size: smaller;
-        background: var(--button);
+        background: rgb(var(--button));
         float: right;
     }
 }
@@ -269,7 +269,7 @@
         position: relative;
         margin: 0.2em 0 1.5em 0;
         padding: 1em;
-        border: 1px solid var(--accent);
+        border: 1px solid rgb(var(--accent));
         border-radius: var(--radius);
 
         .alert-title {
@@ -294,7 +294,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: var(--accent);
+            background: rgb(var(--accent));
             border-radius: var(--radius);
             opacity: 0;
             pointer-events: none;
@@ -320,7 +320,7 @@
             content: '';
             position: absolute;
             border-radius: var(--radius);
-            border: 1px solid var(--accent);
+            border: 1px solid rgb(var(--accent));
             pointer-events: none;
             @keyframes account-country-changed-ambient {
                 0% {
@@ -412,12 +412,12 @@
         margin-bottom: 1em;
     }
     .error-banner {
-        background: var(--error-bg);
-        color: var(--error-fg);
+        background: rgb(var(--error-bg));
+        color: rgb(var(--error-fg));
     }
     .message-banner {
-        background: var(--light-accent);
-        color: var(--light-accent-fg);
+        background: rgb(var(--light-accent));
+        color: rgb(var(--light-accent-fg));
     }
 
     .inner-title {
@@ -433,7 +433,7 @@
             height: 12em;
             aspect-ratio: ~"1 / 1";
             object-fit: contain;
-            border: 1px solid var(--accent);
+            border: 1px solid rgb(var(--accent));
         }
 
         .empty-picture {
@@ -444,8 +444,8 @@
             width: 12em;
             height: 12em;
             max-width: 100%;
-            background: var(--bg1);
-            border: 1px solid var(--light-separator);
+            background: rgb(var(--bg1));
+            border: 1px solid rgb(var(--light-separator));
         }
     }
 
@@ -455,7 +455,7 @@
 
     .picture-upload-form {
         .file-input-container {
-            border: 1px solid var(--light-separator);
+            border: 1px solid rgb(var(--light-separator));
             border-radius: var(--radius);
 
             .file-input {
@@ -481,7 +481,7 @@
         margin-top: 1em;
 
         h3 {
-            border-top: 1px solid var(--light-separator);
+            border-top: 1px solid rgb(var(--light-separator));
             padding-top: 0.5em;
         }
 
@@ -492,8 +492,8 @@
         }
         .delete-confirmation {
             padding: 0.5em 1em;
-            border: 1px solid var(--error);
-            background: var(--bg);
+            border: 1px solid rgb(var(--error));
+            background: rgb(var(--bg));
             border-radius: var(--radius);
 
             .confirmation-buttons {
@@ -532,7 +532,7 @@
     .login-item {
         margin: 1em 0;
         border-radius: var(--radius);
-        background: var(--bg);
+        background: rgb(var(--bg));
         box-shadow: @shade-both;
         padding: 0.5em 1em;
 
@@ -548,7 +548,7 @@
         .item-location {
             .item-region, .item-city {
                 font-size: 0.9em;
-                border: 1px solid var(--light-separator);
+                border: 1px solid rgb(var(--light-separator));
                 border-radius: var(--radius);
                 padding: 0.1em 0.2em;
 

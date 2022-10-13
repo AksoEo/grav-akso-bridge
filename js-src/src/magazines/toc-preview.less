@@ -16,7 +16,7 @@
         top: 0;
         left: 0;
         border-radius: var(--radius);
-        background: var(--bg);
+        background: rgb(var(--bg));
         pointer-events: none;
     }
     .transition-cover-node {
@@ -40,7 +40,7 @@
         margin-top: 3em;
         max-width: 800px;
         border-radius: var(--radius);
-        background: var(--bg);
+        background: rgb(var(--bg));
         display: flex;
         padding: 1em;
 
@@ -100,7 +100,7 @@
             }
 
             .preview-contents {
-                background: var(--bg2);
+                background: rgb(var(--bg2));
                 border-radius: var(--radius);
 
                 .contents-notice {
@@ -109,13 +109,13 @@
                     opacity: 0.6;
 
                     &.is-error {
-                        color: var(--error);
+                        color: rgb(var(--error));
                     }
                 }
 
                 .toc-item {
                     padding: 0.5em 1em;
-                    border-top: 1px solid var(--light-separator);
+                    border-top: 1px solid rgb(var(--light-separator));
 
                     &:first-child {
                         border-top: none;
