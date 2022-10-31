@@ -211,7 +211,9 @@ export default class AudioPlayer {
     }
 
     update() {
-        const playing = !this.audio.paused;
+        const error = this.audio.error;
+
+        const playing = !error && !this.audio.paused;
         this.playPauseButton.dataset.state = playing ? 'playing' : 'paused';
         this.playPauseButton.setAttribute('aria-label', playing
             ? locale.magazines.entry_recitation_btn_pause
@@ -246,8 +248,13 @@ export default class AudioPlayer {
         }
 
         this.timeCurrent.textContent = formatAudioDuration(this.audio.currentTime, this.audio.duration);
-        if (this.audio.duration) {
+
+        this.timeDuration.classList.remove('is-error');
+        if (Number.isFinite(this.audio.duration)) {
             this.timeDuration.textContent = formatAudioDuration(this.audio.duration);
+        } else if (error) {
+            this.timeDuration.textContent = locale.magazines.entry_recitation_error;
+            this.timeDuration.classList.add('is-error');
         } else {
             this.timeDuration.textContent = locale.magazines.entry_recitation_loading;
         }
