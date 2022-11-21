@@ -533,6 +533,7 @@ class Magazines {
                 'magazine' => $magazine,
                 'editions' => $editions,
                 'show_access_banner' => $showAccessBanner,
+                'title' => $this->plugin->locale['magazines']['title_prefix'] . $magazine['name'],
             );
         } else if ($route['type'] === 'edition') {
             $magazine = $this->getMagazine($route['magazine']);
@@ -568,6 +569,8 @@ class Magazines {
                 ),
                 'can_read' => $canRead,
                 'is_single_magazine' => $isSingleMagazine,
+                'title' => $this->plugin->locale['magazines']['title_prefix'] . $magazine['name']
+                    . ': ' . $edition['idHuman'],
             );
         } else if ($route['type'] === 'toc_entry') {
             $magazine = $this->getMagazine($route['magazine']);
@@ -583,6 +586,10 @@ class Magazines {
             );
             if (!$entry) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
 
+            $doc = new \DOMDocument();
+            $doc->loadHTML($entry['title_rendered']);
+            $plain_title = $doc->textContent;
+
             return array(
                 'path_components' => $pathComponents,
                 'type' => 'toc_entry',
@@ -590,6 +597,9 @@ class Magazines {
                 'edition' => $edition,
                 'entry' => $entry,
                 'can_read' => $canRead,
+                'title' => $plain_title . ' — '
+                    . $this->plugin->locale['magazines']['title_prefix'] . $magazine['name']
+                    . ': ' . $edition['idHuman'],
             );
         } else if ($route['type'] === 'error') {
             $this->plugin->getGrav()->fireEvent('onPageNotFound');

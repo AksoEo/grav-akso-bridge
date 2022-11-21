@@ -276,6 +276,10 @@ class AksoBridgePlugin extends Plugin {
             $state['akso_magazine_cover_path'] = self::MAGAZINE_COVER_PATH;
             $state['akso_registration_path'] = $this->registrationPath;
             $state['akso_magazines'] = $magazines->run();
+
+            if (isset($state['akso_magazines']['title'])) {
+                $state['page_title_override'] = $state['akso_magazines']['title'];
+            }
             $app->close();
         } else if ($templateId === 'akso_country_org_list') {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/org-lists.css');
