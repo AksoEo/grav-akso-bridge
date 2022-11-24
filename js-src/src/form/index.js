@@ -349,7 +349,7 @@ class FormInput {
             else input.value = Number.isFinite(value) ? value : '';
         } else if (type === 'text') {
             const input = this.node.querySelector('input') || this.node.querySelector('textarea');
-            input.value || '';
+            input.value = value || '';
         } else if (type === 'enum') {
             const { variant } = this.node.dataset;
             if (variant === 'select') {
@@ -593,6 +593,7 @@ function init() {
             '@created_time': meta.dataset.createdTime ? new Date(meta.dataset.createdTime * 1000) : null,
             '@edited_time': meta.dataset.editedTime ? new Date(meta.dataset.editedTime * 1000) : null,
             '@is_member': meta.dataset.isMember || false,
+            ...JSON.parse(meta.dataset.customFormVars || '{}'),
         };
 
         const getFormValue = id => {

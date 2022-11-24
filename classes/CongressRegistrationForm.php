@@ -24,11 +24,13 @@ class CongressRegistrationForm extends Form {
     private $parsedown;
     private $congressId;
     private $instanceId;
-    public function __construct($plugin, $app, $form, $congressId, $instanceId, $currency) {
+    private $customFormVars;
+    public function __construct($plugin, $app, $form, $customFormVars, $congressId, $instanceId, $currency) {
         parent::__construct($app);
         $this->app = $app;
         $this->plugin = $plugin;
         $this->form = $form;
+        $this->customFormVars = $customFormVars;
         $this->congressId = $congressId;
         $this->instanceId = $instanceId;
         $this->currency = $currency;
@@ -703,6 +705,22 @@ class CongressRegistrationForm extends Form {
             $scriptCtx->setFormVar('@createdTime', null);
             $scriptCtx->setFormVar('@editedTime', null);
         }
+
+        $custom_vars_json = array();
+        foreach ($this->customFormVars as $name => $info) {
+            $var_name = substr($name, 1); // ignore the double @
+            $var_value = $info['default'];
+
+            if ($this->participant) {
+                $overrides = $this->participant['customFormVars'];
+                if (isset($overrides[$name])) {
+                    $var_value = $overrides[$name];
+                }
+            }
+
+            $custom_vars_json[$var_name] = $var_value;
+        }
+        $meta->setAttribute('data-custom-form-vars', json_encode($custom_vars_json));
 
         $root->appendChild($meta);
 

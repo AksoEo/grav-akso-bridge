@@ -112,6 +112,7 @@ class CongressInstance {
             $regFormFields []= 'price.var';
             $regFormFields []= 'price.minUpfront';
             $regFormFields []= 'form';
+            $regFormFields []= 'customFormVars';
         }
         $formRes = $app->bridge->get('/congresses/' . $congressId . '/instances/' . $instanceId . '/registration_form', array(
             'fields' => $regFormFields

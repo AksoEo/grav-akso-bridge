@@ -85,7 +85,7 @@ class CongressRegistration {
         $this->isEditable = $this->form['editable'];
         $this->isCancelable = $this->form['cancellable'];
 
-        $fields = ['cancelledTime', 'price', 'amountPaid', 'hasPaidMinimum', 'codeholderId', 'createdTime', 'editedTime'];
+        $fields = ['cancelledTime', 'price', 'amountPaid', 'hasPaidMinimum', 'codeholderId', 'createdTime', 'editedTime', 'customFormVars'];
         foreach ($this->form['form'] as $formItem) {
             if ($formItem['el'] === 'input') $fields[] = 'data.' . $formItem['name'];
         }
@@ -486,6 +486,7 @@ class CongressRegistration {
             $this->plugin,
             $this->app,
             $this->form['form'],
+            $this->form['customFormVars'],
             $this->congressId,
             $this->instanceId,
             $this->currency
