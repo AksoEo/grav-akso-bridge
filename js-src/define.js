@@ -6,6 +6,7 @@ if (!window.define) {
     srcDir = srcDir.join('/');
 
     var modules = {};
+    var modulePromises = {};
 
     var loadAsScript = function loadAsScript(id) {
         return new Promise(resolve => {
@@ -18,8 +19,8 @@ if (!window.define) {
     };
 
     var modLoad = function modLoad(id) {
-        if (modules[id]) return Promise.resolve(modules[id]);
-        return loadAsScript(id).then(function() {
+        if (modulePromises[id]) return modulePromises[id];
+        return modulePromises[id] = loadAsScript(id).then(function() {
             if (!modules[id]) throw new Error('Failed to load ' + id + ': no module defined?');
             return modules[id];
         });
@@ -46,6 +47,15 @@ if (!window.define) {
             reqs = [];
         }
         var id = document.currentScript.dataset.id;
+        if (!id) {
+          id = './' + document.currentScript
+              .getAttribute('src')
+              .split('/')
+              .pop()
+              .replace(/\.js$/i, '');
+
+          console.debug('define() on script with no ID. Inferred: ' + id);
+        }
         if (modules[id]) return;
         var exports = {};
         modules[id] = Promise.resolve().then(function() {
@@ -58,6 +68,7 @@ if (!window.define) {
             }
             return Promise.all(toLoad);
         }).then(function(loaded) {
+            console.debug('exec module ' + id);
             var result = run.apply(window, loaded);
             if (!exports.default) exports.default = result;
             return exports;

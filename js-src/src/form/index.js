@@ -299,7 +299,8 @@ class FormInput {
                 return null;
             }
         } else if (type === 'country') {
-            // TODO
+          const { value } = this.node.querySelector('select');
+          return value || null;
         } else if (type === 'date') {
             const { value } = this.node.querySelector('input');
             const match = value.match(RE_DATE_FMT);
