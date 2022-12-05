@@ -635,9 +635,57 @@ class CongressRegistrationForm extends Form {
         $root->setAttribute('class', 'form-item form-text-item');
         $root->setAttribute('data-el', 'text');
         if (gettype($item['text']) === 'string') {
+            $root->setAttribute('data-text', base64_encode(json_encode($item['text'])));
+
             // plain text
             // TODO: use markdown-it with appropriate notes
-            $this->setInnerHTML($root, $this->parsedown->text($item['text']));
+            // TODO: render templating
+
+            $text = $item['text'];
+            $text = preg_replace_callback(
+                '/\{\{#if\s+(.+?)}}(.+?)(?:\{\{#else}}(.+?))?\{\{\/if}}/s',
+                function ($matches) use ($scriptCtx) {
+                    $condExpr = array(
+                        't' => 'c',
+                        'f' => 'id',
+                        'a' => [$matches[1]],
+                    );
+                    $res = $scriptCtx->eval($condExpr);
+                    if ($res['s'] && $res['v']) {
+                        return $matches[2];
+                    } else if ($res['s']) {
+                        return $matches[3];
+                    } else {
+                        return '<? ERARO ?>';
+                    }
+                },
+                $text
+            );
+            $text = preg_replace_callback(
+                '/\{\{([^#\/].*?)}}/s',
+                function ($matches) use ($scriptCtx) {
+                    $scriptCtx->pushScript(array(
+                        '__!!EMPTY_STRING!!__' => array('t' => 's', 'v' => ''),
+                    ));
+                    $expr = array(
+                        't' => 'c',
+                        'f' => '++',
+                        'a' => ['__!!EMPTY_STRING!!__', $matches[1]],
+                    );
+                    $res = $scriptCtx->eval($expr);
+                    $scriptCtx->popScript();
+
+                    if ($res['s']) {
+                        if (is_array($res['v'])) return join('', $res['v']);
+                        return (string) $res['v'];
+                    } else {
+                        return '<? ERARO ?>';
+                    }
+                },
+                $text
+            );
+
+            $this->setInnerHTML($root, $this->parsedown->text($text));
         } else {
             $root->setAttribute('data-script', base64_encode(json_encode($item['text'])));
 

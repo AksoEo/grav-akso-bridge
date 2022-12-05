@@ -554,12 +554,12 @@ function initFormItem(node, onChange) {
 
         return new FormInput(node, onChange);
     } else if (node.dataset.el === 'text') {
-        let script = decodeScript(node.dataset.script);
+        let text = decodeScript(node.dataset.text);
 
         return {
             el: 'text',
             node,
-            script,
+            text,
         };
     } else if (node.dataset.el === 'script') {
         return {
@@ -605,9 +605,18 @@ function init() {
 
         for (const item of formItems) {
             if (item.el === 'text') {
+                if (item.text.includes('{{')) {
+                    try {
+                        item.node.innerHTML = md.render(renderScriptText(scriptStack, formVars, item.text));
+                    } catch (err) {
+                        console.error('Script eval error', err);
+                        // error
+                        // TODO: handle
+                    }
+                }
+
                 if (item.script) {
                     try {
-                        const result = ascEval(scriptStack, formVars, item.script);
 
                         if (result) {
                             item.node.innerHTML = md.render(ascCastToString(result));
@@ -648,6 +657,38 @@ function init() {
             if (!update(true)) e.preventDefault();
         });
     }
+}
+
+function renderScriptText(scriptStack, formVars, text) {
+  const ifRegex = /\{\{#if\s+(.+?)}}(.+?)(?:\{\{#else}}(.+?))?\{\{\/if}}/gs;
+  const identifierRegex = /\{\{([^#/].*?)}}/gs;
+
+  const emptyString = Symbol('empty string');
+  const emptyStringDefs = {
+      [emptyString]: { t: 's', v: '' },
+  };
+
+  return (text || '')
+      .replace(ifRegex, (m, cond, body, body2) => {
+          const condValue = ascEval(scriptStack, formVars, {
+              t: 'c',
+              f: 'id',
+              a: [cond],
+          });
+          if (condValue) {
+              return body;
+          } else {
+              return body2;
+          }
+      })
+      .replace(identifierRegex, (m, id) => {
+          const expr = {
+              t: 'c',
+              f: '++',
+              a: [emptyString, id],
+          };
+          return ascEval(scriptStack.concat([emptyStringDefs]), formVars, expr);
+      });
 }
 
 if (document.readyState === 'complete') init();

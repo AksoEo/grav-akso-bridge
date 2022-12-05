@@ -124,7 +124,8 @@
                     data-el="script"
                     data-script="{{akso_congress_registration.payment_form_script|e('html_attr')}}"></div>
                 {% if akso_congress_registration.payment_method.feeFixed is not empty or akso_congress_registration.payment_method.feePercent is not empty %}
-                    <div class="form-item form-text-item" data-el="text" data-script='!{"t":"c","f":"id","a":["fees_text"]}'>
+                    {% set data_text = '{{fee_text}}' %}
+                    <div class="form-item form-text-item" data-el="text" data-text='{{ data_text }}'>
                         <b>{{akso_locale.registration_form.payment_fees}}</b>:
                         {% if akso_congress_registration.payment_method.feeFixed is not empty %}
                             {{akso_congress_registration.fee_fixed_rendered|e}}
