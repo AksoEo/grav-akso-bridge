@@ -4,19 +4,22 @@ import Markdown from 'markdown-it';
 import { initDatePolyfill, initTimePolyfill, initDateTimePolyfill } from './date-editor';
 import './index.less';
 
-{
+function removeNoscripts() {
     const noscriptItems = document.querySelectorAll('.congress-form-noscript');
     for (let i = 0; i < noscriptItems.length; i++) {
         noscriptItems[i].parentNode.removeChild(noscriptItems[i]);
     }
 }
 
-{
+function followIntentRedirect() {
     const intentRedirect = document.querySelector('#payment-intent-redirect-button');
     if (intentRedirect) {
         intentRedirect.click();
     }
 }
+
+removeNoscripts();
+followIntentRedirect();
 
 // TODO: load if needed/show progress?
 loadCountryFmt().then(() => console.log('Loaded ASC countries'));
@@ -572,6 +575,9 @@ function initFormItem(node, onChange) {
 }
 
 function init() {
+    removeNoscripts();
+    followIntentRedirect();
+
     const form = document.querySelector('form.akso-form');
     if (!form) return;
     const submitButton = form.querySelector('.submit-button');
