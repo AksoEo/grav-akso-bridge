@@ -705,7 +705,11 @@ class AksoBridgePlugin extends Plugin {
                     // no page params; skip
                     continue;
                 }
-                $regPath = $page->route() . '/' . self::CONGRESS_REGISTRATION_PATH;
+
+                $routeWithSlash = $page->route();
+                if (!str_ends_with($routeWithSlash, '/')) $routeWithSlash .= '/';
+
+                $regPath = $routeWithSlash . self::CONGRESS_REGISTRATION_PATH;
                 if (!str_starts_with($currentPath, $regPath)) continue;
                 $page->activeChild = true;
 
