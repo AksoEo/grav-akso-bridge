@@ -603,10 +603,6 @@ function init() {
             ...JSON.parse(meta.dataset.customFormVars || '{}'),
         };
 
-        const getFormValue = id => {
-            return id in formVars ? formVars[id] : null;
-        };
-
         let firstInvalidInput = null;
 
         for (const item of formItems) {

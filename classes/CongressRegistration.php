@@ -521,7 +521,12 @@ class CongressRegistration {
                     }
 
                     if ($nonceValid) {
-                        $form->trySubmit($post);
+                        try {
+                            $form->trySubmit($post);
+                        } catch (\Exception $e) {
+                            $form->setUnknownError();
+                            Grav::instance()['log']->error($e);
+                        }
                     } else {
                         $form->setNonceInvalid();
                     }

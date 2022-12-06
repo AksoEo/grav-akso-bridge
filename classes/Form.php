@@ -119,22 +119,22 @@ class FormInputText extends FormInputPrototype {
         if ($item['pattern'] !== null) {
             $res = $extra['bridge']->matchRegExp($item['pattern'], $value);
             if (!$res['m']) {
-                return $item['patternError'] ? $item['patternError'] : localize($extra['locale'], 'err_text_pattern_generic');
+                return $item['patternError'] ?: localize($extra['locale'], 'err_text_pattern_generic');
             }
         }
 
         // Javascript uses UTF16
         $fulfillsMin = $item['minLength'] !== null ? mb_strlen($value, 'UTF-16') >= $item['minLength'] : true;
-        $fulfillsMax = $item['maxLength'] !== null ? mb_strlen($value, 'UTF-16') >= $item['maxLength'] : true;
+        $fulfillsMax = $item['maxLength'] !== null ? mb_strlen($value, 'UTF-16') <= $item['maxLength'] : true;
 
         if ($item['minLength'] !== null && $item['maxLength'] !== null) {
             if (!$fulfillsMin || !$fulfillsMax) {
-                return localize($extra['locale'], 'err_text_len_range', $item['min'], $item['max']);
+                return localize($extra['locale'], 'err_text_len_range', $item['minLength'], $item['maxLength']);
             }
         } else if (!$fulfillsMin) {
-            return localize($extra['locale'], 'err_text_len_min', $item['min']);
+            return localize($extra['locale'], 'err_text_len_min', $item['minLength']);
         } else if (!$fulfillsMax) {
-            return localize($extra['locale'], 'err_text_len_max', $item['max']);
+            return localize($extra['locale'], 'err_text_len_max', $item['maxLength']);
         }
     }
 }
@@ -166,6 +166,8 @@ class FormInputMoney extends FormInputPrototype {
 class FormInputEnum extends FormInputText {
     public const ID = 'enum';
     public function getError($item, $value, $extra) {
+        if (!$value) return null;
+
         $found = false;
         foreach ($item['options'] as $option) {
             if ($option['value'] === $value) {
@@ -187,6 +189,8 @@ class FormInputCountry extends FormInputText {
 class FormInputDate extends FormInputText {
     public const ID = 'date';
     public function getError($item, $value, $extra) {
+        if (!$value) return null;
+
         $dateTime = \DateTime::createFromFormat('Y-m-d', $value);
         if ($dateTime === false) return localize($extra['locale'], 'err_date_fmt');
 
@@ -212,6 +216,8 @@ class FormInputDate extends FormInputText {
 class FormInputTime extends FormInputText {
     public const ID = 'time';
     public function getError($item, $value, $extra) {
+        if (!$value) return null;
+
         $dateTime = \DateTime::createFromFormat('H:i', $value);
         if ($dateTime === false) return localize($extra['locale'], 'err_time_fmt');
 
@@ -262,6 +268,8 @@ class FormInputDateTime extends FormInputText {
         }
     }
     public function getError($item, $value, $extra) {
+        if (!$value) return null;
+
         $dateTime = new \DateTime("@$value");
         if ($dateTime === false) return localize($extra['locale'], 'err_datetime_fmt');
 

@@ -1,6 +1,7 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridge\Form;
 
 // Handles the congress registration form.
@@ -77,6 +78,10 @@ class CongressRegistrationForm extends Form {
             } else if ($res['sc'] === 400) {
                 $this->error = $this->localize('err_submit_invalid');
             } else {
+                $congressId = $this->congressId;
+                $instanceId = $this->instanceId;
+                $dataId = $this->dataId;
+                Grav::instance()['log']->error("failed to update congress registration in congress $congressId instance $instanceId data id $dataId: " . $res['b']);
                 $this->error = $this->localize('err_submit_generic');
             }
         } else {
@@ -89,6 +94,9 @@ class CongressRegistrationForm extends Form {
             } else if ($res['sc'] === 409) {
                 $this->error = $this->localize('err_submit_already_registered');
             } else {
+                $congressId = $this->congressId;
+                $instanceId = $this->instanceId;
+                Grav::instance()['log']->error("failed to submit congress registration in congress $congressId instance $instanceId: " . $res['b']);
                 $this->error = $this->localize('err_submit_generic');
             }
         }
@@ -119,6 +127,10 @@ class CongressRegistrationForm extends Form {
 
     public function setNonceInvalid() {
         $this->error = $this->localize('err_nonce_invalid');
+    }
+
+    public function setUnknownError() {
+        $this->error = $this->localize('err_submit_generic');
     }
 
     public $cancelSucceeded = false;
