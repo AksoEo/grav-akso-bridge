@@ -107,7 +107,7 @@ function ascEval(scriptStack, formVars, expr) {
     const sym = Symbol('result');
     return evaluate(scriptStack.concat([{
         [sym]: expr,
-    }]), sym, id => formVars[id] || null, {
+    }]), sym, id => id in formVars ? formVars[id] : null, {
         shouldHalt: shouldHalt(),
     });
 }
@@ -604,7 +604,7 @@ function init() {
         };
 
         const getFormValue = id => {
-            return formVars[id] || null;
+            return id in formVars ? formVars[id] : null;
         };
 
         let firstInvalidInput = null;

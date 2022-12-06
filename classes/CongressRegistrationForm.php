@@ -210,12 +210,12 @@ class CongressRegistrationForm extends Form {
         if ($field === 'name') {
             // format name
             $name = '';
-            if (isset($ch['honorific'])) $name .= $data['honorific'] . ' ';
-            if (isset($ch['firstName'])) $name .= $data['firstName'] . ' ';
-            else $name .= $data['firstNameLegal'] . ' ';
-            if (isset($ch['lastName'])) $name .= $data['lastName'];
-            else if (isset($ch['lastNameLegal'])) $name .= $data['lastNameLegal'];
-            $name = trim($str);
+            if (isset($ch['honorific'])) $name .= $ch['honorific'] . ' ';
+            if (isset($ch['firstName'])) $name .= $ch['firstName'] . ' ';
+            else $name .= $ch['firstNameLegal'] . ' ';
+            if (isset($ch['lastName'])) $name .= $ch['lastName'];
+            else if (isset($ch['lastNameLegal'])) $name .= $ch['lastNameLegal'];
+            $name = trim($name);
             return $name;
         } else if ($field === 'country' || $field === 'countryArea' || $field === 'city' ||
             $field === 'cityArea' || $field === 'streetAddress' || $field === 'postalCode' ||
