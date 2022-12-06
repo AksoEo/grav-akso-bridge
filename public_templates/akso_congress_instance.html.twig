@@ -53,25 +53,27 @@
 <div class="congress-registration big-actionable-button-container">
     {% set reg_disabled = '' %}
     {% set reg = 'a' %}
+    {% set arrow_class = 'action-arrow-icon' %}
     {% if not akso_congress_registration_allowed %}
-    {% set reg_disabled = 'disabled title="' ~ akso_locale.congress_instance.registration_button_cannot_sign_up|e('html_attr') ~ '"' %}
+    {% set reg_disabled = 'disabled title="' ~ akso_locale.congress_instance.registration_button_cannot_sign_up ~ '"' %}
     {% set akso_congress_registration_link = '' %}
     {% set reg = 'button' %}
+    {% set arrow_class = '' %}
     {% endif %}
     {% if akso_congress_registration_guest_not_allowed %}
     <{{reg}} {{ reg_disabled }} class="link-button congress-registration-button big-actionable-button needs-login" href={{ akso_congress_registration_link|e('html_attr') }}>
         {{akso_locale.congress_instance.registration_button_guest_not_allowed}}
-        <span class="action-arrow-icon" />
+        <span class="{{ arrow_class }}" />
     </{{reg}}>
     {% elseif akso_congress_registration_exists %}
     <a class="link-button is-primary congress-registration-button big-actionable-button is-existing" href={{ akso_congress_registration_link|e('html_attr') }}>
         {{akso_locale.congress_instance.registration_button_view}}
-        <span class="action-arrow-icon" />
+        <span class="{{ arrow_class }}" />
     </a>
     {% else %}
     <{{reg}} {{ reg_disabled }} class="link-button is-primary congress-registration-button big-actionable-button has-emphasis" href={{ akso_congress_registration_link|e('html_attr') }}>
         {{akso_locale.congress_instance.registration_button}}
-        <span class="action-arrow-icon" />
+        <span class="{{ arrow_class }}" />
     </{{reg}}>
     {% endif %}
 </div>

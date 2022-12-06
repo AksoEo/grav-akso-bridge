@@ -59,7 +59,10 @@ class CongressInstance {
 
             $congressName = $res['b']['name'];
 
-            $state['akso_congress_registration_link'] = Grav::instance()['page']->route() . '/' . AksoBridgePlugin::CONGRESS_REGISTRATION_PATH;
+            $linkBase = Grav::instance()['page']->route();
+            if (!str_ends_with($linkBase, '/')) $linkBase .= '/';
+
+            $state['akso_congress_registration_link'] = $linkBase . AksoBridgePlugin::CONGRESS_REGISTRATION_PATH;
 
             $congressStartTime = null;
             if ($firstEventRes['k'] && sizeof($firstEventRes['b']) > 0) {
