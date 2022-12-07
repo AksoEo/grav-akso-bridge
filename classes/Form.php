@@ -81,7 +81,7 @@ class FormInputBoolean extends FormInputPrototype {
 class FormInputNumber extends FormInputPrototype {
     public const ID = 'number';
     public function readFromPost($data, $extra) {
-        return $data === "" ? null : floatval($data);
+        return ($data === "" || $data === null) ? null : floatval($data);
     }
     public function getError($item, $value, $extra) {
         if ($item['step'] !== null) {
@@ -113,7 +113,7 @@ class FormInputNumber extends FormInputPrototype {
 class FormInputText extends FormInputPrototype {
     public const ID = 'text';
     public function readFromPost($data, $extra) {
-        return $data === "" ? null : strval($data);
+        return ($data === "" || $data === null) ? null : strval($data);
     }
     public function getError($item, $value, $extra) {
         if ($item['pattern'] !== null) {
@@ -142,7 +142,7 @@ class FormInputMoney extends FormInputPrototype {
     public const ID = 'money';
     public function readFromPost($data, $extra) {
         $multiplier = $extra['currencies'][$extra['item']['currency']];
-        return $data === "" ? null : floor(floatval($data) * $multiplier);
+        return ($data === "" || $data === null) ? null : floor(floatval($data) * $multiplier);
     }
     public function getError($item, $value, $extra) {
         if ($item['step'] !== null) {
@@ -249,7 +249,7 @@ class FormInputDateTime extends FormInputText {
     public const ID = 'datetime';
     public function readFromPost($data, $extra) {
         $item = $extra['item'];
-        if ($data !== "") {
+        if ($data) {
             $tz = 'UTC';
             if ($item['tz']) $tz = $item['tz'];
             try {
@@ -266,6 +266,7 @@ class FormInputDateTime extends FormInputText {
                 return null;
             }
         }
+        return null;
     }
     public function getError($item, $value, $extra) {
         if (!$value) return null;
@@ -324,6 +325,7 @@ class FormInputBooleanTable extends FormInputText {
             $out[] = $row;
         }
         if ($isNull) $out = null;
+        return $out;
     }
     public function getError($item, $value, $extra) {
         $selected = 0;
