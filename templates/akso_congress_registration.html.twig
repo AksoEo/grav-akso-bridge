@@ -194,7 +194,9 @@
                                 <span class="method-recommended">{{akso_locale.registration_form.payment_method_recommended}}</span>
                             {% endif %}
                         </h3>
-                        <p>{{method.description|e}}</p>
+                        <div class="method-description">
+                            {{ method.description_rendered|raw }}
+                        </div>
                         <form method="GET" action="{{ akso_congress_registration.method_target|e('html_attr') }}" class="method-form">
                             <div class="currency-select">
                                 {% if method.currencies|length > 1 %}

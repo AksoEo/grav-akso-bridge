@@ -350,6 +350,14 @@ class CongressRegistration {
                     'order' => [['name', 'asc']],
                 ), 60);
                 if ($res['k']) {
+                    foreach ($res['b'] as &$method) {
+                        $method['description_rendered'] = $this->app->bridge->renderMarkdown(
+                            $method['description'] ?: '',
+                            ['emphasis', 'strikethrough', 'link', 'list', 'table'],
+                        );
+                    }
+                    unset($method);
+
                     // put recommended methods first
                     foreach ($res['b'] as $method) {
                         if ($method['isRecommended']) {
