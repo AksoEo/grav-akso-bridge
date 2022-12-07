@@ -354,7 +354,7 @@ class CongressRegistration {
                         $method['description_rendered'] = $this->app->bridge->renderMarkdown(
                             $method['description'] ?: '',
                             ['emphasis', 'strikethrough', 'link', 'list', 'table'],
-                        );
+                        )['c'];
                     }
                     unset($method);
 
