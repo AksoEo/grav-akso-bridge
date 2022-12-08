@@ -36,6 +36,13 @@
 .registration-form .form-input-item input[type=email],
 .registration-form .form-input-item input[type=tel],
 .registration-form .form-input-item input[type=uri],
+.registration-form .form-input-item:not([data-type=money]) input[type=number] {
+  width: 100%;
+}
+.registration-form .form-input-item input[type=text],
+.registration-form .form-input-item input[type=email],
+.registration-form .form-input-item input[type=tel],
+.registration-form .form-input-item input[type=uri],
 .registration-form .form-input-item input[type=number],
 .registration-form .form-input-item select {
     min-width: 10em;
