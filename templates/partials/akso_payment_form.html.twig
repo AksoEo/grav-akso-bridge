@@ -72,7 +72,7 @@
                     data-el="script"
                     data-script="{{akso_payment.payment_form_script|e('html_attr')}}"></div>
                 {% if akso_payment.payment_method.feeFixed is not empty or akso_payment.payment_method.feePercent is not empty %}
-                    {% set data_text = '{{fee_text}}' %}
+                    {% set data_text = '!"{{fee_text}}"' %}
                     <div class="form-item form-text-item" data-el="text" data-script='{{ data_text }}'>
                         <b>{{akso_locale.registration_form.payment_fees}}</b>:
                         {% if akso_payment.payment_method.feeFixed is not empty %}
