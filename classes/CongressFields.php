@@ -513,37 +513,7 @@ class CongressFields {
             )],
         );
 
-        return [array(
-            'name' => 'div',
-            'attributes' => array(
-                'class' => 'akso-members-only-content',
-            ),
-            'handler' => 'elements',
-            'text' => [
-                array(
-                    'name' => 'div',
-                    'attributes' => array(
-                        'class' => 'akso-members-only-content-if-clause',
-                    ),
-                    'handler' => 'elements',
-                    'text' => [$participantsEl],
-                ),
-                array(
-                    'name' => 'div',
-                    'attributes' => array(
-                        'class' => 'akso-members-only-content-else-clause',
-                    ),
-                    'handler' => 'elements',
-                    'text' => [array(
-                        'name' => 'div',
-                        'attributes' => array(
-                            'class' => 'akso-members-only-box',
-                        ),
-                        'text' => '',
-                    )],
-                ),
-            ],
-        )];
+        return $participantsEl;
     }
 
     private function renderCongressParticipantsMeta($congressId, $instanceId, $field) {
