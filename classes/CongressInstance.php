@@ -144,6 +144,7 @@ class CongressInstance {
             if ($isRegistration) {
                 Grav::instance()['assets']->add('plugin://akso-bridge/css/registration-form.css');
                 Grav::instance()['assets']->add('plugin://akso-bridge/js/dist/form.js');
+                Grav::instance()['assets']->add('plugin://akso-bridge/js/dist/form.css');
 
                 $registration = new CongressRegistration($this->plugin, $app, $congressId, $instanceId, $paymentOrg, $formRes['b'], $congressName);
                 $state['akso_congress_registration'] = $registration->run();

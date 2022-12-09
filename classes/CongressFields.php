@@ -513,7 +513,7 @@ class CongressFields {
             )],
         );
 
-        return $participantsEl;
+        return [$participantsEl];
     }
 
     private function renderCongressParticipantsMeta($congressId, $instanceId, $field) {

@@ -137,6 +137,7 @@ class FormInput {
         this.node = node;
         this.name = node.dataset.name;
         this.type = node.dataset.type;
+        this.hideIfDisabled = !!node.dataset.hideIfDisabled;
         this.onChange = onChange;
 
         // don't show errors until the user interacted with the input
@@ -432,6 +433,14 @@ class FormInput {
                     const box = this.node.querySelector(`input[data-index="${x}-${y}"]`)
                     if (box) box.disabled = disabled;
                 }
+            }
+        }
+
+        if (this.hideIfDisabled) {
+            if (disabled) {
+                this.node.classList.add('item-disabled-hidden');
+            } else {
+                this.node.classList.remove('item-disabled-hidden');
             }
         }
     }

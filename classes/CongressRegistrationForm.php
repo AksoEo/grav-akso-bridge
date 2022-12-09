@@ -252,6 +252,9 @@ class CongressRegistrationForm extends Form {
         $root->setAttribute('data-name', $item['name']);
         $root->setAttribute('data-el', 'input');
         $root->setAttribute('data-type', $item['type']);
+        if ($item['hideIfDisabled']) {
+            $root->setAttribute('data-hide-if-disabled', 'true');
+        }
 
         $data = $this->doc->createElement('div');
         $data->setAttribute('class', 'form-data');
