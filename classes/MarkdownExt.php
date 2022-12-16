@@ -607,6 +607,7 @@ class MarkdownExt {
         $this->handleHTMLIfLoggedIn($document);
         $this->handleHTMLCongressPosters($document);
         $this->handleHTMLMailLinks($document);
+        $this->handleHTMLLists($document);
         $this->congressFields->handleHTMLCongressStuff($document);
         $this->intermediaries->handleHTMLIntermediaries($document);
 
