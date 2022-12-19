@@ -123,9 +123,9 @@ class FormInputText extends FormInputPrototype {
             }
         }
 
-        // Javascript uses UTF16
-        $fulfillsMin = $item['minLength'] !== null ? mb_strlen($value, 'UTF-16') >= $item['minLength'] : true;
-        $fulfillsMax = $item['maxLength'] !== null ? mb_strlen($value, 'UTF-16') <= $item['maxLength'] : true;
+        // Javascript uses UTF16, see https://stackoverflow.com/a/30607540
+        $fulfillsMin = $item['minLength'] !== null ? strlen(iconv('utf-8', 'utf-16le', $value)) / 2 >= $item['minLength'] : true;
+        $fulfillsMax = $item['maxLength'] !== null ? strlen(iconv('utf-8', 'utf-16le', $value)) / 2 <= $item['maxLength'] : true;
 
         if ($item['minLength'] !== null && $item['maxLength'] !== null) {
             if (!$fulfillsMin || !$fulfillsMax) {
