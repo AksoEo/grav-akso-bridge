@@ -606,8 +606,8 @@ function init() {
 
         const scriptStack = [];
         const formVars = {
-            '@created_time': meta.dataset.createdTime ? new Date(meta.dataset.createdTime * 1000) : null,
-            '@edited_time': meta.dataset.editedTime ? new Date(meta.dataset.editedTime * 1000) : null,
+            '@created_time': meta.dataset.createdTime || null,
+            '@edited_time': meta.dataset.editedTime || null,
             '@is_member': meta.dataset.isMember || false,
             ...JSON.parse(meta.dataset.customFormVars || '{}'),
         };
