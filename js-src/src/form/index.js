@@ -606,8 +606,8 @@ function init() {
 
         const scriptStack = [];
         const formVars = {
-            '@created_time': meta.dataset.createdTime || null,
-            '@edited_time': meta.dataset.editedTime || null,
+            '@created_time': +meta.dataset.createdTime || null,
+            '@edited_time': +meta.dataset.editedTime || null,
             '@is_member': meta.dataset.isMember || false,
             ...JSON.parse(meta.dataset.customFormVars || '{}'),
         };
@@ -655,6 +655,11 @@ function init() {
         if (!isValid && isSubmissionAttempt && firstInvalidInput) {
             scrollNodeIntoView(firstInvalidInput.node);
         }
+
+        window.DEBUG_ascEval = (expr) => {
+            if (typeof expr === 'string') expr = { t: 'c', f: 'id', a: [expr] };
+            return ascEval(scriptStack, formVars, expr);
+        };
 
         return isValid;
     };
