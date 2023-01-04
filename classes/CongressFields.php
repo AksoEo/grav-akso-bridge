@@ -3,6 +3,7 @@ namespace Grav\Plugin\AksoBridge;
 
 use \DiDom\Document;
 use \DiDom\Element;
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridge\Utils;
 
 // Handles rendering of congress fields in markdown.
@@ -218,6 +219,12 @@ class CongressFields {
                 'order' => [['sequenceId', 'asc']],
             ), 120);
             if (!$res['k']) {
+                Grav::instance()['log']->error(
+                    "markdown: could not load congress participants for $congressId/$instanceId: "
+                    . $res['b']
+                );
+
+                $totalParticipants = -1;
                 break;
             }
             $totalParticipants = $res['h']['x-total-items'];
@@ -229,6 +236,11 @@ class CongressFields {
                 }
                 $participants[] = $item;
             }
+        }
+
+        if ($totalParticipants === -1) {
+            // error...
+            return [$this->createError()];
         }
 
         // fetch last name publicity
