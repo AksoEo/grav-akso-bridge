@@ -671,6 +671,9 @@ class CongressRegistrationForm extends Form {
                     } else if ($res['s']) {
                         return $matches[3];
                     } else {
+                        $name = $matches[1];
+                        $err = $res['e'];
+                        Grav::instance()['log']->error("Failed akso script execution in string template condition: $name: $err");
                         return '<? ERARO ?>';
                     }
                 },
@@ -694,6 +697,9 @@ class CongressRegistrationForm extends Form {
                         if (is_array($res['v'])) return join('', $res['v']);
                         return (string) $res['v'];
                     } else {
+                        $name = $matches[1];
+                        $err = $res['e'];
+                        Grav::instance()['log']->error("Failed akso script execution in string template: $name: $err");
                         return '<? ERARO ?>';
                     }
                 },
