@@ -36,16 +36,6 @@ class UserVotes {
                     ['emphasis', 'strikethrough', 'link', 'list', 'table', 'image'],
                 )['c'];
 
-                {
-                    $startTime = $vote['timeStart'];
-                    $startTime = new \DateTime("@$startTime");
-                    $endTime = $vote['timeEnd'];
-                    $endTime = new \DateTime("@$endTime");
-
-                    $vote['fmt_time_start'] = Utils::formatDateTimeUtc($startTime);
-                    $vote['fmt_time_end'] = Utils::formatDateTimeUtc($endTime);
-                }
-
                 $votes[] = $vote;
             }
             if ($res['h']['x-total-items'] >= count($votes)) break;

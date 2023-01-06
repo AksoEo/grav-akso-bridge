@@ -118,7 +118,9 @@
                                     {{akso_locale.account_notifs.newsletter_subscribed}}
                                     <div class="newsletter-subscribed-since">
                                         {{akso_locale.account_notifs.newsletter_subscribed_since}}
-                                        {{newsletter.time|date('c')}}
+                                        <time class="dyn-timestamp" datetime="{{ newsletter.time|date('c') }}">
+                                            {{newsletter.time|akso_datetime}}
+                                        </time>
                                     </div>
                                 </div>
 

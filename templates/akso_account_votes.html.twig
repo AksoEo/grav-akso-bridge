@@ -13,11 +13,11 @@
                 </div>
                 <div class="vote-time">
                     <time class="dyn-timestamp" datetime="{{vote.timeStart|date('c')}}">
-                        {{vote.fmt_time_start|e}}
+                        {{vote.timeStart|akso_datetime}}
                     </time>
                     —
                     <time class="dyn-timestamp" datetime="{{vote.timeEnd|date('c')}}">
-                        {{vote.fmt_time_end|e}}
+                        {{vote.timeEnd|akso_datetime}}
                     </time>
                 </div>
                 <div class="vote-description">

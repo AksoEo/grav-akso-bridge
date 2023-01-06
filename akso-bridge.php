@@ -3,15 +3,14 @@ namespace Grav\Plugin;
 
 use Grav\Common\Plugin;
 use Grav\Common\Uri;
+use Grav\Plugin\AksoBridge\AksoTwigExt;
 use RocketTheme\Toolbox\Event\Event;
 use Grav\Common\Page\Page;
-use Grav\Common\Helpers\Excerpts;
 use Grav\Plugin\AksoBridge\MarkdownExt;
 use Grav\Plugin\AksoBridge\AppBridge;
 use Grav\Plugin\AksoBridge\CongressInstance;
 use Grav\Plugin\AksoBridge\CongressLocations;
 use Grav\Plugin\AksoBridge\CongressPrograms;
-use Grav\Plugin\AksoBridge\CongressRegistration;
 use Grav\Plugin\AksoBridge\CountryLists;
 use Grav\Plugin\AksoBridge\OrgLists;
 use Grav\Plugin\AksoBridge\Delegates;
@@ -35,6 +34,7 @@ class AksoBridgePlugin extends Plugin {
         return [
             'onPluginsInitialized' => ['onPluginsInitialized', 0],
             'onTwigTemplatePaths' => ['onTwigTemplatePaths', 0],
+            'onTwigInitialized' => ['onTwigInitialized', 0],
             'onTwigSiteVariables' => ['onTwigSiteVariables', 0],
             'onMarkdownInitialized' => ['onMarkdownInitialized', 0],
             'onOutputGenerated' => ['onOutputGenerated', 0],
@@ -775,6 +775,10 @@ class AksoBridgePlugin extends Plugin {
         $twig = $this->grav['twig'];
         $twig->twig_paths[] = __DIR__ . '/templates';
         $twig->twig_paths[] = __DIR__ . '/public_templates';
+    }
+
+    public function onTwigInitialized() {
+        $this->grav['twig']->twig->addExtension(new AksoTwigExt());
     }
 
     private function getReferrerPath() {
