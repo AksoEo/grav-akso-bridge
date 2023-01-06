@@ -292,14 +292,17 @@ class CongressRegistration {
                     'payment_form_script' => base64_encode(json_encode([
                         'text_pre' => ['t' => 's', 'v' => '**' . $this->plugin->locale['registration_form']['payment_fees'] . '**: '],
 
+                        '0' => ['t' => 'n', 'v' => 0],
+                        '100' => ['t' => 'n', 'v' => 100],
+
                         'currency' => ['t' => 's', 'v' => $currency],
                         'fee_fixed_val' => ['t' => 'n', 'v' => $method['feeFixed'] !== null ? $method['feeFixed']['val'] : 0],
                         'fee_fixed_cur' => ['t' => 's', 'v' => $method['feeFixed'] !== null ? $method['feeFixed']['cur'] : ''],
                         'fee_fixed' => ['t' => 'c', 'f' => 'currency_fmt', 'a' => ['fee_fixed_cur', 'fee_fixed_val']],
 
                         'fee_pc_val' => ['t' => 'n', 'v' => $method['feePercent'] !== null ? $method['feePercent'] : 0],
+                        'fee_pc_val_100' => ['t' => 'c', 'f' => '*', 'a' => ['fee_pc_val', '100']],
 
-                        '0' => ['t' => 'n', 'v' => 0],
                         'has_fixed_fee' => ['t' => 'c', 'f' => '>', 'a' => ['fee_fixed_val', '0']],
                         'has_pc_fee' => ['t' => 'c', 'f' => '>', 'a' => ['fee_pc_val', '0']],
                         'has_both_fees' => ['t' => 'c', 'f' => 'and', 'a' => ['has_fixed_fee', 'has_pc_fee']],
@@ -309,7 +312,7 @@ class CongressRegistration {
 
                         'text_fee_join' => ['t' => 's', 'v' => ' % ('],
                         'text_fee_after' => ['t' => 's', 'v' => ')'],
-                        'text_fee_pc' => ['t' => 'c', 'f' => '++', 'a' => ['fee_pc_val', 'text_fee_join']],
+                        'text_fee_pc' => ['t' => 'c', 'f' => '++', 'a' => ['fee_pc_val_100', 'text_fee_join']],
                         'fee_pc_real_val' => ['t' => 'c', 'f' => '*', 'a' => ['fee_pc_val', '@amount']],
                         'text_fee_val' => ['t' => 'c', 'f' => 'currency_fmt', 'a' => ['currency', 'fee_pc_real_val']],
                         'text_fee_calc' => ['t' => 'c', 'f' => '++', 'a' => ['text_fee_val', 'text_fee_after']],

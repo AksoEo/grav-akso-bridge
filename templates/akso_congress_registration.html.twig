@@ -136,7 +136,7 @@
                             <span>+</span>
                         {% endif %}
                         {% if akso_congress_registration.payment_method.feePercent is not empty %}
-                            {{akso_congress_registration.payment_method.feePercent|e}} %
+                            {{(akso_congress_registration.payment_method.feePercent * 100)|e}} %
                         {% endif %}
                     </div>
                 {% endif %}
