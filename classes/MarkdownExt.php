@@ -517,9 +517,18 @@ class MarkdownExt {
                 $congress = intval($matches[2]);
                 $instance = isset($matches[3]) ? intval($matches[3]) : null;
                 $args = [];
-                foreach (preg_split('/\s+/', $matches[4]) as $arg) {
-                    $arg2 = trim($arg);
-                    if (!empty($arg2)) $args[] = $arg2;
+
+                $arg_matches = [];
+                preg_match_all(
+                    '/(?P<quote>["«»‹›“”‟„’❝❞❮❯⹂〝〞〟＂‚‛‘❛❜❟\'])(?P<arg>(?:\\\\(?P>quote)|[^"«»‹›“”‟„’❝❞❮❯⹂〝〞〟＂‚‛‘❛❜❟\'])+?)(?P>quote)|(?P<arg2>[^\s]+)/',
+                    $matches[4],
+                    $arg_matches
+                );
+
+                for ($i = 0; $i < count($arg_matches['arg']); $i++) {
+                    $arg = $arg_matches['arg'][$i];
+                    if (!$arg) $arg = $arg_matches['arg2'][$i];
+                    $args[] = $arg;
                 }
                 $extent = strlen($matches[0]);
 

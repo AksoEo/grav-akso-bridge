@@ -150,15 +150,17 @@ Following inline fields are supported:
 Additionally, following block fields are supported using the same syntax:
 
 ```md
-[[kongreso aliĝintoj 1/2 show_name_field first_name_field]]
-[[kongreso aliĝintoj 1/2 show_name_field first_name_field another_field more_fields]]
+[[kongreso aliĝintoj 1/2 show_name_var first_name_var]]
+[[kongreso aliĝintoj 1/2 show_name_var first_name_var another_var "Title Label" yet_another_var "Label"]]
 ```
 
 These will show a list of congress participants.
 
-- `show_name_field` should refer to the name of a bool field. A name will only be shown if this value is true.
-- `first_name_field` should refer to the name of a string field for the first name.
-- Additional fields will be shown in a table
+- `show_name_var` should refer to the name of a bool AKSO script variable. A name will only be shown if this value is true.
+- `first_name_var` should refer to the name of a string AKSO script variable for the first name.
+- Additional variables will be shown in a table
+
+Variables may also refer to form vars directly (e.g. `@first_name`)
 
 #### Countdown component
 ```md
