@@ -3,8 +3,23 @@ namespace Grav\Plugin\AksoBridge;
 use Cocur\Slugify\Slugify;
 use \DiDom\Document;
 use \DiDom\Element;
+use Grav\Common\Markdown\Parsedown;
+
+/**
+ * We have a couple of renderers written using Parsedown's HTML syntax, but Parsedown does not let you access
+ * its element renderer directly. it *is* protected though, so we can subclass it to access it from here...
+ */
+class Parsedown2 extends Parsedown {
+    public function pd2Elements($els) {
+        return $this->elements($els);
+    }
+}
 
 class Utils {
+    static function parsedownElementsToHTML($elements) {
+        return Parsedown2::instance()->pd2Elements($elements);
+    }
+
     static function setInnerHTML($node, $html) {
         $fragment = $node->ownerDocument->createDocumentFragment();
         $fragment->appendXML($html);
@@ -104,8 +119,8 @@ class Utils {
         $paddingCharCount = substr_count($input, $map[32]);
         $allowedValues = array(6,4,3,1,0);
         if(!in_array($paddingCharCount, $allowedValues)) return false;
-        for($i=0; $i<4; $i++){ 
-            if($paddingCharCount == $allowedValues[$i] && 
+        for($i=0; $i<4; $i++){
+            if($paddingCharCount == $allowedValues[$i] &&
                 substr($input, -($allowedValues[$i])) != str_repeat($map[32], $allowedValues[$i])) return false;
         }
         $input = str_replace('=','', $input);

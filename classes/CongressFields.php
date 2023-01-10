@@ -95,9 +95,26 @@ class CongressFields {
                 ),
             )];
         } else if ($field === 'aliĝintoj') {
-            return $this->renderCongressParticipants($congress, $instance, $data, $args);
+            return [array(
+                'name' => 'script',
+                'attributes' => array(
+                    'class' => 'akso-congress-participants',
+                    'congress' => $congress,
+                    'instance' => $instance,
+                    'data' => json_encode($data),
+                    'args' => json_encode($args),
+                ),
+            )];
         } else if ($field === 'kvantoaliĝintoj' || $field === 'kvantounikajlandoj') {
-            return $this->renderCongressParticipantsMeta($congress, $instance, $field);
+            return [array(
+                'name' => 'script',
+                'attributes' => array(
+                    'class' => 'akso-congress-participants-meta',
+                    'congress' => $congress,
+                    'instance' => $instance,
+                    'field' => $field,
+                ),
+            )];
         }
         return [$this->createError()];
     }
@@ -177,6 +194,35 @@ class CongressFields {
 
             $contents = new Element('span', $span);
             $dateSpan->appendChild($contents);
+        }
+
+        $participants = $doc->find('.akso-congress-participants');
+        foreach ($participants as $list) {
+            $congress = $list->getAttribute('congress');
+            $instance = $list->getAttribute('instance');
+            $data = json_decode($list->getAttribute('data'), true);
+            $args = json_decode($list->getAttribute('args'), true);
+
+            $rendered = $this->renderCongressParticipants($congress, $instance, $data, $args);
+            $rendered = Utils::parsedownElementsToHTML($rendered);
+
+            $containerNode = new Element('span');
+            $containerNode->setInnerHtml($rendered);
+            $list->replace($containerNode);
+        }
+
+        $participantsMeta = $doc->find('.akso-congress-participants-meta');
+        foreach ($participantsMeta as $node) {
+            $congress = $node->getAttribute('congress');
+            $instance = $node->getAttribute('instance');
+            $field = $node->getAttribute('field');
+
+            $rendered = $this->renderCongressParticipantsMeta($congress, $instance, $field);
+            $rendered = Utils::parsedownElementsToHTML($rendered);
+
+            $containerNode = new Element('span');
+            $containerNode->setInnerHtml($rendered);
+            $node->replace($containerNode);
         }
     }
 
