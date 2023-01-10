@@ -152,6 +152,8 @@ Additionally, following block fields are supported using the same syntax:
 ```md
 [[kongreso aliĝintoj 1/2 show_name_var first_name_var]]
 [[kongreso aliĝintoj 1/2 show_name_var first_name_var another_var "Title Label" yet_another_var "Label"]]
+
+[[kongreso aliĝintoj 1/2 !nur-validaj show_name_var first_name_var]]
 ```
 
 These will show a list of congress participants.
@@ -159,6 +161,7 @@ These will show a list of congress participants.
 - `show_name_var` should refer to the name of a bool AKSO script variable. A name will only be shown if this value is true.
 - `first_name_var` should refer to the name of a string AKSO script variable for the first name.
 - Additional variables will be shown in a table
+- Put `!nur-validaj` to show only valid participants
 
 Variables may also refer to form vars directly (e.g. `@first_name`)
 

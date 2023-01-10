@@ -184,12 +184,19 @@ class CongressFields {
         if (count($args) < 2) {
             return [$this->createError()];
         }
-        $show_name_var = $args[0];
-        $first_name_var = $args[1];
+
+        $validOnly = false;
+        if (mb_strtolower($args[0]) === '!nur-validaj') {
+            array_shift($args);
+            $validOnly = true;
+        }
+
+        $show_name_var = \Normalizer::normalize($args[0]);
+        $first_name_var = \Normalizer::normalize($args[1]);
         $extra_vars = [];
 
         for ($i = 2; $i < count($args); $i += 2) {
-            $arg_var = $args[$i];
+            $arg_var = \Normalizer::normalize($args[$i]);
             $arg_label = $args[$i + 1] ?? '';
             $extra_vars[] = [$arg_var, $arg_label];
         }
@@ -213,12 +220,24 @@ class CongressFields {
         $participants = [];
         $totalParticipants = 1;
 
+        $participantsFilter = array('cancelledTime' => null);
+
+        if ($validOnly) {
+            $participantsFilter = array(
+                '$and' => [
+                    $participantsFilter,
+                    array('isValid' => true),
+                ],
+            );
+        }
+
         while (count($participants) < $totalParticipants) {
             $res = $this->bridge->get("/congresses/$congressId/instances/$instanceId/participants", array(
                 'offset' => count($participants),
                 'limit' => 100,
                 'fields' => $fields,
                 'order' => [['sequenceId', 'asc']],
+                'filter' => $participantsFilter,
             ), 120);
             if (!$res['k']) {
                 Grav::instance()['log']->error(
@@ -243,20 +262,39 @@ class CongressFields {
                 $res = $this->bridge->evalScript($stack, $fvars, array('t' => 'c', 'f' => 'id', 'a' => [$show_name_var]));
                 if ($res['s']) {
                     $should_show_name = $res['v'] === true;
+                } else {
+                    Grav::instance()['log']->error(
+                        "markdown: could not load congress participants for $congressId/$instanceId: "
+                        . $res['e']
+                    );
+                    $totalParticipants = -1;
+                    break;
                 }
                 $res = $this->bridge->evalScript($stack, $fvars, array('t' => 'c', 'f' => 'id', 'a' => [$first_name_var]));
                 if ($res['s']) {
                     $first_name = gettype($res['v']) === 'array' ? implode('', $res['v']) : (string) $res['v'];
+                } else {
+                    Grav::instance()['log']->error(
+                        "markdown: could not load congress participants for $congressId/$instanceId: "
+                        . $res['e']
+                    );
+                    $totalParticipants = -1;
+                    break;
                 }
 
                 $item['show_name'] = $should_show_name;
-                $item['first_name'] = $first_name || '';
+                $item['first_name'] = $first_name ?? '';
                 foreach ($extra_vars as [$field]) {
                     $res = $this->bridge->evalScript($stack, $fvars, array('t' => 'c', 'f' => 'id', 'a' => [$field]));
                     if ($res['s']) {
                         $item['extra_fields'][$field] = gettype($res['v']) === 'array' ? implode('', $res['v']) : (string) $res['v'];
                     } else {
-                        $item['extra_fields'][$field] = '';
+                        Grav::instance()['log']->error(
+                            "markdown: could not load congress participants for $congressId/$instanceId: "
+                            . $res['e']
+                        );
+                        $totalParticipants = -1;
+                        break;
                     }
                 }
                 $participants[] = $item;
@@ -266,35 +304,6 @@ class CongressFields {
         if ($totalParticipants === -1) {
             // error...
             return [$this->createError()];
-        }
-
-        // fetch last name publicity
-        $codeholders = [];
-
-        {
-            $codeholderIds = [];
-            foreach ($participants as $part) {
-                if ($part['codeholderId']) {
-                    $codeholderIds[] = $part['codeholderId'];
-                }
-            }
-            $off = 0;
-            while ($off < count($codeholderIds)) {
-                $ids = array_slice($codeholderIds, $off, 100);
-                $res = $this->bridge->get("/codeholders", array(
-                    'offset' => $off,
-                    'limit' => count($ids),
-                    'fields' => ['id', 'honorific', 'firstName', 'firstNameLegal', 'lastName', 'lastNameLegal', 'lastNamePublicity'],
-                    'filter' => array('id' => array('$in' => $ids)),
-                ), 120);
-                if (!$res['k']) {
-                    break;
-                }
-                $off += 100;
-                foreach ($res['b'] as $item) {
-                    $codeholders[$item['id']] = $item;
-                }
-            }
         }
 
         $hasExtraFields = !empty($extra_vars);
@@ -318,22 +327,7 @@ class CongressFields {
             }
             $tableCells = [];
 
-            $codeholder = null;
-            if ($part['codeholderId'] && isset($codeholders[$part['codeholderId']])) {
-                $codeholder = $codeholders[$part['codeholderId']];
-            }
-
             $name = $part['first_name'];
-            if ($codeholder) {
-                $name = $codeholder['honorific'];
-                if ($name) $name .= ' ';
-                $name .= $codeholder['firstName'] ?? $codeholder['firstNameLegal'];
-                if ($codeholder['lastNamePublicity'] === 'public' || $codeholder['lastNamePublicity'] === 'members') {
-                    // show both 'public' and 'members', because this field is visible to members only!
-                    $name .= ' ' . ($codeholder['lastName'] ?? $codeholder['lastNameLegal']);
-                }
-                $name = trim($name);
-            }
             $tableCells[] = array('name' => 'th', 'text' => $name);
 
             $details = [];
