@@ -779,7 +779,7 @@ const messageHandlers = {
             const res = evaluate(s.concat({
                 [sym]: e,
             }), sym, id => {
-                const value = fv[id] || null;
+                const value = (id in fv) ? fv[id] : null;
                 if (value && value.type === 'date') return new Date(value.time * 1000);
                 return value;
             }, {
