@@ -24,3 +24,4 @@ newsletter: null
 from: ne-respondu@uea.org
 from_name: 'Universala Esperanto-Asocio'
 reply_to: null
+newsletter_send_org: 'uea'

@@ -1,7 +1,5 @@
-# AKSO Bridge and UEA Plugin
-This plugin handles UEA.org's connection to AKSO and specific markdown rendering extensions.
-
-This plugin is an extension for [Grav CMS](http://github.com/getgrav/grav).
+# AKSO Bridge Plugin
+This plugin provides extensions to [Grav CMS](https://github.com/getgrav/grav) for including content from AKSO.
 
 This plugin adds several [markdown extensions](markdown.md).
 

@@ -38,7 +38,7 @@ class GkSendToSubscribers {
 
         $notifTemplate = $app->bridge->post('/notif_templates', array(
             'base' => 'inherit',
-            'org' => 'uea',
+            'org' => $plugin->getGrav()['config']->get('plugins.akso-bridge.newsletter_send_org'),
             'name' => $title,
             'intent' => 'newsletter',
             'subject' => $title,

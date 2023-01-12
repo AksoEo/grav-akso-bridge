@@ -1,4 +1,4 @@
-name: AKSO Bridge and UEA extensions
+name: AKSO Bridge
 version: 0.1.0
 description: AKSO bridge plugin
 icon: plug
@@ -62,6 +62,9 @@ form:
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.VOTE_ORGS
       validate:
         type: commalist
+    newsletter_send_org:
+      type: text
+      label: PLUGIN_AKSO_BRIDGE.SETTINGS.NEWSLETTER_SEND_ORG
     newsletter_orgs:
       type: selectize
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.NEWSLETTER_ORGS
