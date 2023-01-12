@@ -356,7 +356,7 @@ class CongressFields {
         $plist = [];
         $ptableHeader = [array(
             'name' => 'th',
-            'text' => '', // $this->plugin->locale['content']['congress_participants_th_name'],
+            'text' => $this->plugin->locale['content']['congress_participants_th_name'],
         )];
         $ptable = [];
 
