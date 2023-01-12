@@ -282,7 +282,7 @@ class CongressFields {
                 'offset' => count($participants),
                 'limit' => 100,
                 'fields' => $fields,
-                'order' => [['sequenceId', 'asc']],
+                'order' => [['sequenceId', 'asc'], ['createdTime', 'asc']],
                 'filter' => $participantsFilter,
             ), 120);
             if (!$res['k']) {
