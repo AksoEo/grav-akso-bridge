@@ -66,6 +66,9 @@
             </div>
         {% elseif akso_congress_registration.is_payment_method %}
             <h1>{{akso_congress_registration.payment_method.name}}</h1>
+            <div class="method-description">
+                {{ akso_congress_registration.payment_method.description_rendered|raw }}
+            </div>
             <h2 class="payment-amount">
                 {{akso_locale.registration_form.payment_outstanding}}
                 {{akso_congress_registration.payment.remaining_rendered|e}}
@@ -85,6 +88,7 @@
             {% endif %}
             <form method="POST" id="akso-congress-registration-form" class="akso-form">
                 <input
+                    type="hidden"
                     class="hidden-input"
                     name="nonce"
                     value="{{akso_congress_registration.form_nonce|e('html_attr')}}" />
@@ -171,6 +175,9 @@
                 {{akso_locale.registration_form.payment_outstanding}}
                 {{akso_congress_registration.payment.remaining_rendered|e}}
             </h2>
+            <p>
+                {{ akso_locale.registration_form.payment_methods_description }}
+            </p>
             {% if akso_congress_registration.payment_methods is empty %}
                 <p>
                     {{akso_locale.registration_form.payment_methods_none}}

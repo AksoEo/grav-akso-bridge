@@ -119,7 +119,7 @@ class CongressRegistration {
 
         if ($this->paymentMethod) {
             $res = $this->app->bridge->get('/aksopay/payment_orgs/' . $this->paymentOrg . '/methods/' . $this->paymentMethod, array(
-                'fields' => ['id', 'type', 'stripeMethods', 'name', 'description', 'currencies',
+                'fields' => ['id', 'type', 'stripeMethods', 'name', 'descriptionPreview', 'currencies',
                     'feePercent', 'feeFixed.val', 'feeFixed.cur', 'internal'],
             ), 60);
 
@@ -268,6 +268,11 @@ class CongressRegistration {
                 if (!isset($_SESSION[self::NONCES])) $_SESSION[self::NONCES] = [];
                 $_SESSION[self::NONCES][] = $nonce;
 
+                $method['description_rendered'] = $this->app->bridge->renderMarkdown(
+                    $method['descriptionPreview'] ?: '',
+                    ['emphasis', 'strikethrough', 'link'],
+                )['c'];
+
                 return array(
                     'is_payment' => true,
                     'is_payment_method' => true,
@@ -346,7 +351,7 @@ class CongressRegistration {
 
             if ($this->paymentOrg) {
                 $res = $this->app->bridge->get('/aksopay/payment_orgs/' . $this->paymentOrg . '/methods', array(
-                    'fields' => ['id', 'type', 'stripeMethods', 'name', 'description', 'currencies',
+                    'fields' => ['id', 'type', 'stripeMethods', 'name', 'descriptionPreview', 'currencies',
                         'feePercent', 'feeFixed.val', 'feeFixed.cur', 'isRecommended'],
                     'filter' => array('internal' => false),
                     'limit' => 100,
@@ -355,8 +360,8 @@ class CongressRegistration {
                 if ($res['k']) {
                     foreach ($res['b'] as &$method) {
                         $method['description_rendered'] = $this->app->bridge->renderMarkdown(
-                            $method['description'] ?: '',
-                            ['emphasis', 'strikethrough', 'link', 'list', 'table'],
+                            $method['descriptionPreview'] ?: '',
+                            ['emphasis', 'strikethrough', 'link'],
                         )['c'];
                     }
                     unset($method);
