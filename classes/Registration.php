@@ -1613,12 +1613,27 @@ class Registration extends Form {
             $this->state['locked_offers'] = $res['offers'];
         }
 
+        // TOS checkbox
+        if (isset($_POST['atos'])) {
+            $this->state['atos'] = true;
+        } else if (isset($this->state['unsafe_deserialized']['atos'])) {
+            $this->state['atos'] = true;
+        }
+
         $this->updateCodeholderState();
         $this->updateCurrencyState();
         $this->updateOffersState();
 
         if ($this->state['step'] > 0) {
-            $err = $this->getThisCodeholderError();
+            $err = null;
+
+            if (!isset($this->state['atos']) || !$this->state['atos']) {
+                $err = $this->locale['terms_required'];
+            }
+
+            if (!$err) {
+                $err = $this->getThisCodeholderError();
+            }
 
             if ($err) {
                 $this->state['form_error'] = $err;
@@ -1640,6 +1655,7 @@ class Registration extends Form {
             'codeholder' => $this->state['codeholder'],
             'offers' => $this->state['offers'],
             'dataIds' => $this->state['dataIds'],
+            'atos' => $this->state['atos'] ?? false,
         );
         $this->state['serialized'] = json_encode($serializedState);
         $_SESSION[self::SESSION_KEY_NAME] = $serializedState;
@@ -1812,6 +1828,11 @@ class Registration extends Form {
 
         $thisYear = (int) (new \DateTime())->format('Y');
 
+        $renderedTermsLabel = $this->app->bridge->renderMarkdown(
+            $this->locale['terms_checkbox_label'],
+            ['emphasis', 'strikethrough', 'link', 'list', 'table'],
+        )['c'];
+
         return array(
             'disabled' => $this->getDisabledError(),
             'countries' => $this->getCachedCountries(),
@@ -1826,6 +1847,7 @@ class Registration extends Form {
             'thisYear' => $thisYear,
             'payment_orgs' => $this->paymentOrgs,
             'is_donation' => $this->isDonation,
+            'rendered_terms_label' => $renderedTermsLabel,
         );
     }
 

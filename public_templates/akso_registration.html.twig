@@ -30,7 +30,7 @@
         {% endif %}
         <input
             class="hidden-input"
-            type="text"
+            type="hidden"
             name="state_serialized"
             value="{{ akso_registration.state.serialized|e('html_attr') }}" />
         {% if akso_registration.state.registered or akso_registration.state.step > 0 or akso_auth %}
@@ -314,6 +314,16 @@
                     </div>
                 </div>
             </div>
+            <div class="form-terms">
+                <input
+                    id="tos-checkbox"
+                    requiredssssssssssssssssssssss
+                    type="checkbox"
+                    name="atos" />
+                <label for="tos-checkbox">
+                    {{ akso_registration.rendered_terms_label|raw }}
+                </label>
+            </div>
             <div class="form-buttons">
                 <button type="submit" class="is-primary" formaction="{{akso_registration.targets.offers|e('html_attr')}}">
                     {{akso_registration.is_donation ? akso_locale.registration.codeholder_next_donation : akso_locale.registration.codeholder_next}}
@@ -546,9 +556,11 @@
                 {% endfor %}
             </div>
             <div class="form-buttons">
+                {% if akso_registration.offers is not empty %}
                 <button type="submit" class="is-primary" formaction="{{akso_registration.targets.summary|e('html_attr')}}">
                     {{akso_locale.registration.offers_next}}
                 </button>
+                {% endif %}
             </div>
         {% elseif akso_registration.state.step == 2 %}
         <p>
