@@ -416,7 +416,7 @@ class Registration extends Form {
 
             for ($i = 0; true; $i += 100) {
                 $res = $this->app->bridge->get("/aksopay/payment_orgs/$orgId/methods", array(
-                    'fields' => ['id', 'type', 'name', 'description', 'currencies', 'prices', 'feePercent', 'feeFixed.val', 'feeFixed.cur', 'maxAmount'],
+                    'fields' => ['id', 'type', 'name', 'descriptionPreview', 'currencies', 'prices', 'feePercent', 'feeFixed.val', 'feeFixed.cur', 'maxAmount'],
                     'filter' => array('internal' => false),
                     'limit' => 100,
                     'offset' => $i,
@@ -426,9 +426,10 @@ class Registration extends Form {
                     break;
                 }
                 foreach ($res['b'] as $method) {
-                    if (gettype($method['description']) === 'string') {
+                    $method['description'] = null;
+                    if (gettype($method['descriptionPreview']) === 'string') {
                         $method['description'] = $this->app->bridge->renderMarkdown(
-                            $method['description'],
+                            $method['descriptionPreview'],
                             ['emphasis', 'strikethrough', 'link', 'list', 'table'],
                         )['c'];
                     }
