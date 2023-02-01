@@ -95,6 +95,9 @@ class Magazines {
                 $srange[0] = $range;
                 $srange[1] = $range_end;
                 $useRange = true;
+            } else {
+                // the first request always has no range, so we bump here
+                $this->bridge->post("/magazines/$magazine/editions/$edition/toc/$entry/recitation/$format/!bump", [], [], []);
             }
 
             $res = $this->bridge->getRawStream($path, 600, $srange, function ($chunk) use ($useRange) {
@@ -482,21 +485,6 @@ class Magazines {
         );
 
         $showAccessBanner = false;
-        if ($route['type'] === 'list' || $route['type'] === 'magazine-single') {
-            $showAccessBanner = true;
-            if ($this->plugin->aksoUser) {
-                // check if user can access all these magazines. if not, show banner
-                $canAccessAll = true;
-                foreach ($list as $item) {
-                    $canRead = $this->canUserReadMagazine($this->plugin->aksoUser, $item, $item['latest'], 'access');
-                    if (!$canRead) {
-                        $canAccessAll = false;
-                        break;
-                    }
-                }
-                $showAccessBanner = !$canAccessAll;
-            }
-        }
 
         if ($route['type'] === 'list') {
             $magazines = $this->listMagazines();
@@ -510,6 +498,20 @@ class Magazines {
                 $list = $magazines;
             }
 
+            $showAccessBanner = true;
+            if ($this->plugin->aksoUser) {
+                // check if user can access all these magazines. if not, show banner
+                $canAccessAll = true;
+                foreach ($magazines as $item) {
+                    $canRead = $this->canUserReadMagazine($this->plugin->aksoUser, $item, $item['latest'], 'access');
+                    if (!$canRead) {
+                        $canAccessAll = false;
+                        break;
+                    }
+                }
+                $showAccessBanner = !$canAccessAll;
+            }
+
             return array(
                 'path_components' => $pathComponents,
                 'type' => 'list',
@@ -520,6 +522,14 @@ class Magazines {
             $magazine = $this->getMagazine($route['magazine']);
             if (!$magazine) return $this->plugin->getGrav()->fireEvent('onPageNotFound');
             $editions = $this->getMagazineEditions($route['magazine'], $magazine['name']);
+
+            if ($route['type'] === 'magazine-single') {
+                $showAccessBanner = true;
+                if ($this->plugin->aksoUser) {
+                    // check if user can access all these magazines. if not, show banner
+                    $showAccessBanner = !$this->canUserReadMagazine($this->plugin->aksoUser, $magazine, $magazine['latest'], 'access');
+                }
+            }
 
             foreach ($editions as &$year) {
                 foreach ($year as &$edition) {
