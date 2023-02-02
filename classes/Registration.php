@@ -108,7 +108,8 @@ class Registration extends Form {
         return null;
     }
 
-    private function scriptCtxFmtCurrency($scriptCtx, $currency, $value) {
+    private function scriptCtxFmtCurrency($currency, $value) {
+        $scriptCtx = new FormScriptExecCtx($this->app);
         $scriptCtx->pushScript(array(
             'currency' => array('t' => 's', 'v' => $currency),
             'value' => array('t' => 'n', 'v' => $value),
@@ -201,7 +202,7 @@ class Registration extends Form {
                                     $result['v']
                                 );
                                 $offer['price']['value'] = $convertedValue;
-                                $offer['price']['amount'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $convertedValue);
+                                $offer['price']['amount'] = $this->scriptCtxFmtCurrency($currency, $convertedValue);
                             } else {
                                 $offer['price']['value'] = null;
                                 $offer['price']['amount'] = '(Eraro)';
@@ -1236,7 +1237,7 @@ class Registration extends Form {
                                     // i dont think intermediaries need currency conversion?
                                     $convertedValue = $result['v'];
                                     $method['offers'][$offerId]['value'] = $convertedValue;
-                                    $method['offers'][$offerId]['amount'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $convertedValue);
+                                    $method['offers'][$offerId]['amount'] = $this->scriptCtxFmtCurrency($currency, $convertedValue);
                                     $method['offers_sum'] += $convertedValue;
                                 } else {
                                     $method['offers'][$offerId]['value'] = null;
@@ -1247,7 +1248,7 @@ class Registration extends Form {
                     }
 
                     $method['total_sum'] = $method['offers_sum'];
-                    $method['offers_sum_rendered'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $method['offers_sum']);
+                    $method['offers_sum_rendered'] = $this->scriptCtxFmtCurrency($currency, $method['offers_sum']);
                 } else {
                     $method['available'] = false;
                     $method['error'] = $this->locale['payment_intermediary_year_not_available'];
@@ -1262,11 +1263,11 @@ class Registration extends Form {
         }
 
         if ($method['fee_total']) {
-            $method['fee_total_rendered'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $method['fee_total']);
+            $method['fee_total_rendered'] = $this->scriptCtxFmtCurrency($currency, $method['fee_total']);
             $method['total_sum'] += $method['fee_total'];
         }
 
-        $method['total_sum_rendered'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $method['total_sum']);
+        $method['total_sum_rendered'] = $this->scriptCtxFmtCurrency($currency, $method['total_sum']);
 
         $totalUsd = $this->convertCurrency($currency, 'USD', $method['total_sum']);
         $methodMaxAmount = 50000000; // (default to hard limit)
