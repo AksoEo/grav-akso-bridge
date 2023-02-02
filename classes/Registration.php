@@ -65,7 +65,7 @@ class Registration extends Form {
         return $obj[$keyPart];
     }
 
-    private function getPriceScriptCtx() {
+    private function getPriceScriptCtx(int $year) {
         $scriptCtx = new FormScriptExecCtx($this->app);
         $codeholder = $this->state['codeholder'];
         if (isset($codeholder['birthdate'])) {
@@ -76,14 +76,14 @@ class Registration extends Form {
             $age = null;
             $agePrimo = null;
             {
-                $birthdate = \DateTime::createFromFormat('Y-m-d', $codeholder['birthdate']);
+                $birthdate = \DateTime::createFromFormat('Y-m-d-P', $codeholder['birthdate'] . '-UTC');
                 if ($birthdate) {
-                    $now = new \DateTime();
-                    $age = (int) $birthdate->diff($now)->format('y');
-
                     $beginningOfYear = new \DateTime();
-                    $beginningOfYear->setISODate($now->format('Y'), 1, 1);
-                    $agePrimo = (int) $birthdate->diff($beginningOfYear)->format('y');
+                    $beginningOfYear->setTimezone(new \DateTimeZone("UTC"));
+                    $beginningOfYear->setDate($year, 1, 1);
+
+                    $age = $birthdate->diff($beginningOfYear)->y;
+                    $agePrimo = $age;
                 }
             }
             $scriptCtx->setFormVar('age', $age);
@@ -154,78 +154,78 @@ class Registration extends Form {
         if ($res['k']) {
             $offerYears = array_reverse($res['b']);
 
-            $scriptCtx = $this->getPriceScriptCtx();
-            if ($scriptCtx) {
-                $currency = $this->state['currency'];
+            $currency = $this->state['currency'];
 
-                // compute all prices for the current codeholder
-                foreach ($offerYears as &$offerYear) {
-                    if (!isset($offerYear['offers'])) continue;
-                    $yearCurrency = $offerYear['currency'];
+            // compute all prices for the current codeholder
+            foreach ($offerYears as &$offerYear) {
+                if (!isset($offerYear['offers'])) continue;
+                $yearCurrency = $offerYear['currency'];
 
-                    foreach ($offerYear['offers'] as &$offerGroup) {
-                        if (gettype($offerGroup['description']) === 'string') {
-                            $offerGroup['description'] = $this->app->bridge->renderMarkdown(
-                                $offerGroup['description'],
-                                ['emphasis', 'strikethrough', 'link'],
-                            )['c'];
-                        }
+                $scriptCtx = $this->getPriceScriptCtx($offerYear['year']);
+                if (!$scriptCtx) continue;
 
-                        foreach ($offerGroup['offers'] as &$offer) {
-                            if (!isset($offer['price'])) continue;
+                foreach ($offerYear['offers'] as &$offerGroup) {
+                    if (gettype($offerGroup['description']) === 'string') {
+                        $offerGroup['description'] = $this->app->bridge->renderMarkdown(
+                            $offerGroup['description'],
+                            ['emphasis', 'strikethrough', 'link'],
+                        )['c'];
+                    }
 
-                            $offer['is_duplicate'] = isset($registeredOffers[$offerYear['year']])
-                                && in_array($offer['id'], $registeredOffers[$offerYear['year']]);
+                    foreach ($offerGroup['offers'] as &$offer) {
+                        if (!isset($offer['price'])) continue;
 
-                            if ($offer['price']) {
-                                if (gettype($offer['price']['description']) === 'string') {
-                                    $offer['price']['description'] = $this->app->bridge->renderMarkdown(
-                                        $offer['price']['description'],
-                                        ['emphasis', 'strikethrough'],
-                                    )['c'];
-                                }
+                        $offer['is_duplicate'] = isset($registeredOffers[$offerYear['year']])
+                            && in_array($offer['id'], $registeredOffers[$offerYear['year']]);
 
-                                $scriptCtx->pushScript($offer['price']['script']);
-                                $result = $scriptCtx->eval(array(
-                                    't' => 'c',
-                                    'f' => 'id',
-                                    'a' => [$offer['price']['var']],
-                                ));
-                                $scriptCtx->popScript();
+                        if ($offer['price']) {
+                            if (gettype($offer['price']['description']) === 'string') {
+                                $offer['price']['description'] = $this->app->bridge->renderMarkdown(
+                                    $offer['price']['description'],
+                                    ['emphasis', 'strikethrough'],
+                                )['c'];
+                            }
 
-                                if ($result['s']) {
-                                    $convertedValue = $this->convertCurrency(
-                                        $yearCurrency,
-                                        $currency,
-                                        $result['v']
-                                    );
-                                    $offer['price']['value'] = $convertedValue;
-                                    $offer['price']['amount'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $convertedValue);
-                                } else {
-                                    $offer['price']['value'] = null;
-                                    $offer['price']['amount'] = '(Eraro)';
-                                }
+                            $scriptCtx->pushScript($offer['price']['script']);
+                            $result = $scriptCtx->eval(array(
+                                't' => 'c',
+                                'f' => 'id',
+                                'a' => [$offer['price']['var']],
+                            ));
+                            $scriptCtx->popScript();
+
+                            if ($result['s']) {
+                                $convertedValue = $this->convertCurrency(
+                                    $yearCurrency,
+                                    $currency,
+                                    $result['v']
+                                );
+                                $offer['price']['value'] = $convertedValue;
+                                $offer['price']['amount'] = $this->scriptCtxFmtCurrency($scriptCtx, $currency, $convertedValue);
+                            } else {
+                                $offer['price']['value'] = null;
+                                $offer['price']['amount'] = '(Eraro)';
                             }
                         }
-
-                        if ($this->isDonation) {
-                            $offerGroup['offers'] = array_filter($offerGroup['offers'], function ($offer) {
-                                return $offer['type'] === 'addon';
-                            });
-                        }
                     }
+
                     if ($this->isDonation) {
-                        $offerYear['offers'] = array_filter($offerYear['offers'], function ($group) {
-                            return !empty($group['offers']);
+                        $offerGroup['offers'] = array_filter($offerGroup['offers'], function ($offer) {
+                            return $offer['type'] === 'addon';
                         });
                     }
                 }
                 if ($this->isDonation) {
-                    // keep only the current year, if it's not empty
-                    $offerYears = array_filter($offerYears, function ($year) use ($currentYear) {
-                        return !empty($year['offers']) && $year['year'] === $currentYear;
+                    $offerYear['offers'] = array_filter($offerYear['offers'], function ($group) {
+                        return !empty($group['offers']);
                     });
                 }
+            }
+            if ($this->isDonation) {
+                // keep only the current year, if it's not empty
+                $offerYears = array_filter($offerYears, function ($year) use ($currentYear) {
+                    return !empty($year['offers']) && $year['year'] === $currentYear;
+                });
             }
 
             return $offerYears;
@@ -1106,13 +1106,6 @@ class Registration extends Form {
     }
 
     private function deriveMethodState($org, $method) {
-        $scriptCtx = $this->getPriceScriptCtx();
-        if (!$scriptCtx) {
-            $method['available'] = false;
-            $method['error'] = '(Eraro)';
-            return $method;
-        }
-
         $currency = $this->state['currency'];
         $method['currency_available'] = in_array($currency, $method['currencies']);
         $method['total_sum'] = $org['offers_sum'];
@@ -1166,8 +1159,6 @@ class Registration extends Form {
             $isMember = $this->plugin->aksoUser ? $this->plugin->aksoUser['member'] : false;
             $method['intermediary_rendered'] = CodeholderLists::renderCodeholder($this->app->bridge, $intermediary, null, $isMember)->html();
 
-            $scriptCtx->setFormVar('currency', $currency);
-
             if (count($org['years']) != 1) {
                 $method['available'] = false;
                 $method['error'] = $this->locale['payment_intermediary_err_multiple_years'];
@@ -1176,6 +1167,14 @@ class Registration extends Form {
             $method['year'] = $org['years'][0];
 
             foreach ($this->offers as $offerYear) {
+                $scriptCtx = $this->getPriceScriptCtx($offerYear['year']);
+                if (!$scriptCtx) {
+                    $method['available'] = false;
+                    $method['error'] = '(Eraro)';
+                    return $method;
+                }
+                $scriptCtx->setFormVar('currency', $currency);
+
                 if ($offerYear['paymentOrgId'] != $org['id']) {
                     continue;
                 }
