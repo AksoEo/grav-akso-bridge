@@ -917,7 +917,18 @@ const messageHandlers = {
                 ref: null,
             };
         } else {
-            return await runCache(true);
+            try {
+                return await runCache(true);
+            } catch (err) {
+                if (err?.statusCode) {
+                    return {
+                        k: false,
+                        sc: err.statusCode,
+                        h: {},
+                        ref: null,
+                    };
+                } else throw err;
+            }
         }
     },
     release_raw: async (conn, { p }) => {

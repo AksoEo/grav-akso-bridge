@@ -721,6 +721,20 @@
                     background: rgb(var(--bg));
                     border-radius: var(--radius);
                     box-shadow: @shade-both;
+                    display: flex;
+
+                    .method-thumbnail {
+                        margin-left: 1em;
+                        margin-top: 1em;
+                        align-self: flex-start;
+                        width: 4em;
+                        flex-shrink: 0;
+
+                        .method-thumbnail-image {
+                            border-radius: 0.5em;
+                            width: 100%;
+                        }
+                    }
 
                     .method-details {
                         flex: 1;

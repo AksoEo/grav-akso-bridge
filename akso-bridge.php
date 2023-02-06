@@ -4,6 +4,7 @@ namespace Grav\Plugin;
 use Grav\Common\Plugin;
 use Grav\Common\Uri;
 use Grav\Plugin\AksoBridge\AksoTwigExt;
+use Grav\Plugin\AksoBridge\Payments;
 use RocketTheme\Toolbox\Event\Event;
 use Grav\Common\Page\Page;
 use Grav\Plugin\AksoBridge\MarkdownExt;
@@ -43,10 +44,11 @@ class AksoBridgePlugin extends Plugin {
 
     const RESOURCE_PATH = '/_';
     const CONGRESS_REGISTRATION_PATH = 'alighilo';
-    const CODEHOLDER_PICTURE_PATH = self::RESOURCE_PATH . '/membro/bildo';
-    const CONGRESS_LOC_THUMBNAIL_PATH = self::RESOURCE_PATH . '/kongresa_loko/bildo';
-    const MAGAZINE_COVER_PATH = self::RESOURCE_PATH . '/revuo/bildo';
-    const MAGAZINE_DOWNLOAD_PATH = self::RESOURCE_PATH . '/revuo/elshuto';
+    public const CODEHOLDER_PICTURE_PATH = self::RESOURCE_PATH . '/membro/bildo';
+    public const CONGRESS_LOC_THUMBNAIL_PATH = self::RESOURCE_PATH . '/kongresa_loko/bildo';
+    public const MAGAZINE_COVER_PATH = self::RESOURCE_PATH . '/revuo/bildo';
+    public const MAGAZINE_DOWNLOAD_PATH = self::RESOURCE_PATH . '/revuo/elshuto';
+    public const PAYMENT_METHOD_THUMBNAIL_PATH = self::RESOURCE_PATH . '/pagmetodo/bildo';
 
     // allow access to protected property
     public function getGrav() {
@@ -148,6 +150,12 @@ class AksoBridgePlugin extends Plugin {
             $app->open();
             $loc = new CongressLocations($this, $app, null, null);
             $loc->runThumbnail();
+            $app->close();
+        } else if ($this->path === self::PAYMENT_METHOD_THUMBNAIL_PATH) {
+            $app = new AppBridge($this->grav);
+            $app->open();
+            $payments = new Payments($this, $app);
+            $payments->runMethodThumbnail();
             $app->close();
         } else if ($this->path === self::CODEHOLDER_PICTURE_PATH) {
             $md = new MarkdownExt($this);

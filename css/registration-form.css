@@ -180,6 +180,20 @@
     padding: 1em;
     margin: 1em 0;
     text-align: left;
+    display: flex;
+}
+.registration-form.is-payment .payment-methods .payment-method .method-thumbnail {
+    margin-right: 1em;
+    align-self: flex-start;
+    width: 4em;
+    flex-shrink: 0;
+}
+.registration-form.is-payment .payment-methods .payment-method .method-details {
+    flex: 1;
+}
+.registration-form.is-payment .payment-methods .payment-method .method-thumbnail .method-thumbnail-image {
+    border-radius: 0.5em;
+    width: 100%;
 }
 .registration-form.is-payment .payment-methods .payment-method .method-type {
     font-size: small;

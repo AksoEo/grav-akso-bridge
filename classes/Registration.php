@@ -403,6 +403,8 @@ class Registration extends Form {
         return $result;
     }
     private function loadPaymentOrgs($orgs) {
+        $payments = new Payments($this->plugin, $this->app);
+
         $result = [];
         foreach ($orgs->toArray() as $orgId) {
             $res = $this->app->bridge->get("/aksopay/payment_orgs/$orgId", array(
@@ -417,14 +419,16 @@ class Registration extends Form {
 
             for ($i = 0; true; $i += 100) {
                 $res = $this->app->bridge->get("/aksopay/payment_orgs/$orgId/methods", array(
-                    'fields' => ['id', 'type', 'name', 'descriptionPreview', 'currencies', 'prices', 'feePercent', 'feeFixed.val', 'feeFixed.cur', 'maxAmount'],
+                    'fields' => [
+                        'id', 'type', 'name', 'descriptionPreview', 'currencies', 'prices', 'feePercent', 'feeFixed.val',
+                        'feeFixed.cur', 'maxAmount',
+                    ],
                     'filter' => array('internal' => false),
                     'limit' => 100,
                     'offset' => $i,
                 ), 120);
                 if (!$res['k']) {
                     throw new \Exception('Failed to load payment methods');
-                    break;
                 }
                 foreach ($res['b'] as $method) {
                     $method['description'] = null;
@@ -433,6 +437,15 @@ class Registration extends Form {
                             $method['descriptionPreview'],
                             ['emphasis', 'strikethrough', 'link', 'list', 'table'],
                         )['c'];
+                    }
+
+                    if ($payments->hasThumbnail($orgId, $method['id'])) {
+                        $src = $payments->getMethodThumbnailSrcSet($orgId, $method['id'], 64);
+                        $method['thumbnail_src'] = $src['src'];
+                        $method['thumbnail_srcset'] = $src['srcset'];
+                    } else {
+                        $method['thumbnail_src'] = null;
+                        $method['thumbnail_srcset'] = null;
                     }
 
                     $methods[$method['id']] = $method;

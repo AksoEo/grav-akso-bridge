@@ -349,6 +349,8 @@ class CongressRegistration {
             $autoPaymentMethods = [];
             $otherPaymentMethods = [];
 
+            $payments = new Payments($this->plugin, $this->app);
+
             if ($this->paymentOrg) {
                 $res = $this->app->bridge->get('/aksopay/payment_orgs/' . $this->paymentOrg . '/methods', array(
                     'fields' => ['id', 'type', 'stripeMethods', 'name', 'descriptionPreview', 'currencies',
@@ -363,6 +365,16 @@ class CongressRegistration {
                             $method['descriptionPreview'] ?: '',
                             ['emphasis', 'strikethrough', 'link'],
                         )['c'];
+
+                        if ($payments->hasThumbnail($this->paymentOrg, $method['id'])) {
+                            $src = $payments->getMethodThumbnailSrcSet($this->paymentOrg, $method['id'], 64);
+                            $method['thumbnail_src'] = $src['src'];
+                            $method['thumbnail_srcset'] = $src['srcset'];
+                        } else {
+                            $method['thumbnail_src'] = null;
+                            $method['thumbnail_srcset'] = null;
+                        }
+
                     }
                     unset($method);
 

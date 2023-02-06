@@ -317,7 +317,7 @@
             <div class="form-terms">
                 <input
                     id="tos-checkbox"
-                    requiredssssssssssssssssssssss
+                    required
                     type="checkbox"
                     name="atos" />
                 <label for="tos-checkbox">
@@ -609,6 +609,16 @@
                         <li class="payment-method">
                         {% endif %}
                             {% set method_radio_id = 'payment-method-check-' ~ org.id ~ '-' ~ method.id %}
+                            {% if method.thumbnail_src %}
+                                <div class="method-thumbnail">
+                                    <img
+                                        class="method-thumbnail-image"
+                                        loading="lazy"
+                                        alt="{{ method.name|e('html_attr') }}"
+                                        src="{{ method.thumbnail_src|e('html_attr') }}"
+                                        srcset="{{ method.thumbnail_srcset|e('html_attr') }}" />
+                                </div>
+                            {% endif %}
                             <form class="method-details" method="POST">
                                 <label class="method-name" for="{{method_radio_id}}">{{method.name|e}}</label>
                                 <div class="method-description">
