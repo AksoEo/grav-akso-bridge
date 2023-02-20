@@ -1,0 +1,427 @@
+{% macro render_option(option, codeholders, context, verbose) %}
+    <div class="vote-option">
+        {% if option.type == 'simple' %}
+            <div class="option-contents">
+                <div class="option-name">{{option.name|e}}</div>
+                {% if verbose %}
+                    <div class="option-description">{{option.description_rendered|raw}}</div>
+                {% endif %}
+            </div>
+        {% elseif option.type == 'codeholder' %}
+            {% set codeholder = codeholders[option.codeholderId] %}
+            {% if codeholder.icon_src %}
+                <div class="option-icon">
+                    <img
+                        aria-hidden="true"
+                        src="{{codeholder.icon_src|e('html_attr')}}"
+                        srcset="{{codeholder.icon_srcset|e('html_attr')}}" />
+                </div>
+            {% endif %}
+            <div class="option-contents">
+                {% if verbose and codeholder.country %}
+                    <div class="option-extra">
+                        <img
+                            class="inline-flag-icon"
+                            src="{{codeholder.fmt_country_emoji.src|e('html_attr')}}"
+                            alt="{{codeholder.fmt_country_emoji.alt|e('html_attr')}}" />
+                        {{codeholder.fmt_country}}
+                    </div>
+                {% endif %}
+                <div class="option-name">
+                    {{codeholder.fmt_name|e}}
+                </div>
+                {% if verbose %}
+                    <div class="option-description">{{option.description_rendered|raw}}</div>
+                    {% if codeholder.has_details %}
+                        <details class="option-codeholder-details">
+                            <summary>{{context.akso_locale.account_votes.option_codeholder_details}}</summary>
+                            <table>
+                                {% if codeholder.email %}
+                                    <!-- because the user is logged in we won't bother obfuscating -->
+                                    <div>
+                                        <a href="mailto:{{codeholder.email|e('html_attr')}}">{{codeholder.email|e}}</a>
+                                    </div>
+                                {% endif %}
+                                {% if codeholder.website %}
+                                    <div>
+                                        <a href="{{codeholder.website|e('html_attr')}}">{{codeholder.website|e}}</a>
+                                    </div>
+                                {% endif %}
+                                {% if codeholder.biography %}
+                                    <div>
+                                        {% set is_first = true %}
+                                        {% for line in codeholder.biography|split('\n') %}
+                                            {% if is_first %}
+                                                {% set is_first = false %}
+                                            {% else %}
+                                                <br />
+                                            {% endif %}
+                                            {{line|e}}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </table>
+                        </details>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% set result = vote.result %}
+{% set NARROW_NBSP = '\xE2\x80\xAF' %}
+
+{% if vote.percentageVoted != null %}
+    {% set percentage = (vote.percentageVoted * 100)|number_format(1, ',') ~ NARROW_NBSP ~ '%' %}
+    {% if result and result.ballots %}
+        {% set str = result.ballots.count ~ NARROW_NBSP ~ "/" ~ NARROW_NBSP ~ result.ballots.voters %}
+        {% set str = str ~ " (" ~ percentage ~ ")" %}
+    {% else %}
+        {% set str = percentage %}
+    {% endif %}
+    {{ akso_locale.account_votes.results_percentage_voted|format(str) }}
+{% endif %}
+
+{% if result == null %}
+    <p>
+        {{ akso_locale.account_votes.results_are_private }}
+    </p>
+{% else %}
+    <div class="vote-result">
+        <div class="result-status">
+            {% if result.status == 'no-quorum' %}
+                {{akso_locale.account_votes.status_no_quorum}}
+            {% elseif result.status == 'too-many-blanks' %}
+                {{akso_locale.account_votes.status_too_many_blanks}}
+            {% elseif result.status == 'tie-breaker-needed' %}
+                {{akso_locale.account_votes.status_tie_breaker_needed}}
+            {% elseif result.status == 'tie' %}
+                {{akso_locale.account_votes.status_tie}}
+            {% elseif result.status == 'majority-empty' %}
+                {{akso_locale.account_votes.status_majority_empty}}
+            {% elseif result.status == 'success' %}
+                {% if result.type == 'yn' or result.type == 'ynb' %}
+                    {% if result.pass.result %}
+                        {{akso_locale.account_votes.status_yn_passed}}
+                    {% else %}
+                        {{akso_locale.account_votes.status_yn_not_passed}}
+                    {% endif %}
+                {% else %}
+                    {{akso_locale.account_votes.status_success}}
+                {% endif %}
+            {% else %}
+                ?{{ result.status }}?
+            {% endif %}
+        </div>
+        {% if result.ballots and result.type != 'yn' and result.ballots.count > 0 %}
+            <div class="result-blanks">
+                {% set str = result.ballots.blank ~ NARROW_NBSP ~ "/" ~ NARROW_NBSP ~ result.ballots.count %}
+                {% set percentage = (result.ballots.blank / result.ballots.count * 100)|number_format(1, ',') %}
+                {% set str = str ~ " (" ~ percentage ~ NARROW_NBSP ~ "%)" %}
+                {{ akso_locale.account_votes.result_blanks|format(str) }}
+            </div>
+        {% endif %}
+        {% if result.value.winners %}
+            <div class="result-winners">
+                <h3>
+                    {% if result.value.winners|count > 1 %}
+                        {{ akso_locale.account_votes.result_winners }}
+                    {% else %}
+                        {{ akso_locale.account_votes.result_winner }}
+                    {% endif %}
+                </h3>
+                <ul class="winners-list">
+                {% for winner in result.value.winners %}
+                    <li class="winner-item">
+                        {{ _self.render_option(vote.options[winner], vote.codeholders, context, true) }}
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+            <hr />
+        {% endif %}
+        {% if result.mentions and result.type != 'tm' %}
+            <details class="result-mentions" data-value="{{ result.mentions|json_encode }}">
+                <summary>
+                    {{ akso_locale.account_votes.result_mentions_summary }}
+                </summary>
+                <p>
+                    {{ akso_locale.account_votes.result_mentions_description }}
+                </p>
+                <table class="inner-table">
+                    <thead>
+                        <tr>
+                            <th>{{ akso_locale.account_votes.result_table_header_option }}</th>
+                            <th>{{ akso_locale.account_votes.result_table_header_mentions }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for k, v in result.mentions.mentions %}
+                            <tr>
+                                <td>
+                                    {% set option = vote.options[k] %}
+                                    {{ _self.render_option(option, vote.codeholders, context, false) }}
+                                </td>
+                                <td>
+                                    {{ v }}
+                                    {% if k in result.mentions.excludedByMentions %}
+                                        {{ akso_locale.account_votes.result_mentions_excluded }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </details>
+        {% endif %}
+        {% if result.type == 'rp' %}
+            <div class="result-vote-type">{{ akso_locale.account_votes.result_type_rp }}</div>
+        {% elseif result.type == 'stv' %}
+            <div class="result-vote-type">{{ akso_locale.account_votes.result_type_stv }}</div>
+        {% elseif result.type == 'tm' %}
+            <div class="result-vote-type">{{ akso_locale.account_votes.result_type_tm }}</div>
+        {% endif %}
+        {% if (result.type == 'yn' or result.type == 'ynb') and result.status == 'success' %}
+            <div class="result-ynb-value">
+                <table class="inner-table">
+                    <thead>
+                        <tr>
+                            <th>{{akso_locale.account_votes.result_table_header_option}}</th>
+                            <th>{{akso_locale.account_votes.result_table_header_votes}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{akso_locale.account_votes.vote_ynb_y}}</td>
+                            <td>{{result.value.tally.yes}}</td>
+                        </tr>
+                        <tr>
+                            <td>{{akso_locale.account_votes.vote_ynb_n}}</td>
+                            <td>{{result.value.tally.no}}</td>
+                        </tr>
+                        {% if result.type == 'ynb' %}
+                            <tr>
+                                <td>{{akso_locale.account_votes.vote_ynb_b}}</td>
+                                <td>{{result.value.tally.blank}}</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        {% elseif result.type == 'rp' %}
+            <div class="result-rp-value">
+                <h3>{{ akso_locale.account_votes.result_rp_rounds_title }}</h3>
+                {% for i, round in result.value.rounds %}
+                    <div class="rp-round" data-value="{{ round|json_encode }}">
+                        <h4>{{ akso_locale.account_votes.result_rp_round_n_title|format(i + 1) }}</h4>
+                        <div class="rp-round-winner">
+                            {{ akso_locale.account_votes.result_rp_round_winner }}
+                            {{_self.render_option(vote.options[round.winner], vote.codeholders, context, false)}}
+                        </div>
+                        <table class="inner-table">
+                            <thead>
+                                <tr>
+                                    <th>{{akso_locale.account_votes.result_rp_table_header_pair}}</th>
+                                    <th></th>
+                                    <th></th>
+                                    <th>{{akso_locale.account_votes.result_rp_table_header_diff}}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pair in round.orderedPairs %}
+                                    {% set a = pair[0] %}
+                                    {% set b = pair[1] %}
+                                    {% set edge = null %}
+                                    {% for e in round.lockGraphEdges %}
+                                        {% if (e.from == a and e.to == b) or (e.from == b and e.to == a) %}
+                                            {% set edge = e %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    <tr>
+                                        {% if edge %}
+                                            <td class="rp-pair-cell-a">
+                                                {% if edge.from == round.winner %}
+                                                    <span class="rp-pair-item is-pair-winner is-round-winner">
+                                                {% else %}
+                                                    <span class="rp-pair-item is-pair-winner">
+                                                {% endif %}
+                                                    {{_self.render_option(vote.options[edge.from], vote.codeholders, context, false)}}
+                                                </span>
+                                            </td>
+                                            <td class="rp-pair-cell-sym">→</td>
+                                            <td class="rp-pair-cell-b">
+                                                <span class="rp-pair-item">
+                                                    {{_self.render_option(vote.options[edge.to], vote.codeholders, context, false)}}
+                                                </span>
+                                            </td>
+                                        {% else %}
+                                            <td class="rp-pair-cell-a">
+                                                <span class="rp-pair-item">
+                                                    {{_self.render_option(vote.options[a], vote.codeholders, context, false)}}
+                                                </span>
+                                            </td>
+                                            <td class="rp-pair-cell-sym">·</td>
+                                            <td class="rp-pair-cell-b">
+                                                <span class="rp-pair-item">
+                                                    {{_self.render_option(vote.options[b], vote.codeholders, context, false)}}
+                                                </span>
+                                            </td>
+                                        {% endif %}
+                                        <td>
+                                            {% if edge %}
+                                                {{ edge.diff }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endfor %}
+            </div>
+        {% elseif result.type == 'stv' %}
+            <div class="result-stv-value">
+                {% set quota = null %}
+                {% for event in result.value.events %}
+                    {% if event.type == 'elect-with-quota' and quota == null %}
+                        {% set quota = event.quota %}
+                    {% endif %}
+                {% endfor %}
+                <p>
+                    {{ akso_locale.account_votes.result_stv_quota|format(quota|number_format(3, ',')) }}
+                </p>
+
+                <div class="stv-table-container">
+                    <table class="stv-table">
+                        <thead>
+                            <tr>
+                                <th>{{ akso_locale.account_votes.result_table_header_option }}</th>
+                                {% for index, event in result.value.events %}
+                                    <th>
+                                        {{ akso_locale.account_votes.result_stv_table_header|format(index + 1) }}
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                            <tr class="stv-event-type-row">
+                                <th></th>
+                                {% for event in result.value.events %}
+                                    <th>
+                                        {% if event.type == 'elect-with-quota' and event.elected is empty %}
+                                            {{ akso_locale.account_votes.result_stv_table_header_elect_empty }}
+                                        {% elseif event.type == 'elect-with-quota' %}
+                                            {{ akso_locale.account_votes.result_stv_table_header_elect }}
+                                        {% elseif event.type == 'eliminate' %}
+                                            {{ akso_locale.account_votes.result_stv_table_header_eliminate }}
+                                        {% elseif event.type == 'elect-rest' %}
+                                            {{ akso_locale.account_votes.result_stv_table_header_elect_rest }}
+                                        {% endif %}
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for option in result.mentions.includedByMentions %}
+                                <tr>
+                                    <th>
+                                        {{ _self.render_option(vote.options[option], vote.codeholders, context, false) }}
+                                    </th>
+                                    {% set elected = false %}
+                                    {% set eliminated = false %}
+                                    {% set prev_value = null %}
+                                    {% for index, event in result.value.events %}
+                                        {% set changed = '' %}
+                                        {% if event.values[option] is defined %}
+                                            {% if prev_value == null or prev_value != event.values[option] %}
+                                                {% set changed = ' did-change' %}
+                                            {% endif %}
+                                            {% set prev_value = event.values[option] %}
+                                        {% endif %}
+
+                                        <td>
+                                            {% if elected %}
+                                                —
+                                            {% elseif event.values[option] is defined %}
+                                                {% set value = event.values[option]|number_format(3, ',') %}
+                                                {% if eliminated %}
+                                                    <span class="event-eliminated-value is-none">—</span>
+                                                {% elseif event.elected is defined and option in event.elected %}
+                                                    <span class="event-elected-value">{{ value }}</span>
+                                                    {% set elected = true %}
+                                                {% elseif event.type == 'eliminate' and event.candidate == option %}
+                                                    <span class="event-eliminated-value eliminated-here">{{ value }}</span>
+                                                    {% set eliminated = true %}
+                                                {% else %}
+                                                    <span class="event-value {{ changed }}">{{ value }}</span>
+                                                {% endif %}
+                                            {% elseif event.elected is defined and option in event.elected %}
+                                                <span class="event-elected-value">—</span>
+                                                {% set elected = true %}
+                                            {% elseif event.type == 'eliminate' and event.candidate == option %}
+                                                <span class="event-eliminated-value eliminated-here is-none">—</span>
+                                                {% set eliminated = true %}
+                                            {% elseif eliminated %}
+                                                <span class="event-eliminated-value is-none">—</span>
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="stv-legend">
+                    <h4>{{ akso_locale.account_votes.result_stv_table_legend_title }}</h4>
+                    <ul>
+                        <li>{{ akso_locale.account_votes.result_stv_table_legend_quota }}</li>
+                        <li>{{ akso_locale.account_votes.result_stv_table_legend_eliminate }}</li>
+                        <li>{{ akso_locale.account_votes.result_stv_table_legend_elect_rest }}</li>
+                    </ul>
+                </div>
+            </div>
+        {% elseif result.type == 'tm' %}
+            <div class="result-tm-value">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{ akso_locale.account_votes.result_table_header_option }}</th>
+                            <th>{{ akso_locale.account_votes.result_table_header_mentions }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set mentions_items = [] %}
+                        {% for k, v in result.mentions.mentions %}
+                            {% set mentions_items = mentions_items|merge([{ 'val': v, 'opt': k }]) %}
+                        {% endfor %}
+                        {% set mentions_sorted = mentions_items|sort((a, b) => b.val - a.val)|reverse %}
+                        {% for item in mentions_sorted %}
+                            {% set option = item.opt %}
+                            <tr>
+                                <td>
+                                    {{ _self.render_option(vote.options[option], vote.codeholders, context, false) }}
+                                </td>
+                                <td>
+                                    {{ result.mentions.mentions[option] }}
+                                    {% if result.status == 'success' and option in result.value.winners %}
+                                        ✓
+                                    {% endif %}
+                                    {% if result.status == 'tie' and option in result.tiedNodes %}
+                                        *
+                                    {% endif %}
+                                    {% if k in result.mentions.excludedByMentions %}
+                                        {{ akso_locale.account_votes.result_mentions_excluded }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+{% endif %}
+

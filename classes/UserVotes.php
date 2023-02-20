@@ -19,7 +19,11 @@ class UserVotes {
         $votes = [];
         while (true) {
             $res = $this->bridge->get('/codeholders/self/votes', array(
-                'fields' => ['mayVote', 'hasVoted', 'id', 'org', 'name', 'timeStart', 'timeEnd', 'hasStarted', 'hasEnded', 'hasResults', 'isActive', 'description'],
+                'fields' => [
+                    'mayVote', 'hasVoted', 'id', 'org', 'name', 'timeStart', 'timeEnd', 'hasStarted', 'hasEnded',
+                    'hasResults', 'isActive', 'description',
+                    'publishResults', 'publishVoters', 'publishVotersPercentage',
+                ],
                 'filter' => array(
                     'org' => array('$in' => $voteOrgs),
                 ),
@@ -28,7 +32,7 @@ class UserVotes {
                 'limit' => 100,
             ));
             if (!$res['k']) {
-                throw new Exception('Could not fetch self/votes');
+                throw new \Exception('Could not fetch self/votes');
             }
             foreach ($res['b'] as $vote) {
                 $vote['description_rendered'] = $this->bridge->renderMarkdown(
@@ -47,7 +51,7 @@ class UserVotes {
         $res = $this->bridge->get("/codeholders/self/votes/$id", array(
             'fields' => [
                 'id', 'org', 'name', 'description', 'type', 'mayVote', 'isActive', 'hasResults',
-                'ballotsSecret', 'hasVoted', 'options', 'tieBreakerCodeholder',
+                'ballotsSecret', 'hasVoted', 'options', 'tieBreakerCodeholder', 'percentageVoted',
             ],
         ));
         if (!$res['k']) {
