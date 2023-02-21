@@ -206,13 +206,9 @@ class MarkdownExt {
             }
         };
 
-        // A MILDLY CURSED SOLUTION
-        // due to grav's markdown handling being rather limited, this will not immediately
-        // render the list html after fetching the data. Instead, it will write it as a JSON
-        // string for the HTML handler below to *actually* render
         $markdown->addBlockType('[', 'AksoList');
-        $markdown->blockAksoList = function($line, $block) use ($self) {
-            if (preg_match('/^\[\[listo\s+(\d+)(?:\s+lau-(\w+)-en-rolo\s+((?:\d+(?:,\s*|\s+))*\d+))?\]\]/i', $line['text'], $matches)) {
+        $markdown->blockAksoList = function($line) {
+            if (preg_match('/^\[\[listo\s+(\d+)(?:\s+lau-(\w+)-en-rolo\s+((?:\d+(?:,\s*|\s+))*\d+))?]]/i', $line['text'], $matches)) {
                 $listId = $matches[1];
                 $sortBy = null;
                 $sortByRoles = [];
@@ -222,116 +218,11 @@ class MarkdownExt {
                 } else if (isset($matches[2]) && $matches[2] === 'teksto') {
                     $sortBy = 'dataString';
                 } else if (isset($matches[2])) {
-                    throw new Error('unknown sorting method ' . $sortBy . ' in list ' . $listId);
+                    throw new \Exception('unknown sorting method ' . $sortBy . ' in list ' . $listId);
                 }
 
                 if ($sortBy) {
                     $sortByRoles = array_map(function($f) { return (int) $f; }, preg_split('/,\s*|\s+/', $matches[3]));
-                }
-
-                $error = null;
-                $codeholders = [];
-                $dataOrgIds = [];
-                $dataOrgCodeholders = [];
-
-                while (true) {
-                    $haveItems = count($codeholders);
-                    $res = $self->bridge->get('/lists/' . $listId . '/codeholders', array(
-                        'offset' => $haveItems,
-                        'limit' => 100
-                    ), 60);
-
-                    if (!$res['k']) {
-                        $error = '[internal error while fetching list: ' . $res['b'] . ']';
-                        break;
-                    }
-
-                    // $totalItems = $res['h']['x-total-items'];
-                    $totalItems = 99999999; // FIXME: the server doesn't send this apparently?
-                    $codeholderIds = $res['b'];
-
-                    $res = $self->bridge->get('/codeholders', array(
-                        'filter' => array('id' => array('$in' => $codeholderIds)),
-                        'fields' => CodeholderLists::FIELDS,
-                        'limit' => 100,
-                    ), 60);
-                    if (!$res['k']) {
-                        $error = '[internal error while fetching list: ' . $res['b'] . ']';
-                        break;
-                    }
-                    $chData = array();
-                    foreach ($res['b'] as $ch) {
-                        $chData[$ch['id']] = $ch;
-                    }
-
-                    foreach ($codeholderIds as $id) {
-                        if (!isset($chData[$id])) continue;
-                        $ch = $chData[$id];
-                        // php refuses to encode json if we dont do this
-                        $ch['profilePictureHash'] = bin2hex($ch['profilePictureHash']);
-
-                        // FIXME: do not do this (sending a request for each codeholder)
-                        $res2 = $this->bridge->get("/codeholders/$id/roles", array(
-                            'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString', 'role.id'],
-                            'filter' => array('isActive' => true, 'role.public' => true),
-                            'order' => [['role.name', 'asc']],
-                            'limit' => 100
-                        ), 240);
-                        if ($res2['k']) {
-                            $ch['activeRoles'] = $res2['b'];
-
-                            foreach ($res2['b'] as $role) {
-                                if ($role['dataOrg'] && !in_array($role['dataOrg'], $dataOrgIds)) {
-                                    $dataOrgIds[] = $role['dataOrg'];
-                                }
-                            }
-                        } else {
-                            $ch['activeRoles'] = [];
-                        }
-
-                        $codeholders[] = $ch;
-                    }
-
-                    if (count($res['b']) == 0) break; // in absence of x-total-items we'll need to do this
-                    if (count($codeholders) < $totalItems) {
-                        if (count($res['b']) == 0) {
-                            // avoid an infinite loop
-                            $error = '[internal inconsistency while fetching list: server reported ' . $totalItems . ' item(s) but refuses to send any more than ' . $haveItems . ']';
-                            break;
-                        }
-                    } else {
-                        // we have all items
-                        break;
-                    }
-                }
-
-                for ($i = 0; $i < count($dataOrgIds); $i += 100) {
-                    $ids = array_slice($dataOrgIds, $i, 100);
-                    $res = $self->bridge->get('/codeholders', array(
-                        'fields' => ['id', 'fullName', 'nameAbbrev'],
-                        'filter' => array('id' => array('$in' => $ids)),
-                        'limit' => 100
-                    ), 60);
-                    if (!$res['k']) {
-                        $error = '[internal error while fetching list: ' . $res['b'] . ']';
-                        break;
-                    }
-                    foreach ($res['b'] as $ch) {
-                        $dataOrgCodeholders[$ch['id']] = $ch;
-                    }
-                }
-
-                $text = '!' . $error;
-                if ($error === null) {
-                    $text = json_encode(array(
-                        'codeholders' => $codeholders,
-                        'data_orgs' => $dataOrgCodeholders,
-                        'sorting' => $sortBy ? array(
-                            'field' => $sortBy,
-                            'roles' => $sortByRoles,
-                        ) : null,
-                        'id' => $listId
-                    ));
                 }
 
                 return array(
@@ -341,7 +232,11 @@ class MarkdownExt {
                             'class' => 'unhandled-list',
                             'type' => 'application/json',
                         ),
-                        'text' => $text
+                        'text' => json_encode(array(
+                            'list' => $listId,
+                            'sortBy' => $sortBy,
+                            'sortByRoles' => $sortByRoles,
+                        )),
                     ),
                 );
             }
@@ -604,11 +499,6 @@ class MarkdownExt {
         return $this->handleHTMLComponents($document);
     }
 
-    public function processHTMLComponents($contentString) {
-        $document = new Document($contentString);
-        return $this->handleHTMLComponents($document);
-    }
-
     protected function handleHTMLComponents($document) {
         $this->initAppIfNeeded();
         $this->handleHTMLMagazines($document);
@@ -636,18 +526,14 @@ class MarkdownExt {
         $unhandledLists = $doc->find('.unhandled-list');
         foreach ($unhandledLists as $list) {
             $textContent = $list->text();
-            if (strncmp($textContent, '!', 1) === 0) {
-                // this is an error; skip
-                $list->replace($this->createError($doc));
-                continue;
-            }
 
             $newList = new Element('ul');
             $newList->class = 'codeholder-list';
 
             try {
                 $data = json_decode($textContent, true);
-                $listId = $data['id'];
+                $data = CodeholderLists::fetchCodeholderList($this->app->bridge, $data['list'], $data['sortBy'], $data['sortByRoles']);
+
                 $codeholders = $data['codeholders'];
                 $dataOrgs = $data['data_orgs'];
                 $sorting = $data['sorting'];

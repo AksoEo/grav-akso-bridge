@@ -3,6 +3,7 @@ namespace Grav\Plugin\AksoBridge;
 
 use \DiDom\Document;
 use \DiDom\Element;
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridgePlugin;
 use Grav\Plugin\AksoBridge\MarkdownExt;
 use Grav\Plugin\AksoBridge\Utils;
@@ -36,6 +37,99 @@ class CodeholderLists {
         'profilePicturePublicity',
         'publicCountry'
     ];
+
+    static function fetchCodeholderList($bridge, $listId, $sortBy, $sortByRoles) {
+        // array of codeholder data
+        $codeholders = [];
+        // additional codeholder orgs we need to fetch because they were listed as a dataOrg
+        $dataOrgIds = [];
+        // the additional codeholder orgs we had to fetch
+        $dataOrgCodeholders = [];
+
+        while (true) {
+            $currentItemCount = count($codeholders);
+            $res = $bridge->get('/lists/' . $listId . '/codeholders', array(
+                'offset' => $currentItemCount,
+                'limit' => 100
+            ), 60);
+            if (!$res['k']) {
+                Grav::instance()['log']->error('failed to fetch codeholder list: ' . $res['b']);
+                return null;
+            }
+
+            $codeholderIds = $res['b'];
+
+            $res = $bridge->get('/codeholders', array(
+                'filter' => array('id' => array('$in' => $codeholderIds)),
+                'fields' => CodeholderLists::FIELDS,
+                'limit' => 100,
+            ), 60);
+            if (!$res['k']) {
+                Grav::instance()['log']->error('failed to fetch codeholders in list: ' . $res['b']);
+                return null;
+            }
+
+            $chDataById = array();
+            foreach ($res['b'] as $ch) {
+                $chDataById[$ch['id']] = $ch;
+            }
+
+            foreach ($codeholderIds as $id) {
+                if (!isset($chDataById[$id])) continue;
+                $ch = $chDataById[$id];
+                $ch['profilePictureHash'] = bin2hex($ch['profilePictureHash']);
+
+                $res2 = $bridge->get("/codeholders/$id/roles", array(
+                    'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString', 'role.id'],
+                    'filter' => array('isActive' => true, 'role.public' => true),
+                    'order' => [['role.name', 'asc']],
+                    'limit' => 100,
+                ), 240);
+                if ($res2['k']) {
+                    $ch['activeRoles'] = $res2['b'];
+
+                    foreach ($res2['b'] as $role) {
+                        if ($role['dataOrg'] && !in_array($role['dataOrg'], $dataOrgIds)) {
+                            $dataOrgIds[] = $role['dataOrg'];
+                        }
+                    }
+                } else {
+                    Grav::instance()['log']->warn("could not fetch roles for codeholder $id");
+                    $ch['activeRoles'] = [];
+                }
+
+                $codeholders[] = $ch;
+            }
+
+            if (count($res['b']) == 0) break; // no more items; we're done
+        }
+
+        for ($i = 0; $i < count($dataOrgIds); $i += 100) {
+            $ids = array_slice($dataOrgIds, $i, 100);
+            $res = $bridge->get('/codeholders', array(
+                'fields' => ['id', 'fullName', 'nameAbbrev'],
+                'filter' => array('id' => array('$in' => $ids)),
+                'limit' => 100
+            ), 60);
+            if (!$res['k']) {
+                Grav::instance()['log']->error('could not fetch codeholders for list: ' . $res['b']);
+                return null;
+            }
+            foreach ($res['b'] as $ch) {
+                $dataOrgCodeholders[$ch['id']] = $ch;
+            }
+        }
+
+        return array(
+            'codeholders' => $codeholders,
+            'data_orgs' => $dataOrgCodeholders,
+            'sorting' => $sortBy ? array(
+                'field' => $sortBy,
+                'roles' => $sortByRoles,
+            ) : null,
+            'id' => $listId,
+        );
+    }
 
     static function renderCodeholder($bridge, $codeholder, $dataOrgs, $isViewerMember, $elementTag = 'li') {
         $chNode = new Element($elementTag);
@@ -163,6 +257,7 @@ class CodeholderLists {
                 }
 
                 $rolesContainer->appendChild($li);
+                $rolesContainer->appendChild(new Element('span', ' '));
             }
             $right->appendChild($rolesContainer);
         }
