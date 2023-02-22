@@ -422,6 +422,7 @@ class Form {
                 'order' => [['name_eo', 'asc']]
             ), 300);
             if ($res['k']) $this->cachedCountries = $res['b'];
+            else throw new \Exception('could not load countries');
         }
         return $this->cachedCountries;
     }

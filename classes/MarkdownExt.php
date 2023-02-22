@@ -621,10 +621,9 @@ class MarkdownExt {
                 }
 
                 $list->replace($newList);
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 // oh no
-                $newList->class .= ' is-error';
-                $list->replace($newList);
+                $list->replace($this->createError($doc));
             }
         }
     }
