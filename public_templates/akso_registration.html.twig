@@ -401,7 +401,7 @@
                             {% set available = false %}
                             {% set classes = classes ~ ' not-available' %}
                         {% endif %}
-                        {% if offer.type == 'membership' and offer.is_duplicate %}
+                        {% if offer.is_duplicate %}
                             {% set duplicate = true %}
                             {% set available = false %}
                             {% set classes = classes ~ ' not-available already-registered' %}
@@ -507,7 +507,7 @@
                                 </div>
                                 {% endif %}
                             </div>
-                            {% if (offer.type == 'membership' or offer.type == 'magazine') and offer.price and offer.price.description %}
+                            {% if (offer.type == 'membership' or offer.type == 'magazine') and offer.price and offer.price.description and not duplicate %}
                             <div class="item-price-description">
                                 <div class="inner-padding"></div>
                                 <div class="inner-description">

@@ -1,6 +1,7 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridge\Form;
 use Grav\Plugin\AksoBridge\CodeholderLists;
 use Grav\Plugin\AksoBridge\Utils;
@@ -126,20 +127,47 @@ class Registration extends Form {
     // Loads all available offer years.
     private function loadAllOffers($skipOffers = false, $codeholder = null) {
         $registeredOffers = [];
+        $lifetimeRegisteredOffers = [];
         if ($codeholder && !$this->isDonation) {
             $res = $this->app->bridge->get("/codeholders/$codeholder/membership", array(
-                'fields' => ['year', 'categoryId'],
+                'fields' => ['year', 'categoryId', 'lifetime'],
                 'order' => [['year', 'desc']],
                 'limit' => 100, // fetch 100 items; probably enough
             ));
             if ($res['k']) {
                 foreach ($res['b'] as $item) {
-                    $year = $item['year'];
-                    if (!isset($registeredOffers[$year])) {
-                        $registeredOffers[$year] = [];
+                    if ($item['lifetime']) {
+                        $lifetimeRegisteredOffers[] = $item['categoryId'];
+                    } else {
+                        $year = $item['year'];
+                        if (!isset($registeredOffers[$year])) {
+                            $registeredOffers[$year] = [];
+                        }
+                        $registeredOffers[$year][] = $item['categoryId'];
                     }
-                    $registeredOffers[$year][] = $item['categoryId'];
                 }
+            } else {
+                Grav::instance()['log']->warn("could not fetch memberships for codeholder $codeholder");
+            }
+        }
+
+        $registeredMagazineSubs = [];
+        if ($codeholder && !$this->isDonation) {
+            $res = $this->app->bridge->get("/codeholders/$codeholder/magazine_subscriptions", array(
+                'fields' => ['year', 'magazineId', 'paperVersion'],
+                'order' => [['year', 'desc']],
+                'limit' => 100,
+            ));
+            if ($res['k']) {
+                foreach ($res['b'] as $item) {
+                    $year = $item['year'];
+                    if (!isset($registeredMagazineSubs[$year])) {
+                        $registeredMagazineSubs[$year] = [];
+                    }
+                    $registeredMagazineSubs[$year][] = $item;
+                }
+            } else {
+                Grav::instance()['log']->warn("could not fetch magazine subs for codeholder $codeholder");
             }
         }
 
@@ -176,8 +204,27 @@ class Registration extends Form {
                     foreach ($offerGroup['offers'] as &$offer) {
                         if (!isset($offer['price'])) continue;
 
-                        $offer['is_duplicate'] = isset($registeredOffers[$offerYear['year']])
-                            && in_array($offer['id'], $registeredOffers[$offerYear['year']]);
+                        $offer['is_duplicate'] = false;
+                        if ($offer['type'] === 'membership') {
+                            $offer['is_duplicate'] = isset($registeredOffers[$offerYear['year']])
+                                && in_array($offer['id'], $registeredOffers[$offerYear['year']]);
+
+                            if (in_array($offer['id'], $lifetimeRegisteredOffers)) {
+                                $offer['is_duplicate'] = true;
+                            }
+                        } else if ($offer['type'] === 'magazine') {
+                            if (isset($registeredMagazineSubs[$offerYear['year']])) {
+                                foreach ($registeredMagazineSubs[$offerYear['year']] as $item) {
+                                    if ($item['magazineId'] === $offer['id']) {
+                                        // paperVersion implies access
+                                        if ($item['paperVersion'] === $offer['paperVersion'] || !$offer['paperVersion']) {
+                                            $offer['is_duplicate'] = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
                         if ($offer['price']) {
                             if (gettype($offer['price']['description']) === 'string') {
