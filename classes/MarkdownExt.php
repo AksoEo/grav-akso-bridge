@@ -460,9 +460,6 @@ class MarkdownExt {
         $markdown->addBlockType('[', 'AksoIntermediaries');
         $markdown->blockAksoIntermediaries = function($line, $block) use ($self) {
             if (preg_match('/^\[\[perantoj\]\]/', $line['text'], $matches)) {
-                $error = null;
-                $codeholders = [];
-
                 return array(
                     'element' => array(
                         'name' => 'div',
