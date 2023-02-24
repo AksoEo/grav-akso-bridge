@@ -1,20 +1,22 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
-use \DiDom\Document;
-use \DiDom\Element;
-use Grav\Common\Plugin;
-use Grav\Common\Markdown\Parsedown;
-use RocketTheme\Toolbox\Event\Event;
+use DateTime;
+use DateTimeZone;
+use DiDom\Document;
+use DiDom\Element;
+use Exception;
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridgePlugin;
-use Grav\Plugin\AksoBridge\CongressFields;
-use Grav\Plugin\AksoBridge\CodeholderLists;
-use Grav\Plugin\AksoBridge\Magazines;
-use Grav\Plugin\AksoBridge\Utils;
+use Normalizer;
 
 // loaded from AKSO bridge
 class MarkdownExt {
     private $plugin; // owner plugin
+    private $app;
+    private $bridge;
+    private $congressFields;
+    private $intermediaries;
 
     function __construct($plugin) {
         $this->plugin = $plugin;
@@ -22,25 +24,23 @@ class MarkdownExt {
 
     private function initAppIfNeeded() {
         if (isset($this->app) && $this->app) return;
-        $grav = $this->plugin->getGrav();
-        $this->app = new AppBridge($grav);
-        $this->apiHost = $this->app->apiHost;
+        $this->app = new AppBridge(Grav::instance());
         $this->app->open();
         $this->bridge = $this->app->bridge;
 
         $this->congressFields = new CongressFields($this->bridge, $this->plugin);
-        $this->intermediaries = new Intermediaries($this->plugin, $this->bridge, $this->plugin);
+        $this->intermediaries = new Intermediaries($this->plugin, $this->bridge);
     }
 
-    public function onMarkdownInitialized(Event $event) {
+    public function onMarkdownInitialized($event) {
         $this->initAppIfNeeded();
 
         $markdown = $event['markdown'];
         $self = $this;
 
         $markdown->addBlockType('[', 'IfAksoMember', true, true);
-        $markdown->blockIfAksoMember = function($line, $block) {
-            if (preg_match('/^\[\[se membro\]\]/', $line['text'], $matches)) {
+        $markdown->blockIfAksoMember = function($line) {
+            if (preg_match('/^\[\[se membro]]/', $line['text'])) {
                 return array(
                     'char' => $line['text'][0],
                     'element' => array(
@@ -51,7 +51,7 @@ class MarkdownExt {
                         'handler' => 'elements',
                         'text' => [
                             array(
-                                'name' => 'script',
+                                'name' => 'script', // prevents TNTSearch indexing
                                 'attributes' => array(
                                     'class' => 'akso-members-only-content-if-clause',
                                 ),
@@ -70,33 +70,34 @@ class MarkdownExt {
                     ),
                 );
             }
+            return null;
         };
         $markdown->blockIfAksoMemberContinue = function($line, $block) {
             if (isset($block['complete'])) {
-                return;
+                return null;
             }
             // A blank newline has occurred.
             if (isset($block['interrupted'])) {
                 if (isset($block['in_else_clause'])) {
-                    array_push($block['element']['text'][1]['text'], "\n");
+                    $block['element']['text'][1]['text'][] = "\n";
                 } else {
-                    array_push($block['element']['text'][0]['text'], "\n");
+                    $block['element']['text'][0]['text'][] = "\n";
                 }
                 unset($block['interrupted']);
             }
             // Check for end of the block.
-            if (preg_match('/\[\[\/se membro\]\]/', $line['text'])) {
+            if (preg_match('/\[\[\/se membro]]/', $line['text'])) {
                 $block['complete'] = true;
                 return $block;
-            } else if (preg_match('/\[\[alie\]\]/', $line['text'])) {
+            } else if (preg_match('/\[\[alie]]/', $line['text'])) {
                 $block['in_else_clause'] = true;
                 return $block;
             }
 
             if (isset($block['in_else_clause'])) {
-                array_push($block['element']['text'][1]['text'], $line['body']);
+                $block['element']['text'][1]['text'][] = $line['body'];
             } else {
-                array_push($block['element']['text'][0]['text'], $line['body']);
+                $block['element']['text'][0]['text'][] = $line['body'];
             }
             return $block;
         };
@@ -105,11 +106,8 @@ class MarkdownExt {
         };
 
         $markdown->addBlockType('[', 'AksoOnlyMembers');
-        $markdown->blockAksoOnlyMembers = function($line, $block) use ($self) {
-            if (preg_match('/^\[\[nurmembroj\]\]/', $line['text'], $matches)) {
-                $error = null;
-                $codeholders = [];
-
+        $markdown->blockAksoOnlyMembers = function($line) use ($self) {
+            if (preg_match('/^\[\[nurmembroj]]/', $line['text'])) {
                 return array(
                     'element' => array(
                         'name' => 'div',
@@ -120,11 +118,12 @@ class MarkdownExt {
                     ),
                 );
             }
+            return null;
         };
 
         $markdown->addBlockType('[', 'IfAksoLoggedIn', true, true);
-        $markdown->blockIfAksoLoggedIn = function($line, $block) {
-            if (preg_match('/^\[\[se ensalutinta\]\]/', $line['text'], $matches)) {
+        $markdown->blockIfAksoLoggedIn = function($line) {
+            if (preg_match('/^\[\[se ensalutinta]]/', $line['text'])) {
                 return array(
                     'char' => $line['text'][0],
                     'element' => array(
@@ -135,7 +134,7 @@ class MarkdownExt {
                         'handler' => 'elements',
                         'text' => [
                             array(
-                                'name' => 'script',
+                                'name' => 'script', // prevents TNTSearch indexing
                                 'attributes' => array(
                                     'class' => 'akso-logged-in-only-content-if-clause',
                                 ),
@@ -154,33 +153,34 @@ class MarkdownExt {
                     ),
                 );
             }
+            return null;
         };
         $markdown->blockIfAksoLoggedInContinue = function($line, $block) {
             if (isset($block['complete'])) {
-                return;
+                return null;
             }
             // A blank newline has occurred.
             if (isset($block['interrupted'])) {
                 if (isset($block['in_else_clause'])) {
-                    array_push($block['element']['text'][1]['text'], "\n");
+                    $block['element']['text'][1]['text'][] = "\n";
                 } else {
-                    array_push($block['element']['text'][0]['text'], "\n");
+                    $block['element']['text'][0]['text'][] = "\n";
                 }
                 unset($block['interrupted']);
             }
             // Check for end of the block.
-            if (preg_match('/\[\[\/se ensalutinta\]\]/', $line['text'])) {
+            if (preg_match('/\[\[\/se ensalutinta]]/', $line['text'])) {
                 $block['complete'] = true;
                 return $block;
-            } else if (preg_match('/\[\[alie\]\]/', $line['text'])) {
+            } else if (preg_match('/\[\[alie]]/', $line['text'])) {
                 $block['in_else_clause'] = true;
                 return $block;
             }
 
             if (isset($block['in_else_clause'])) {
-                array_push($block['element']['text'][1]['text'], $line['body']);
+                $block['element']['text'][1]['text'][] = $line['body'];
             } else {
-                array_push($block['element']['text'][0]['text'], $line['body']);
+                $block['element']['text'][0]['text'][] = $line['body'];
             }
             return $block;
         };
@@ -189,11 +189,8 @@ class MarkdownExt {
         };
 
         $markdown->addBlockType('[', 'AksoOnlyLoggedIn');
-        $markdown->blockAksoOnlyLoggedIn = function($line, $block) use ($self) {
-            if (preg_match('/^\[\[nurensalutintoj\]\]/', $line['text'], $matches)) {
-                $error = null;
-                $codeholders = [];
-
+        $markdown->blockAksoOnlyLoggedIn = function($line) use ($self) {
+            if (preg_match('/^\[\[nurensalutintoj]]/', $line['text'])) {
                 return array(
                     'element' => array(
                         'name' => 'div',
@@ -204,6 +201,7 @@ class MarkdownExt {
                     ),
                 );
             }
+            return null;
         };
 
         $markdown->addBlockType('[', 'AksoList');
@@ -218,7 +216,7 @@ class MarkdownExt {
                 } else if (isset($matches[2]) && $matches[2] === 'teksto') {
                     $sortBy = 'dataString';
                 } else if (isset($matches[2])) {
-                    throw new \Exception('unknown sorting method ' . $sortBy . ' in list ' . $listId);
+                    throw new Exception('unknown sorting method ' . $sortBy . ' in list ' . $listId);
                 }
 
                 if ($sortBy) {
@@ -240,85 +238,18 @@ class MarkdownExt {
                     ),
                 );
             }
+            return null;
         };
 
         $markdown->addBlockType('[', 'AksoMagazines');
-        $markdown->blockAksoMagazines = function($line, $block) use ($self) {
-            if (preg_match('/^\[\[revuoj\s+([\/\w]+)((?:\s+\d+)+)\]\]/', $line['text'], $matches)) {
-                $error = null;
-                $codeholders = [];
-
+        $markdown->blockAksoMagazines = function($line) use ($self) {
+            if (preg_match('/^\[\[revuoj\s+([\/\w]+)((?:\s+\d+)+)]]/', $line['text'], $matches)) {
                 $pathTarget = $matches[1];
 
                 $ids = [];
                 foreach (preg_split('/\s+/', $matches[2]) as $id) {
                     if (!empty($id)) $ids[] = (int) $id;
                 }
-                $error = null;
-                $posters = [];
-
-                $magazines = [];
-                {
-                    $res = $this->app->bridge->get("/magazines", array(
-                        'fields' => ['id', 'name'],
-                        'filter' => array('id' => array('$in' => (array) $ids)),
-                        'limit' => count($ids),
-                    ));
-                    if (!$res['k']) {
-                        $error = 'Eraro';
-                    } else {
-                        foreach ($res['b'] as $item) {
-                            $magazines[$item['id']] = $item;
-                        }
-                    }
-                }
-
-                if (!$error) {
-                    foreach ($ids as $id) {
-                        $res = $self->bridge->get("/magazines/$id/editions", array(
-                            'fields' => ['id', 'idHuman', 'date', 'description'],
-                            'order' => [['date', 'desc']],
-                            'offset' => 0,
-                            'limit' => 1,
-                        ), 120);
-
-                        if (!$res['k'] || count($res['b']) < 1) {
-                            $error = 'Eraro';
-                            break;
-                        }
-
-                        $edition = $res['b'][0];
-                        $editionId = $edition['id'];
-                        $hasThumbnail = false;
-                        try {
-                            $path = "/magazines/$id/editions/$editionId/thumbnail/32px";
-                            $res = $this->app->bridge->getRaw($path, 120);
-                            if ($res['k']) {
-                                $hasThumbnail = true;
-                            }
-                            $this->app->bridge->releaseRaw($path);
-                        } catch (\Exception $e) {}
-
-                        $posters[] = array(
-                            'magazine' => $id,
-                            'edition' => $editionId,
-                            'info' => $magazines[$id],
-                            'idHuman' => $edition['idHuman'],
-                            'date' => $edition['date'],
-                            'description' => $edition['description'],
-                            'hasThumbnail' => $hasThumbnail,
-                        );
-                    }
-                }
-
-                $text = '!' . $error;
-                if ($error === null) {
-                    $text = json_encode(array(
-                        'target' => $pathTarget,
-                        'posters' => $posters,
-                    ));
-                }
-
 
                 return array(
                     'element' => array(
@@ -327,28 +258,28 @@ class MarkdownExt {
                             'class' => 'unhandled-akso-magazines',
                             'type' => 'application/json',
                         ),
-                        'text' => $text,
+                        'text' => json_encode(array(
+                            'ids' => $ids,
+                            'pathTarget' => $pathTarget,
+                        )),
                     ),
                 );
             }
+            return null;
         };
 
         $markdown->addBlockType('[', 'AksoCongresses');
-        $markdown->blockAksoCongresses = function($line, $block) use ($self) {
-            if (preg_match('/^\[\[kongreso(\s+tempokalkulo)?\s+(\d+)\/(\d+)\s+([^\s]+)(?:\s+([^\s]+))?\]\]/', $line['text'], $matches)) {
+        $markdown->blockAksoCongresses = function($line) use ($self) {
+            if (preg_match('/^\[\[kongreso(\s+tempokalkulo)?\s+(\d+)\/(\d+)\s+(\S+)(?:\s+(\S+))?]]/', $line['text'], $matches)) {
                 $showCountdown = isset($matches[1]) && $matches[1];
                 $congressId = $matches[2];
                 $instanceId = $matches[3];
                 $href = $matches[4];
-                $imgHref = isset($matches[5]) ? $matches[5] : null;
-                $error = null;
-                $renderedCongresses = '';
+                $imgHref = $matches[5] ?? null;
 
                 $res = $self->bridge->get("/congresses/$congressId/instances/$instanceId", array(
                     'fields' => ['id', 'name', 'dateFrom', 'dateTo', 'tz'],
                 ));
-
-                $text = '';
 
                 if ($res['k']) {
                     $info = array(
@@ -370,16 +301,16 @@ class MarkdownExt {
                             'offset' => 0,
                             'limit' => 1,
                         ), 60);
-                        $congressStartTime = null;
+
                         if ($firstEventRes['k'] && sizeof($firstEventRes['b']) > 0) {
                             // use the start time of the first event if available
                             $firstEvent = $firstEventRes['b'][0];
-                            $congressStartTime = \DateTime::createFromFormat("U", $firstEvent['timeFrom']);
+                            $congressStartTime = DateTime::createFromFormat("U", $firstEvent['timeFrom']);
                         } else {
                             // otherwise just use noon in local time
-                            $timeZone = isset($res['b']['tz']) ? new \DateTimeZone($res['b']['tz']) : new \DateTimeZone('+00:00');
+                            $timeZone = isset($res['b']['tz']) ? new DateTimeZone($res['b']['tz']) : new DateTimeZone('+00:00');
                             $dateStr = $res['b']['dateFrom'] . ' 12:00:00';
-                            $congressStartTime = \DateTime::createFromFormat("Y-m-d H:i:s", $dateStr, $timeZone);
+                            $congressStartTime = DateTime::createFromFormat("Y-m-d H:i:s", $dateStr, $timeZone);
                         }
 
                         $info['date'] = Utils::formatDayMonth($res['b']['dateFrom']) . '–'. Utils::formatDayMonth($res['b']['dateTo']);
@@ -403,11 +334,12 @@ class MarkdownExt {
                     ),
                 );
             }
+            return null;
         };
 
         $markdown->addInlineType('[', 'AksoCongressField');
         $markdown->inlineAksoCongressField = function($excerpt) use ($self) {
-            if (preg_match('/^\[\[kongreso\s+([\w!]+)\s+(\d+)(?:\/(\d+))?(.*)\]\]/u', $excerpt['text'], $matches)) {
+            if (preg_match('/^\[\[kongreso\s+([\w!]+)\s+(\d+)(?:\/(\d+))?(.*)]]/u', $excerpt['text'], $matches)) {
                 $fieldName = mb_strtolower(normalizer_normalize($matches[1]));
                 $congress = intval($matches[2]);
                 $instance = isset($matches[3]) ? intval($matches[3]) : null;
@@ -415,7 +347,7 @@ class MarkdownExt {
 
                 $arg_matches = [];
                 preg_match_all(
-                    '/(?P<quote>["«»‹›“”‟„’❝❞❮❯⹂〝〞〟＂‚‛‘❛❜❟\'])(?P<arg>(?:\\\\(?P>quote)|[^"«»‹›“”‟„’❝❞❮❯⹂〝〞〟＂‚‛‘❛❜❟\'])+?)(?P>quote)|(?P<arg2>[^\s]+)/',
+                    '/(?P<quote>["«»‹›“”‟„’❝❞❮❯⹂〝〞〟＂‚‛‘❛❜❟\'])(?P<arg>(?:\\\\(?P>quote)|[^"«»‹›“”‟„’❝❞❮❯⹂〝〞〟＂‚‛‘❛❜❟\'])+?)(?P>quote)|(?P<arg2>\S+)/',
                     $matches[4],
                     $arg_matches
                 );
@@ -430,11 +362,12 @@ class MarkdownExt {
                 $rendered = $self->congressFields->renderField($extent, $fieldName, $congress, $instance, $args);
                 if ($rendered != null) return $rendered;
             }
+            return null;
         };
 
         $markdown->addInlineType('[', 'AksoFlag');
         $markdown->inlineAksoFlag = function($excerpt) use ($self) {
-            if (preg_match('/^\[\[flago:(\w+)\]\]/u', $excerpt['text'], $matches)) {
+            if (preg_match('/^\[\[flago:(\w+)]]/u', $excerpt['text'], $matches)) {
                 $code = mb_strtolower($matches[1]);
 
                 $emoji = Utils::getEmojiForFlag($code);
@@ -455,11 +388,12 @@ class MarkdownExt {
                     ),
                 );
             }
+            return null;
         };
 
         $markdown->addBlockType('[', 'AksoIntermediaries');
-        $markdown->blockAksoIntermediaries = function($line, $block) use ($self) {
-            if (preg_match('/^\[\[perantoj\]\]/', $line['text'], $matches)) {
+        $markdown->blockAksoIntermediaries = function($line) use ($self) {
+            if (preg_match('/^\[\[perantoj]]/', $line['text'])) {
                 return array(
                     'element' => array(
                         'name' => 'div',
@@ -470,17 +404,18 @@ class MarkdownExt {
                     ),
                 );
             }
+            return null;
         };
     }
 
     public $nonces = array('scripts' => [], 'styles' => []);
 
-    public function onOutputGenerated(Event $event) {
+    public function onOutputGenerated() {
         if ($this->plugin->isAdmin()) {
-            return;
+            return null;
         }
         $grav = $this->plugin->getGrav();
-        $grav->output = \Normalizer::normalize($this->performHTMLPostProcessingTasks($grav->output));
+        $grav->output = Normalizer::normalize($this->performHTMLPostProcessingTasks($grav->output));
         return $this->nonces;
     }
 
@@ -496,10 +431,10 @@ class MarkdownExt {
         return $this->handleHTMLComponents($document);
     }
 
-    protected function handleHTMLComponents($document) {
+    protected function handleHTMLComponents($document): string {
         $this->initAppIfNeeded();
-        $this->handleHTMLMagazines($document);
         $this->handleHTMLIfMembers($document);
+        $this->handleHTMLMagazines($document);
         $this->handleHTMLIfLoggedIn($document);
         $this->handleHTMLCongressPosters($document);
         $this->handleHTMLMailLinks($document);
@@ -618,7 +553,7 @@ class MarkdownExt {
                 }
 
                 $list->replace($newList);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // oh no
                 $list->replace($this->createError($doc));
             }
@@ -646,7 +581,7 @@ class MarkdownExt {
                 ],
                 'limit' => 100,
             ), 60);
-            if (!$res['k']) throw new \Exception('Failed to fetch list codeholders');
+            if (!$res['k']) throw new Exception('Failed to fetch list codeholders');
             $foundCh = false;
             foreach ($res['b'] as $ch) {
                 if ($ch['id'] === $chId) {
@@ -682,74 +617,133 @@ class MarkdownExt {
             }
             die();
         } else {
-            throw new \Exception('Failed to load picture');
+            throw new Exception('Failed to load picture');
         }
     }
 
     protected function handleHTMLMagazines($doc) {
         $unhandledMagazines = $doc->find('.unhandled-akso-magazines');
         foreach ($unhandledMagazines as $magazines) {
-            $textContent = $magazines->text();
-            if (strncmp($textContent, '!', 1) === 0) {
-                // this is an error; skip
-                $magazines->replace($this->createError($doc));
-                continue;
-            }
-
             $newMagazines = new Element('ul');
             $newMagazines->class = 'akso-magazine-posters';
 
             try {
-                $data = json_decode($textContent, true);
-                $pathTarget = $data['target'];
-                $posters = $data['posters'];
+                $data = json_decode($magazines->text(), true);
+                $ids = $data['ids'];
+                $pathTarget = $data['pathTarget'];
 
-                foreach ($posters as $poster) {
-                    $link = $pathTarget . '/' . Magazines::MAGAZINE . '/' . $poster['magazine']
-                        . '/' . Magazines::EDITION . '/' . $poster['edition'];
+                $error = false;
+                $posters = [];
 
-                    $mag = new Element('li');
-                    $mag->class = 'magazine';
-                    $coverContainer = new Element('a');
-                    $coverContainer->href = $link;
-                    $coverContainer->class = 'magazine-cover-container';
-                    if ($poster['hasThumbnail']) {
-                        $img = new Element('img');
-                        $img->class = 'magazine-cover';
-                        $basePath = AksoBridgePlugin::MAGAZINE_COVER_PATH . '?'
-                            . Magazines::TH_MAGAZINE . '=' . $poster['magazine'] . '&'
-                            . Magazines::TH_EDITION . '=' . $poster['edition'] . '&'
-                            . Magazines::TH_SIZE;
-                        $img->src = "$basePath=128px";
-                        $img->srcset = "$basePath=128px 1x, $basePath=256px 2x, $basePath=512px 3x";
-                        $coverContainer->appendChild($img);
+                $magazineItems = [];
+                {
+                    $res = $this->app->bridge->get("/magazines", array(
+                        'fields' => ['id', 'name'],
+                        'filter' => array('id' => array('$in' => $ids)),
+                        'limit' => count($ids),
+                    ), 60);
+                    if (!$res['k']) {
+                        Grav::instance()['log']->error('Could not fetch magazines: ' . $res['b']);
+                        $error = true;
                     } else {
-                        $coverContainer->class .= ' has-no-thumbnail';
-                        $inner = new Element('div');
-                        $inner->class = 'th-inner';
-                        $title = new Element('div', $poster['info']['name']);
-                        $title->class = 'th-title';
-                        $subtitle = new Element('div', $poster['idHuman']);
-                        $subtitle->class = 'th-subtitle';
-                        $inner->appendChild($title);
-                        $inner->appendChild($subtitle);
-                        $coverContainer->appendChild($inner);
+                        foreach ($res['b'] as $item) {
+                            $magazineItems[$item['id']] = $item;
+                        }
                     }
-                    $mag->appendChild($coverContainer);
-                    $magTitle = new Element('a', $poster['info']['name']);
-                    $magTitle->class = 'magazine-title';
-                    $magTitle->href = $link;
-                    $mag->appendChild($magTitle);
-                    $magMeta = new Element('div', Utils::formatDate($poster['date']));
-                    $magMeta->class = 'magazine-meta';
-                    $mag->appendChild($magMeta);
-                    $newMagazines->appendChild($mag);
                 }
-                $magazines->replace($newMagazines);
+
+                if (!$error) {
+                    foreach ($ids as $id) {
+                        $res = $this->app->bridge->get("/magazines/$id/editions", array(
+                            'fields' => ['id', 'idHuman', 'date', 'description'],
+                            'order' => [['date', 'desc']],
+                            'offset' => 0,
+                            'limit' => 1,
+                        ), 120);
+
+                        if (!$res['k'] || count($res['b']) < 1) {
+                            $error = true;
+                            if (!$res['k']) {
+                                Grav::instance()['log']->error("Could not fetch magazine $id editions: " . $res['b']);
+                            }
+                            break;
+                        }
+
+                        $edition = $res['b'][0];
+                        $editionId = $edition['id'];
+                        $hasThumbnail = false;
+                        try {
+                            $path = "/magazines/$id/editions/$editionId/thumbnail/32px";
+                            $res = $this->app->bridge->getRaw($path, 120);
+                            if ($res['k']) {
+                                $hasThumbnail = true;
+                            }
+                            $this->app->bridge->releaseRaw($path);
+                        } catch (Exception $e) {}
+
+                        $posters[] = array(
+                            'magazine' => $id,
+                            'edition' => $editionId,
+                            'info' => $magazineItems[$id],
+                            'idHuman' => $edition['idHuman'],
+                            'date' => $edition['date'],
+                            'description' => $edition['description'],
+                            'hasThumbnail' => $hasThumbnail,
+                        );
+                    }
+                }
+
+                if (!$error) {
+                    foreach ($posters as $poster) {
+                        $link = $pathTarget . '/' . Magazines::MAGAZINE . '/' . $poster['magazine']
+                            . '/' . Magazines::EDITION . '/' . $poster['edition'];
+
+                        $mag = new Element('li');
+                        $mag->class = 'magazine';
+                        $coverContainer = new Element('a');
+                        $coverContainer->href = $link;
+                        $coverContainer->class = 'magazine-cover-container';
+                        if ($poster['hasThumbnail']) {
+                            $img = new Element('img');
+                            $img->class = 'magazine-cover';
+                            $basePath = AksoBridgePlugin::MAGAZINE_COVER_PATH . '?'
+                                . Magazines::TH_MAGAZINE . '=' . $poster['magazine'] . '&'
+                                . Magazines::TH_EDITION . '=' . $poster['edition'] . '&'
+                                . Magazines::TH_SIZE;
+                            $img->src = "$basePath=128px";
+                            $img->srcset = "$basePath=128px 1x, $basePath=256px 2x, $basePath=512px 3x";
+                            $coverContainer->appendChild($img);
+                        } else {
+                            $coverContainer->class .= ' has-no-thumbnail';
+                            $inner = new Element('div');
+                            $inner->class = 'th-inner';
+                            $title = new Element('div', $poster['info']['name']);
+                            $title->class = 'th-title';
+                            $subtitle = new Element('div', $poster['idHuman']);
+                            $subtitle->class = 'th-subtitle';
+                            $inner->appendChild($title);
+                            $inner->appendChild($subtitle);
+                            $coverContainer->appendChild($inner);
+                        }
+                        $mag->appendChild($coverContainer);
+                        $magTitle = new Element('a', $poster['info']['name']);
+                        $magTitle->class = 'magazine-title';
+                        $magTitle->href = $link;
+                        $mag->appendChild($magTitle);
+                        $magMeta = new Element('div', Utils::formatDate($poster['date']));
+                        $magMeta->class = 'magazine-meta';
+                        $mag->appendChild($magMeta);
+                        $newMagazines->appendChild($mag);
+                    }
+
+                    $magazines->replace($newMagazines);
+                } else {
+                    $magazines->replace($this->createError($doc));
+                }
             } catch (Exception $e) {
                 // oh no
-                $newMagazines->class .= ' is-error';
-                $magazines->replace($newMagazines);
+                Grav::instance()['log']->error('Error rendering magazines: ' . $e->getTraceAsString());
+                $magazines->replace($this->createError($doc));
             }
         }
     }
@@ -946,7 +940,7 @@ class MarkdownExt {
             // split off ?query params
             $hrefParts = explode('?', $href, 2);
             $mailAddress = $hrefParts[0];
-            $params = isset($hrefParts[1]) ? $hrefParts[1] : '';
+            $params = $hrefParts[1] ?? '';
 
             $textContent = trim($anchor->text());
             if (mb_strtolower($textContent) !== mb_strtolower($mailAddress)) {
@@ -978,7 +972,7 @@ class MarkdownExt {
     }
 
     /** Handles XSS and returns a list of nonces. */
-    protected function removeXSS($doc) {
+    protected function removeXSS($doc): array {
         // apparently, Grav allows script tags in the document body
 
         // remove all scripts in the page content
@@ -1014,33 +1008,17 @@ class MarkdownExt {
     }
 
     /**
-     * Removes html and body tags at the begining and end of the html source
+     * Removes html and body tags at the beginning and end of the html source
      *
      * @param $html
      * @return string
      */
-    private function cleanupTags($html)
-    {
+    private function cleanupTags($html): string {
         // remove html/body tags
         $html = preg_replace('#<html><body>#', '', $html);
         $html = preg_replace('#</body></html>#', '', $html);
 
         // remove whitespace
-        $html = trim($html);
-
-        /*// remove p tags
-        preg_match_all('#<p>(?:\s*)((<a*.>)?.*)(?:\s*)(<figure((?:.|\n)*?)*(?:\s*)<\/figure>)(?:\s*)(<\/a>)?(?:\s*)<\/p>#m', $html, $matches);
-
-        if (is_array($matches) && !empty($matches)) {
-            $num_matches = count($matches[0]);
-            for ($i = 0; $i < $num_matches; $i++) {
-                $original = $matches[0][$i];
-                $new = $matches[1][$i] . $matches[3][$i] . $matches[5][$i];
-
-                $html = str_replace($original, $new, $html);
-            }
-        }*/
-
-        return $html;
+        return trim($html);
     }
 }
