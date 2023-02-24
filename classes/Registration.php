@@ -1,10 +1,12 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use DateTime;
+use DateTimeZone;
+use Ds\Map;
+use Ds\Set;
+use Exception;
 use Grav\Common\Grav;
-use Grav\Plugin\AksoBridge\Form;
-use Grav\Plugin\AksoBridge\CodeholderLists;
-use Grav\Plugin\AksoBridge\Utils;
 
 // TODO: use form nonce
 
@@ -66,7 +68,7 @@ class Registration extends Form {
         return $obj[$keyPart];
     }
 
-    private function getPriceScriptCtx(int $year) {
+    private function getPriceScriptCtx(int $year): ?FormScriptExecCtx {
         $scriptCtx = new FormScriptExecCtx($this->app);
         $codeholder = $this->state['codeholder'];
         if (isset($codeholder['birthdate'])) {
@@ -77,10 +79,10 @@ class Registration extends Form {
             $age = null;
             $agePrimo = null;
             {
-                $birthdate = \DateTime::createFromFormat('Y-m-d-P', $codeholder['birthdate'] . '-UTC');
+                $birthdate = DateTime::createFromFormat('Y-m-d-P', $codeholder['birthdate'] . '-UTC');
                 if ($birthdate) {
-                    $beginningOfYear = new \DateTime();
-                    $beginningOfYear->setTimezone(new \DateTimeZone("UTC"));
+                    $beginningOfYear = new DateTime();
+                    $beginningOfYear->setTimezone(new DateTimeZone("UTC"));
                     $beginningOfYear->setDate($year, 1, 1);
 
                     $age = $birthdate->diff($beginningOfYear)->y;
@@ -125,9 +127,8 @@ class Registration extends Form {
     }
 
     // Loads all available offer years.
-    private function loadAllOffers($skipOffers = false, $codeholder = null) {
+    private function loadAllOffers($codeholder = null): array {
         $registeredOffers = [];
-        $lifetimeRegisteredOffers = [];
         if ($codeholder && !$this->isDonation) {
             $res = $this->app->bridge->get("/codeholders/$codeholder/membership", array(
                 'fields' => ['year', 'categoryId', 'lifetime'],
@@ -136,15 +137,11 @@ class Registration extends Form {
             ));
             if ($res['k']) {
                 foreach ($res['b'] as $item) {
-                    if ($item['lifetime']) {
-                        $lifetimeRegisteredOffers[] = $item['categoryId'];
-                    } else {
-                        $year = $item['year'];
-                        if (!isset($registeredOffers[$year])) {
-                            $registeredOffers[$year] = [];
-                        }
-                        $registeredOffers[$year][] = $item['categoryId'];
+                    $year = $item['year'];
+                    if (!isset($registeredOffers[$year])) {
+                        $registeredOffers[$year] = [];
                     }
+                    $registeredOffers[$year][] = $item['categoryId'];
                 }
             } else {
                 Grav::instance()['log']->warn("could not fetch memberships for codeholder $codeholder");
@@ -171,9 +168,8 @@ class Registration extends Form {
             }
         }
 
-        $fields = ['year', 'paymentOrgId', 'currency'];
+        $fields = ['year', 'paymentOrgId', 'currency', 'offers'];
         $currentYear = (int) date('Y');
-        if (!$skipOffers) $fields[] = 'offers';
         $res = $this->app->bridge->get('/registration/options', array(
             'limit' => 100,
             'filter' => ['enabled' => true, 'year' => ['$gte' => $currentYear]],
@@ -208,10 +204,6 @@ class Registration extends Form {
                         if ($offer['type'] === 'membership') {
                             $offer['is_duplicate'] = isset($registeredOffers[$offerYear['year']])
                                 && in_array($offer['id'], $registeredOffers[$offerYear['year']]);
-
-                            if (in_array($offer['id'], $lifetimeRegisteredOffers)) {
-                                $offer['is_duplicate'] = true;
-                            }
                         } else if ($offer['type'] === 'magazine') {
                             if (isset($registeredMagazineSubs[$offerYear['year']])) {
                                 foreach ($registeredMagazineSubs[$offerYear['year']] as $item) {
@@ -281,8 +273,8 @@ class Registration extends Form {
         return [];
     }
 
-    private function getOfferCategoryIds($offerYears) {
-        $ids = new \Ds\Set();
+    private function getOfferCategoryIds($offerYears): Set {
+        $ids = new Set();
         foreach ($offerYears as $year) {
             foreach ($year['offers'] as $group) {
                 foreach ($group['offers'] as $offer) {
@@ -294,8 +286,8 @@ class Registration extends Form {
         }
         return $ids;
     }
-    private function getRegisteredOfferCategoryIds($offerYears) {
-        $ids = new \Ds\Set();
+    private function getRegisteredOfferCategoryIds($offerYears): Set {
+        $ids = new Set();
         foreach ($offerYears as $yearItems) {
             foreach ($yearItems as $offer) {
                 if ($offer['type'] === 'membership') $ids->add($offer['id']);
@@ -303,8 +295,8 @@ class Registration extends Form {
         }
         return $ids;
     }
-    private function getOfferMagazineIds($offerYears) {
-        $ids = new \Ds\Set();
+    private function getOfferMagazineIds($offerYears): Set {
+        $ids = new Set();
         foreach ($offerYears as $year) {
             foreach ($year['offers'] as $group) {
                 foreach ($group['offers'] as $offer) {
@@ -316,8 +308,8 @@ class Registration extends Form {
         }
         return $ids;
     }
-    private function getRegisteredOfferMagazineIds($offerYears) {
-        $ids = new \Ds\Set();
+    private function getRegisteredOfferMagazineIds($offerYears): Set {
+        $ids = new Set();
         foreach ($offerYears as $yearItems)  {
             foreach ($yearItems as $offer) {
                 if ($offer['type'] === 'magazine') $ids->add($offer['id']);
@@ -325,10 +317,10 @@ class Registration extends Form {
         }
         return $ids;
     }
-    private function getOfferAddonIds($offerYears) {
-        $orgs = new \Ds\Map();
+    private function getOfferAddonIds($offerYears): Map {
+        $orgs = new Map();
         foreach ($offerYears as $year) {
-            $ids = new \Ds\Set();
+            $ids = new Set();
             foreach ($year['offers'] as $group) {
                 foreach ($group['offers'] as $offer) {
                     if ($offer['type'] === 'addon') {
@@ -338,28 +330,14 @@ class Registration extends Form {
             }
             if (!$ids->isEmpty()) {
                 $orgId = $year['paymentOrgId'];
-                if (!$orgs->hasKey($orgId)) $orgs->put($orgId, new \Ds\Set());
+                if (!$orgs->hasKey($orgId)) $orgs->put($orgId, new Set());
                 $orgs->put($orgId, $orgs->get($orgId)->union($ids));
             }
         }
         return $orgs;
     }
-    private function getRegisteredOfferAddonIds($offerYears) {
-        $orgs = new \Ds\Map();
-        foreach ($offerYears as $year => $yearItems) {
-            $ids = new \Ds\Set();
-            foreach ($yearItems as $offer) {
-                if ($offer['type'] === 'addon') $ids->add($offer['id']);
-            }
-            if (!$ids->isEmpty()) {
-                $orgId = $this->offersByYear[$year]['paymentOrgId'];
-                if (!$orgs->hasKey($orgId)) $orgs->put($orgId, new \Ds\Set());
-                $orgs->put($orgId, $orgs->get($orgId)->union($ids));
-            }
-        }
-        return $orgs;
-    }
-    private function loadAllCategories($ids) {
+
+    private function loadAllCategories($ids): array {
         $categories = [];
         if ($ids->isEmpty()) return $categories;
         for ($i = 0; true; $i += 100) {
@@ -389,7 +367,7 @@ class Registration extends Form {
 
         return $categories;
     }
-    private function loadAllMagazines($ids) {
+    private function loadAllMagazines($ids): array {
         $magazines = [];
         if ($ids->isEmpty()) return $magazines;
         for ($i = 0; true; $i += 100) {
@@ -412,7 +390,7 @@ class Registration extends Form {
 
         return $magazines;
     }
-    private function loadAllAddons($orgs) {
+    private function loadAllAddons($orgs): array {
         $result = [];
         foreach ($orgs->keys()->toArray() as $orgId) {
             $ids = $orgs->get($orgId);
@@ -449,7 +427,7 @@ class Registration extends Form {
         }
         return $result;
     }
-    private function loadPaymentOrgs($orgs) {
+    private function loadPaymentOrgs($orgs): array {
         $payments = new Payments($this->plugin, $this->app);
 
         $result = [];
@@ -475,7 +453,7 @@ class Registration extends Form {
                     'offset' => $i,
                 ), 120);
                 if (!$res['k']) {
-                    throw new \Exception('Failed to load payment methods');
+                    throw new Exception('Failed to load payment methods');
                 }
                 foreach ($res['b'] as $method) {
                     $method['description'] = null;
@@ -507,7 +485,7 @@ class Registration extends Form {
         return $result;
     }
 
-    public function loadRegistered($dataIds, $addons, $membershipAddons) {
+    public function loadRegistered($dataIds, $addons, $membershipAddons): array {
         $needsLogin = false;
         $currency = '';
         $hasCodeholder = false;
@@ -515,8 +493,6 @@ class Registration extends Form {
         $offersByYear = [];
         $yearDataIds = [];
         $yearStatuses = [];
-
-        $scriptCtx = new FormScriptExecCtx($this->app);
 
         foreach ($dataIds as $id) {
             if (!$id) continue;
@@ -663,7 +639,7 @@ class Registration extends Form {
             try {
                 $decoded = json_decode($_POST['state_serialized'], true);
                 if (gettype($decoded) === 'array') $this->state['unsafe_deserialized'] = $decoded;
-            } catch (\Exception $e) {}
+            } catch (Exception $e) {}
         } else if (isset($_SESSION[self::SESSION_KEY_NAME]) && gettype($_SESSION[self::SESSION_KEY_NAME]) === 'array') {
             $this->state['unsafe_deserialized'] = $_SESSION[self::SESSION_KEY_NAME];
         }
@@ -703,7 +679,7 @@ class Registration extends Form {
             }
         }
 
-        $this->state['currency_mult'] = isset($currencies[$this->state['currency']]) ? $currencies[$this->state['currency']] : 1;
+        $this->state['currency_mult'] = $currencies[$this->state['currency']] ?? 1;
     }
 
     public static function readCodeholderStateSafe($bridge, $ch) {
@@ -803,7 +779,7 @@ class Registration extends Form {
                     $ch['splitCountry'] = true; // always read address and fee country separately
                     $ch['splitName'] = true;
                 } else {
-                    throw new \Exception("could not fetch codeholder");
+                    throw new Exception("could not fetch codeholder");
                 }
             } else if (isset($_POST['codeholder']) && gettype($_POST['codeholder']) === 'array') {
                 $ch = $_POST['codeholder'];
@@ -817,7 +793,6 @@ class Registration extends Form {
             $this->state['codeholder'] = self::readCodeholderStateSafe($this->app->bridge, $ch);
         }
 
-        $addressFmt = '';
         try {
             $addr = $this->state['codeholder']['address'];
             $countryName = '';
@@ -837,7 +812,7 @@ class Registration extends Form {
                 'sortingCode' => $addr['sortingCode'],
             ), $countryName)['c'];
             $addressFmt = implode(', ', explode("\n", $addressFmt));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $addressFmt = '(Nevalida adreso)';
         }
 
@@ -982,7 +957,7 @@ class Registration extends Form {
                         'id' => $item['id'],
                         'amount' => isset($item['amount']) ? ((float) $item['amount']) : null,
                         'amount_addon' => isset($item['amount_addon']) ? ((float) $item['amount_addon']) : 0,
-                        'paper' => isset($item['paper']) ? $item['paper'] : false,
+                        'paper' => $item['paper'] ?? false,
                     );
                 }
                 if (!empty($items)) $this->state['offers'][$year] = $items;
@@ -995,7 +970,7 @@ class Registration extends Form {
 
         if ($this->state['step'] >= 1) {
             $codeholderId = $this->plugin->aksoUser ? $this->plugin->aksoUser['id'] : null;
-            $this->offers = $this->loadAllOffers(false, $codeholderId);
+            $this->offers = $this->loadAllOffers($codeholderId);
             $this->offersByYear = [];
             foreach ($this->offers as $offerYear) {
                 $this->offersByYear[$offerYear['year']] = $offerYear;
@@ -1096,7 +1071,7 @@ class Registration extends Form {
 
     private function updatePaymentsState() {
         if ($this->state['step'] >= 2) {
-            $paymentOrgIds = new \Ds\Set();
+            $paymentOrgIds = new Set();
             foreach ($this->offers as $offerYear) {
                 $paymentOrgIds->add($offerYear['paymentOrgId']);
             }
@@ -1275,7 +1250,7 @@ class Registration extends Form {
                                 return $method;
                             }
 
-                            if ($priceScript) {
+                            {
                                 $offerId = implode('-', [$offer['type'], $offer['id']]);
                                 $method['offers'][$offerId] = [];
                                 if (gettype($priceDesc) === 'string') {
@@ -1339,7 +1314,7 @@ class Registration extends Form {
         return $method;
     }
 
-    private function createEntries($years, $priceOverrides = null) {
+    private function createEntries($years, $priceOverrides = null): bool {
         $errors = [];
         foreach ($years as $year) {
             if (isset($this->state['locked_offers'][$year])) continue;
@@ -1378,11 +1353,7 @@ class Registration extends Form {
 
             $options['offers'] = [];
             $addons = [];
-            foreach ($yearItems as $itemId => $itemData) {
-                $itemIdParts = explode('-', $itemId);
-                $groupIndex = $itemIdParts[0];
-                $offerIndex = $itemIdParts[1];
-
+            foreach ($yearItems as $itemData) {
                 $data = array(
                     'type' => $itemData['type'],
                     'id' => $itemData['id'],
@@ -1418,8 +1389,8 @@ class Registration extends Form {
             if ($res['k']) {
                 $this->state['dataIds'][$year] = $res['h']['x-identifier'];
                 $this->state['addons'][$year] = $addons;
-            } else if (!$res['k']) {
-                error_log('create /registration/entries failed! status ' . $res['sc'] . ' - ' . $res['b']);
+            } else {
+                Grav::instance()['log']->error('create /registration/entries failed! status ' . $res['sc'] . ' - ' . $res['b']);
                 if ($res['sc'] === 400) {
                     $errors[$year] = $this->localize('create_entry_bad_request');
                 } else {
@@ -1438,6 +1409,8 @@ class Registration extends Form {
         } else {
             return true;
         }
+
+        return false;
     }
 
     private function createIntent($paymentOrg, $paymentMethodId, $currency) {
@@ -1463,7 +1436,6 @@ class Registration extends Form {
         }
 
         $codeholderId = null;
-        $customerName = '';
         if ($this->plugin->aksoUser) {
             $codeholderId = $this->plugin->aksoUser['id'];
             $customerName = $this->plugin->aksoUserFormattedName;
@@ -1502,7 +1474,7 @@ class Registration extends Form {
                         } else {
                             $purposeDescription .= '(Eraro)';
                         }
-                    } else if ($offer['type'] === 'magazine') {
+                    } else {
                         if (isset($magazines[$offer['id']])) {
                             $purposeDescription .= $this->localize('payment_label_magazine') . ' ' . $magazines[$offer['id']]['name'];
                         } else {
@@ -1746,8 +1718,8 @@ class Registration extends Form {
         if ($isDonation) return null;
 
         if (!$isOrg) {
-            $birthdate = \DateTime::createFromFormat('Y-m-d', $ch['birthdate']);
-            $now = new \DateTime();
+            $birthdate = DateTime::createFromFormat('Y-m-d', $ch['birthdate']);
+            $now = new DateTime();
             if (!$birthdate && !$ch['birthdate']) {
                 return $locale['registration']['codeholder_error_birthdate_required'];
             } else if (!$birthdate) {
@@ -1835,7 +1807,6 @@ class Registration extends Form {
                 }
 
                 $minPrice = 1;
-                $offerName = '';
                 if ($offer['type'] === 'membership') {
                     if (!$originalOffer['price']) return $this->localize('offers_error_inconsistent');
                     $minPrice = $originalOffer['price']['amount'];
@@ -1863,9 +1834,11 @@ class Registration extends Form {
         if ($addonCount == 0 && $this->isDonation) {
             return $this->localize('offers_error_donating_no_addon');
         }
+
+        return null;
     }
 
-    public function run() {
+    public function run(): array {
         $this->update();
 
         $path = $this->plugin->getGrav()['uri']->path();
@@ -1887,7 +1860,7 @@ class Registration extends Form {
             $addons = $this->loadAllAddons($this->getOfferAddonIds($this->offers));
         }
 
-        $thisYear = (int) (new \DateTime())->format('Y');
+        $thisYear = (int) (new DateTime())->format('Y');
 
         $renderedTermsLabel = $this->app->bridge->renderMarkdown(
             $this->locale['terms_checkbox_label'],
@@ -1912,7 +1885,7 @@ class Registration extends Form {
         );
     }
 
-    static function floatval($n) {
+    static function floatval($n): float {
         if (gettype($n) === 'float' || gettype($n) === 'integer') return $n;
         if (gettype($n) === 'string') {
             if (empty($n)) return 0.0;
@@ -1921,7 +1894,7 @@ class Registration extends Form {
         return 0.0;
     }
 
-    private function getDefaultFeeCountryCurrency($country) {
+    private function getDefaultFeeCountryCurrency($country): string {
         $country = strtolower($country);
         $currencies = $this->getCachedCurrencies();
         if ($country == 'no') $country = 'no_';
