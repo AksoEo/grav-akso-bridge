@@ -4,6 +4,7 @@ namespace Grav\Plugin;
 use Grav\Common\Plugin;
 use Grav\Common\Uri;
 use Grav\Plugin\AksoBridge\AksoTwigExt;
+use Grav\Plugin\AksoBridge\CodeholderLists;
 use Grav\Plugin\AksoBridge\Payments;
 use RocketTheme\Toolbox\Event\Event;
 use Grav\Common\Page\Page;
@@ -158,8 +159,10 @@ class AksoBridgePlugin extends Plugin {
             $payments->runMethodThumbnail();
             $app->close();
         } else if ($this->path === self::CODEHOLDER_PICTURE_PATH) {
-            $md = new MarkdownExt($this);
-            $md->runListPicture();
+            $app = new AppBridge($this->grav);
+            $app->open();
+            CodeholderLists::runListPicture($this, $app->bridge);
+            $app->close();
         } else if ($this->path === self::MAGAZINE_COVER_PATH) {
             $app = new AppBridge($this->grav);
             $app->open();
@@ -922,7 +925,7 @@ class AksoBridgePlugin extends Plugin {
             return;
         }
         $markdownExt = $this->loadMarkdownExt();
-        $nonces = $markdownExt->onOutputGenerated($event);
+        $nonces = $markdownExt->onOutputGenerated();
 
         $scriptNonces = '';
         foreach ($nonces['scripts'] as $sn) {

@@ -1,12 +1,10 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
-use \DiDom\Document;
 use \DiDom\Element;
+use Exception;
 use Grav\Common\Grav;
 use Grav\Plugin\AksoBridgePlugin;
-use Grav\Plugin\AksoBridge\MarkdownExt;
-use Grav\Plugin\AksoBridge\Utils;
 
 class CodeholderLists {
     public const FIELDS = [
@@ -131,6 +129,69 @@ class CodeholderLists {
         );
     }
 
+    const LIST_PICTURE_CHID = 'c';
+    const LIST_PICTURE_SIZE = 's';
+    public static function runListPicture($plugin, $bridge) {
+        $chId = isset($_GET[self::LIST_PICTURE_CHID]) ? (int)$_GET[self::LIST_PICTURE_CHID] : 0;
+        $size = isset($_GET[self::LIST_PICTURE_SIZE]) ? (string)$_GET[self::LIST_PICTURE_SIZE] : '';
+        if (!$chId || !$size) {
+            Grav::instance()->fireEvent('onPageNotFound');
+            return;
+        }
+
+        $found = true;
+        {
+            // fetch the entire batch so it can be cached more easily
+            $res = $bridge->get('/codeholders', array(
+                'filter' => array('id' => array('$in' => [$chId])),
+                'fields' => [
+                    'id',
+                    'profilePictureHash',
+                    'profilePicturePublicity'
+                ],
+                'limit' => 100,
+            ), 60);
+            if (!$res['k']) throw new Exception('Failed to fetch list codeholders');
+            $foundCh = false;
+            foreach ($res['b'] as $ch) {
+                if ($ch['id'] === $chId) {
+                    $foundCh = true;
+                    $found = $ch;
+                    break;
+                }
+            }
+            if (!$foundCh) {
+                $found = false;
+            }
+        }
+        $ch = $found;
+        if (!$found || !$ch['profilePictureHash']) {
+            Grav::instance()->fireEvent('onPageNotFound');
+            return;
+        }
+        $isMember = $plugin->aksoUser && $plugin->aksoUser['member'];
+        if ($ch['profilePicturePublicity'] !== 'public' && !($ch['profilePicturePublicity'] === 'members' && $isMember)) {
+            Grav::instance()->fireEvent('onPageNotFound');
+            return;
+        }
+        $hash = bin2hex($ch['profilePictureHash']);
+        $path = "/codeholders/$chId/profile_picture/$size";
+        // hack: use noop as unique cache key for getRaw
+        $res = $bridge->getRaw($path, 10, array('noop' => $hash));
+        if ($res['k']) {
+            header('Content-Type: ' . $res['h']['content-type']);
+            try {
+                readfile($res['ref']);
+            } finally {
+                $bridge->releaseRaw($path);
+            }
+            die();
+        } else {
+            throw new Exception('Failed to load picture');
+        }
+    }
+
+
     static function renderCodeholder($bridge, $codeholder, $dataOrgs, $isViewerMember, $elementTag = 'li') {
         $chNode = new Element($elementTag);
         $chNode->class = 'codeholder-item';
@@ -151,8 +212,8 @@ class CodeholderLists {
         if ($canSeePP && $codeholder['profilePictureHash']) {
             // codeholder has a profile picture
             $picPrefix = AksoBridgePlugin::CODEHOLDER_PICTURE_PATH . '?'
-                . 'c=' . $codeholder['id']
-                . '&s=';
+                . self::LIST_PICTURE_CHID . '=' . $codeholder['id']
+                . '&' . self::LIST_PICTURE_SIZE . '=';
             $img->src = $picPrefix . '128px';
             $img->srcset = $picPrefix . '128px 1x, ' . $picPrefix . '256px 2x, ' . $picPrefix . '512px 3x';
 
