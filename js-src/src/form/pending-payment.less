@@ -1,0 +1,52 @@
+.akso-pending-payment {
+    background: rgb(var(--bg2));
+    border-radius: var(--radius);
+    margin: 1em 0;
+    padding: 0.5em 1em;
+
+    .item-header {
+        padding-bottom: 0.5em;
+        border-bottom: 1px solid rgb(var(--light-separator));
+        margin-bottom: 0.5em;
+
+        .payment-status {
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+    }
+
+    .info-line {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1em;
+
+        .line-value {
+            font-weight: bold;
+        }
+    }
+
+    .item-payment-method {
+        .method-type {
+            text-transform: uppercase;
+            border: 1px solid rgb(var(--light-separator));
+            border-radius: var(--radius);
+            font-size: smaller;
+            padding: 0.1em;
+        }
+    }
+
+    .item-payment-details {
+        margin-top: 1em;
+
+        .inner-payment {
+            margin-top: 0.5em;
+            text-align: right;
+        }
+    }
+
+    .item-pending-description, .item-expiration-notice {
+        margin-top: 0.5em;
+        font-size: smaller;
+    }
+}

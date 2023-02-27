@@ -1,0 +1,99 @@
+{#
+input parameters:
+- data_id: purpose data ID (binary)
+- payment: API payment struct
+  should have an idEncoded field as well (base32)
+  optional property expiryDate
+- aksopay_intent_base: AKSO Pay intent URL base
+#}
+
+{% if payment.type != 'intermediary' or payment.status != 'canceled' %}
+    <div class="akso-pending-payment">
+        {% set purpose = null %}
+        {% for item in payment.purposes %}
+            {% if item.dataId == data_id %}
+                {% set purpose = item %}
+            {% endif %}
+        {% endfor %}
+
+        <header class="item-header">
+            {% if purpose.invalid %}
+                <span class="payment-status" data-status="invalid">
+                    {{ akso_locale.registration_form.payment_item_status_invalid }}
+                </span>
+            {% else %}
+                <span class="payment-status" data-status="{{ payment.status }}">
+                    {{ akso_locale.registration_form['payment_item_status_' ~ payment.status] }}
+                </span>
+            {% endif %}
+            ·
+            {{ akso_locale.registration_form.payment_item_created }}
+            <time class="dyn-timestamp" datetime="{{ payment.timeCreated|date('c') }}">
+                {{ payment.timeCreated|akso_datetime }}
+            </time>
+        </header>
+
+        <div class="purpose-info">
+            {% if purpose.triggerAmount %}
+                <div class="info-line">
+                    <span class="line-label">{{ akso_locale.registration_form.payment_item_trigger_amount }}</span>
+                    <span class="line-value">{{ purpose.triggerAmountFmt }}</span>
+                </div>
+                <div class="info-line">
+                    <span class="line-label">{{ akso_locale.registration_form.payment_item_amount_with_trigger_amount }}</span>
+                    <span class="line-value">{{ purpose.amountFmt }}</span>
+                </div>
+            {% else %}
+                <div class="info-line">
+                    <span class="line-label">{{ akso_locale.registration_form.payment_item_trigger_amount }}</span>
+                    <span class="line-value">{{ purpose.amountFmt }}</span>
+                </div>
+            {% endif %}
+        </div>
+        <div class="item-payment-method">
+            <div class="info-line">
+                <span class="line-label">
+                    {{ akso_locale.registration_form.payment_item_method }}
+                </span>
+                <span class="line-value">
+                    <span class="method-type">{{ akso_locale.registration_form['payment_type_' ~ payment.paymentMethod.type] }}</span>
+                    {{ payment.paymentMethod.name }}
+                </span>
+            </div>
+        </div>
+        {% if payment.paymentMethod.type != 'intermediary' %}
+            <div class="item-payment-details">
+                <div class="info-line">
+                    <span class="line-label">
+                        {{ akso_locale.registration_form.payment_item_total_amount }}
+                    </span>
+                    <span class="line-value">
+                            {{ payment.totalAmountFmt }}
+                    </span>
+                </div>
+                <div class="inner-payment">
+                    <a class="inner-intent-button link-button" target="_blank" rel="noopener" href="{{ aksopay_intent_base }}{{ payment.idEncoded }}">
+                        {{ akso_locale.registration_form.payment_item_open_intent }}
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+        <div class="item-pending-description">
+            {% if payment.status == 'pending' %}
+                {% if payment.paymentMethod.type == 'manual' %}
+                    {{ akso_locale.registration_form.payment_item_pending_description_manual }}
+                {% elseif payment.paymentMethod.type == 'stripe' %}
+                    {{ akso_locale.registration_form.payment_item_pending_description_stripe }}
+                {% endif %}
+            {% endif %}
+        </div>
+        {% if payment.status == 'pending' and payment.paymentMethod.type != 'intermediary' and payment.expiryDate is not null %}
+            <div class="item-expiration-notice">
+                {{ akso_locale.registration_form.payment_item_expires }}
+                <time class="dyn-timestamp" datetime="{{ payment.expiryDate|date('c') }}">
+                    {{ payment.expiryDate|akso_datetime }}
+                </time>
+            </div>
+        {% endif %}
+    </div>
+{% endif %}

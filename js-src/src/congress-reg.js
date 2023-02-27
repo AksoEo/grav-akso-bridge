@@ -1,0 +1,1 @@
+import './congress-reg/index.js';

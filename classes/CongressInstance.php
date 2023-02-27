@@ -142,7 +142,7 @@ class CongressInstance {
             }
 
             if ($isRegistration) {
-                Grav::instance()['assets']->add('plugin://akso-bridge/css/registration-form.css');
+                Grav::instance()['assets']->add('plugin://akso-bridge/js/dist/congress-reg.css');
                 Grav::instance()['assets']->add('plugin://akso-bridge/js/dist/form.js');
                 Grav::instance()['assets']->add('plugin://akso-bridge/js/dist/form.css');
 

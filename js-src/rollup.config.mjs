@@ -72,6 +72,16 @@ export default [
         },
     },
     {
+        input: 'src/congress-reg.js',
+        preserveEntrySignatures: false,
+        plugins: plugins(path.join(__dirname, '../js/dist/congress-reg.css')),
+        output: {
+            dir: path.join(__dirname, '../js/dist/'),
+            chunkFileNames: 'cr_[name].js',
+            format: 'amd',
+        },
+    },
+    {
         input: 'src/account.js',
         preserveEntrySignatures: false,
         plugins: plugins(path.join(__dirname, '../js/dist/account.css')),

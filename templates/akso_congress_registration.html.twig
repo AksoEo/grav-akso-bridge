@@ -40,6 +40,16 @@
         </div>
     {% endif %}
 {% endmacro %}
+{% macro registration_payment_history(akso_locale, payment_info) %}
+    <div class="registration-payment-history">
+        {% set data_id = payment_info.purpose_data_id %}
+        {% set aksopay_intent_base = payment_info.aksopay_intent_base %}
+        <h3>{{ akso_locale.registration_form.payment_history_title }}</h3>
+        {% for payment in payment_info.payment_history %}
+            {% include 'partials/akso_pending_payment.html.twig' %}
+        {% endfor %}
+    </div>
+{% endmacro %}
 
 {% block content %}
     {% if akso_congress_error %}
@@ -219,21 +229,22 @@
                             <form method="GET" action="{{ akso_congress_registration.method_target|e('html_attr') }}" class="method-form">
                                 <div class="currency-select">
                                     {% if method.currencies|length > 1 %}
-                                        <label>
+                                        {% set method_currency_select_id = 'payment-method-currency-' ~ method.id %}
+                                        <label for="{{ method_currency_select_id }}">
                                             {{akso_locale.registration_form.payment_currency}}
                                         </label>
-                                        <select name="currency">
+                                        <select name="currency" id="{{ method_currency_select_id }}">
                                             {% for currency in method.currencies %}
                                                 <option value="{{currency}}">{{akso_locale.currencies[currency]}}</option>
                                             {% endfor %}
                                         </select>
                                     {% else %}
-                                        <input class="hidden-input" name="currency" value="{{ method.currencies[0] }}" />
+                                        <input type="hidden" name="currency" value="{{ method.currencies[0] }}" />
                                     {% endif %}
                                 </div>
-                                <input class="hidden-input" name="dataId" value="{{ akso_congress_registration.data_id }}" />
-                                <input class="hidden-input" name="payment" value="true" />
-                                <input class="hidden-input" name="method" value="{{ method.id }}" />
+                                <input type="hidden" name="dataId" value="{{ akso_congress_registration.data_id }}" />
+                                <input type="hidden" name="payment" value="true" />
+                                <input type="hidden" name="method" value="{{ method.id }}" />
                                 <button type="submit">
                                     {{akso_locale.registration_form.payment_method_pay}}
                                 </button>
@@ -347,6 +358,7 @@
                 {{akso_locale.registration_form.editing_title}}
             </div>
             {{ _self.registration_payment(akso_locale, akso_congress_registration.payment) }}
+            {{ _self.registration_payment_history(akso_locale, akso_congress_registration.payment) }}
         {% endif %}
         {% if akso_congress_registration.is_not_found %}
             <div class="registration-error">

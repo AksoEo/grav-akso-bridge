@@ -1,0 +1,276 @@
+@import '../form/pending-payment.less';
+
+.registration-form {
+    .hidden-input {
+        display: none;
+    }
+    .noscript-note {
+        display: block;
+        padding: 0.5em 1em;
+        background: rgb(var(--bg2));
+        font-size: 0.9em;
+        margin: 1em;
+        border-radius: var(--radius);
+    }
+    .registration-congress-name {
+        padding: 0.5em 1em;
+        font-weight: bold;
+        font-size: small;
+    }
+    .registration-editing-title {
+        text-align: center;
+        font-size: 1.5em;
+        font-weight: bold;
+        border-bottom: 2px solid rgb(var(--accent));
+    }
+    .form-item {
+        padding: 0.5em 1em;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+        text-align: left;
+
+        .form-label {
+            font-weight: bolder;
+        }
+    }
+    .form-input-item {
+        input,
+        select {
+            margin-left: 0;
+        }
+
+        input[type=text],
+        input[type=email],
+        input[type=tel],
+        input[type=uri],
+        &:not([data-type=money]) input[type=number] {
+            width: 100%;
+        }
+
+        input[type=text],
+        input[type=email],
+        input[type=tel],
+        input[type=uri],
+        input[type=number],
+        select {
+            min-width: 10em;
+            max-width: 100%;
+        }
+
+        &[data-type=number],
+        &[data-type=text],
+        &[data-type=money],
+        &[data-type=enum],
+        &[data-type=date],
+        &[data-type=time],
+        &[data-type=datetime] {
+        }
+
+        &[data-type=text] textarea {
+            width: 100%;
+            resize: vertical;
+            min-height: 6em;
+        }
+
+        .boolean-table th, td {
+            text-align: center;
+        }
+
+        .boolean-table tbody tr th {
+            /* headerLeft */
+            text-align: right;
+        }
+
+        .js-date-editor input,
+        .js-date-editor select,
+        .js-time-editor select {
+            min-width: auto;
+        }
+
+        .js-date-time-editor .inner-input,
+        .js-time-editor .inner-input,
+        .js-date-editor .inner-input {
+            display: none;
+        }
+
+        .js-date-time-editor .js-time-editor,
+        .js-date-time-editor .js-date-editor {
+            display: inline-block;
+        }
+
+        .js-date-time-editor .js-date-editor {
+            margin-right: 1em;
+        }
+
+        .money-input .currency-label {
+            margin-left: 0.2em;
+        }
+    }
+    .form-script-item {
+        display: none;
+    }
+    .form-footer {
+        padding: 1em;
+        display: flex;
+        justify-content: space-between;
+    }
+    .registration-message {
+        background: rgb(var(--light-accent));
+        color: rgb(var(--light-accent-fg));
+        border-radius: var(--radius);
+        margin-bottom: 1em;
+        padding: 0.5em 1em;
+    }
+    .registration-error {
+        background: rgb(var(--error-bg));
+        color: rgb(var(--error-fg));
+        border-radius: var(--radius);
+        margin-bottom: 1em;
+        padding: 0.5em 1em;
+    }
+    .registration-suggestion-banner {
+        background: rgb(var(--bg2));
+        border-radius: var(--radius);
+        margin-bottom: 1em;
+        padding: 0.5em 1em;
+    }
+    .field-error {
+        background: rgb(var(--error-bg));
+        color: rgb(var(--error-fg));
+        border-radius: var(--radius);
+        font-size: 0.9em;
+        margin-top: 0.3em;
+        padding: 0.3em 1em;
+    }
+    .registration-confirmation {
+        text-align: center;
+        margin-bottom: 4em;
+
+        .confirmation-link-container {
+            margin-bottom: 1em;
+        }
+    }
+
+    .registration-payment-history {
+        padding-bottom: 0.5em;
+        margin-bottom: 0.5em;
+        border-bottom: 1px solid rgb(var(--light-separator));
+    }
+
+    .registration-payment {
+        margin-top: 1em;
+        margin-bottom: 1em;
+        padding: 0.5em 1em;
+        border-radius: var(--radius);
+        background: rgb(var(--bg2));
+    }
+    .registration-payment h3 {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-top: 0;
+        margin-bottom: 0.5em;
+    }
+    .registration-payment.all-paid {
+        background: rgb(var(--light-accent));
+        color: rgb(var(--light-accent-fg));
+    }
+    .registration-payment .all-paid-title {
+        margin-bottom: 0;
+    }
+    .registration-payment h3 .outstanding-amount {
+        font-weight: normal;
+    }
+    .registration-payment .payment-button-container {
+        text-align: right;
+    }
+    .registration-payment .payment-button-container .link-button {
+        margin-right: 0;
+    }
+
+    &.is-payment {
+        .payment-intent-redirect {
+            padding: 1em;
+            text-align: center;
+        }
+
+        #payment-intent-redirect-button {
+            margin-top: 1em;
+        }
+
+        .payment-methods {
+            padding: 0;
+            list-style-type: none;
+        }
+
+        .payment-methods .payment-method {
+            background: rgb(var(--bg2));
+            border-radius: rgb(var(--radius));
+            padding: 1em;
+            margin: 1em 0;
+            text-align: left;
+            display: flex;
+        }
+
+        .payment-methods .payment-method .method-thumbnail {
+            margin-right: 1em;
+            align-self: flex-start;
+            width: 4em;
+            flex-shrink: 0;
+        }
+
+        .payment-methods .payment-method .method-details {
+            flex: 1;
+        }
+
+        .payment-methods .payment-method .method-thumbnail .method-thumbnail-image {
+            border-radius: 0.5em;
+            width: 100%;
+        }
+
+        .payment-methods .payment-method .method-type {
+            font-size: small;
+        }
+
+        .payment-methods .payment-method .method-name {
+            margin-top: 0;
+        }
+
+        .payment-methods .payment-method .method-recommended {
+            margin-left: 0.1em;
+            font-size: 0.7em;
+            opacity: 0.7;
+        }
+
+        .payment-methods .payment-method .hidden-input {
+            display: none;
+        }
+
+        .payment-methods .payment-method .method-form {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        @media (max-width: 600px) {
+            .payment-methods .payment-method .method-form {
+                display: block;
+            }
+        }
+    }
+
+    &.is-intent-page .payment-amount {
+        margin-bottom: 0;
+    }
+    &.is-intent-page .payment-min-upfront {
+        margin-bottom: 0.5em;
+        opacity: 0.7;
+    }
+
+    .form-small-print {
+        margin: 0;
+        padding: 0.2em 1em;
+        list-style-type: none;
+        font-size: 0.7em;
+        opacity: 0.7;
+        text-align: left;
+    }
+}

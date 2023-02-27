@@ -1,9 +1,11 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
-use \Grav\Common\Utils;
-
 // handles congress registration form
+use DateInterval;
+use DateTime;
+use Grav\Common\Grav;
+
 class CongressRegistration {
     public const DATAID = 'dataId';
     const CANCEL = 'cancel';
@@ -496,9 +498,47 @@ class CongressRegistration {
 
         $minUpfrontRendered = $this->formatCurrency($minUpfront, $this->currency);
 
+        $paymentHistory = [];
+
+        $res = $this->app->bridge->get('/aksopay/payment_intents', array(
+            'fields' => ['codeholderId', 'customer.name', 'customer.email', 'status', 'totalAmount', 'currency', 'id',
+                'timeCreated', 'amountRefunded', 'paymentMethod', 'purposes'],
+            'order' => [['timeCreated', 'desc']],
+            'filter' => array(
+                '$purposes' => array(
+                    'dataId' => '==base64==' . base64_encode(hex2bin($this->dataId)),
+                ),
+            ),
+            'limit' => 100,
+        ));
+        if ($res['k']) {
+            foreach ($res['b'] as $item) {
+                $item['idEncoded'] = Utils::base32_encode($item['id'], false);
+                if ($item['paymentMethod']['paymentValidity']) {
+                    $time = new DateTime("@" . $item['timeCreated']);
+                    $interval = DateInterval::createFromDateString($item['paymentMethod']['paymentValidity'] . ' seconds');
+                    $time = $time->add($interval);
+                    $item['expiryDate'] = $time->getTimestamp();
+
+                    foreach ($item['purposes'] as &$purpose) {
+                        if ($purpose['triggerAmount'] != null) {
+                            $purpose['triggerAmountFmt'] = Utils::formatCurrency($this->app->bridge, $purpose['triggerAmount'], $item['currency']);
+                        }
+                        $purpose['amountFmt'] = Utils::formatCurrency($this->app->bridge, $purpose['amount'], $item['currency']);
+                    }
+                }
+                $item['totalAmountFmt'] = Utils::formatCurrency($this->app->bridge, $item['totalAmount'], $item['currency']);
+                $paymentHistory[] = $item;
+            }
+        }
+        $paymentsHost = Grav::instance()['config']->get('plugins.akso-bridge.payments_host');
+
         return array(
             'has_payment' => true,
             'outstanding_payment' => $remaining > 0,
+            'purpose_data_id' => hex2bin($this->dataId),
+            'payment_history' => $paymentHistory,
+            'aksopay_intent_base' => $paymentsHost . '/i/',
             'remaining_amount' => $remaining,
             'remaining_rendered' => $remainingRendered,
             'total_amount' => $price,
