@@ -939,7 +939,9 @@ const messageHandlers = {
         assertType(c, 'string', 'expected c to be a string');
         assertType(r, 'array', 'expected r to be an array');
 
-        const md = new Markdown('zero').use(MarkdownMultiMdTable);
+        const md = new Markdown('zero', {
+            breaks: true,
+        }).use(MarkdownMultiMdTable);
         md.enable('newline');
         md.enable(r);
         if (i) {
