@@ -11,7 +11,7 @@ input parameters:
     <div class="akso-pending-payment">
         {% set purpose = null %}
         {% for item in payment.purposes %}
-            {% if item.dataId == data_id %}
+            {% if item.dataId == data_id or item.registrationEntryId == data_id %}
                 {% set purpose = item %}
             {% endif %}
         {% endfor %}
@@ -34,13 +34,13 @@ input parameters:
         </header>
 
         <div class="purpose-info">
-            {% if purpose.triggerAmount %}
+            {% if purpose.triggerAmountFmt %}
                 <div class="info-line">
                     <span class="line-label">{{ akso_locale.registration_form.payment_item_trigger_amount }}</span>
                     <span class="line-value">{{ purpose.triggerAmountFmt }}</span>
                 </div>
                 <div class="info-line">
-                    <span class="line-label">{{ akso_locale.registration_form.payment_item_amount_with_trigger_amount }}</span>
+                    <span class="line-label">{{ akso_locale.registration_form.payment_item_purpose_amount_with_trigger_amount }}</span>
                     <span class="line-value">{{ purpose.amountFmt }}</span>
                 </div>
             {% else %}

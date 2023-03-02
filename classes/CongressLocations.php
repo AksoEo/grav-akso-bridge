@@ -99,8 +99,8 @@ class CongressLocations {
                     $cursor = $cursor->add(new \DateInterval("P1D"));
                 }
                 return $days;
-            } catch (Exception $e) {
-                // ???
+            } catch (\Exception $e) {
+                // ??? probably null timezone
             }
         }
         return array();

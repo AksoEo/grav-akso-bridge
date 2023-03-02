@@ -521,8 +521,9 @@ class CongressRegistration {
                     $item['expiryDate'] = $time->getTimestamp();
 
                     foreach ($item['purposes'] as &$purpose) {
-                        if ($purpose['triggerAmount'] != null) {
-                            $purpose['triggerAmountFmt'] = Utils::formatCurrency($this->app->bridge, $purpose['triggerAmount'], $item['currency']);
+                        $triggered = $purpose['triggerAmount'];
+                        if ($triggered != null && ($triggered['currency'] != $item['currency'] || $triggered['amount'] != $purpose['amount'])) {
+                            $purpose['triggerAmountFmt'] = Utils::formatCurrency($this->app->bridge, $triggered['amount'], $triggered['currency']);
                         }
                         $purpose['amountFmt'] = Utils::formatCurrency($this->app->bridge, $purpose['amount'], $item['currency']);
                     }
@@ -530,6 +531,8 @@ class CongressRegistration {
                 $item['totalAmountFmt'] = Utils::formatCurrency($this->app->bridge, $item['totalAmount'], $item['currency']);
                 $paymentHistory[] = $item;
             }
+        } else {
+            Grav::instance()['log']->error('Failed to fetch payment intents for a data ID');
         }
         $paymentsHost = Grav::instance()['config']->get('plugins.akso-bridge.payments_host');
 

@@ -46,7 +46,7 @@ class CongressPrograms {
             $this->congress = $res['b'];
             try {
                 $this->tz = new \DateTimeZone($res['b']['tz']);
-            } catch (Exception $e) {}
+            } catch (\Exception $e) {}
         }
     }
 

@@ -1,6 +1,7 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use DateInterval;
 use DateTime;
 use DateTimeZone;
 use Ds\Map;
@@ -489,10 +490,11 @@ class Registration extends Form {
         $needsLogin = false;
         $currency = '';
         $hasCodeholder = false;
-        $codeholder = [];
+        $codeholder = null;
         $offersByYear = [];
         $yearDataIds = [];
         $yearStatuses = [];
+        $yearPayments = [];
 
         foreach ($dataIds as $id) {
             if (!$id) continue;
@@ -500,8 +502,11 @@ class Registration extends Form {
                 'fields' => ['year', 'currency', 'codeholderData', 'offers', 'status'],
             ));
             if ($res['k']) {
+                $year = $res['b']['year'];
+
                 // ignore duplicate year
-                if (isset($offersByYear[$res['b']['year']])) continue;
+                if (isset($offersByYear[$year])) continue;
+
                 if (!$hasCodeholder) {
                     $hasCodeholder = $res['b']['codeholderData'];
                     if (gettype($res['b']['codeholderData']) === 'integer') {
@@ -542,15 +547,56 @@ class Registration extends Form {
                     $selectedItems[] = $offer;
                 }
 
-                if (isset($addons[$res['b']['year']])) {
-                    foreach ($addons[$res['b']['year']] as $addon) {
+                if (isset($addons[$year])) {
+                    foreach ($addons[$year] as $addon) {
                         $selectedItems[] = $addon;
                     }
                 }
 
-                $offersByYear[$res['b']['year']] = $selectedItems;
-                $yearDataIds[$res['b']['year']] = $id;
-                $yearStatuses[$res['b']['year']] = $res['b']['status'];
+                $offersByYear[$year] = $selectedItems;
+                $yearDataIds[$year] = $id;
+                $yearStatuses[$year] = $res['b']['status'];
+
+                // collect payments against this registration
+                $thisYearPayments = [];
+
+                $res = $this->app->bridge->get("/aksopay/payment_intents", array(
+                    'fields' => ['codeholderId', 'customer.name', 'customer.email', 'status', 'totalAmount', 'currency', 'id',
+                        'timeCreated', 'amountRefunded', 'paymentMethod', 'purposes'],
+                    'order' => [['timeCreated', 'desc']],
+                    'filter' => array(
+                        '$purposes' => array(
+                            'dataId' => '==base64==' . base64_encode(Utils::base32_decode($id)),
+                        ),
+                    ),
+                    'limit' => 100,
+                ));
+                if ($res['k']) {
+                    foreach ($res['b'] as $item) {
+                        $item['specificPurposeDataId'] = Utils::base32_decode($id);
+                        $item['idEncoded'] = Utils::base32_encode($item['id'], false);
+                        if ($item['paymentMethod']['paymentValidity']) {
+                            $time = new DateTime("@" . $item['timeCreated']);
+                            $interval = DateInterval::createFromDateString($item['paymentMethod']['paymentValidity'] . ' seconds');
+                            $time = $time->add($interval);
+                            $item['expiryDate'] = $time->getTimestamp();
+
+                            foreach ($item['purposes'] as &$purpose) {
+                                $triggered = $purpose['triggerAmount'];
+                                if ($triggered != null && ($triggered['currency'] != $item['currency'] || $triggered['amount'] != $purpose['amount'])) {
+                                    $purpose['triggerAmountFmt'] = Utils::formatCurrency($this->app->bridge, $triggered['amount'], $triggered['currency']);
+                                }
+                                $purpose['amountFmt'] = Utils::formatCurrency($this->app->bridge, $purpose['amount'], $item['currency']);
+                            }
+                        }
+                        $item['totalAmountFmt'] = Utils::formatCurrency($this->app->bridge, $item['totalAmount'], $item['currency']);
+                        $thisYearPayments[] = $item;
+                    }
+                } else {
+                    Grav::instance()['log']->error('Failed to fetch payment intents for a data ID');
+                }
+
+                $yearPayments[$year] = $thisYearPayments;
             } else {
                 $this->plugin->getGrav()->fireEvent('onPageNotFound');
             }
@@ -568,6 +614,7 @@ class Registration extends Form {
             'codeholder' => $codeholder,
             'offers' => $offersByYear,
             'year_statuses' => $yearStatuses,
+            'year_payments' => $yearPayments,
             'dataIds' => $yearDataIds,
         );
     }
@@ -1093,7 +1140,7 @@ class Registration extends Form {
                         }
                         $org['statuses'][$offerYear['year']] = $yearStatus;
                         if (!$yearStatus) $org['can_pay'] = true;
-                        else if ($yearStatus === 'pending') {
+                        else if ($yearStatus === 'submitted') {
                             // TODO: we need to filter payment methods to only the selected one
                             $org['can_pay'] = true;
                         }
@@ -1153,6 +1200,11 @@ class Registration extends Form {
         }
 
         if ($method['type'] === 'intermediary') {
+            if (!$this->state['codeholder']) {
+                $method['available'] = false;
+                $method['error'] = $this->locale['payment_intermediary_err_login_required'];
+                return $method;
+            }
             $res = $this->app->bridge->get('/intermediaries', array(
                 'fields' => ['codeholderId', 'paymentDescription'],
                 'filter' => array(
@@ -1643,7 +1695,9 @@ class Registration extends Form {
             $this->state['needs_login'] = $res['needs_login'];
             $this->state['dataIds'] = $res['dataIds'];
             $this->state['year_statuses'] = $res['year_statuses'];
+            $this->state['year_payments'] = $res['year_payments'];
             $this->state['locked_offers'] = $res['offers'];
+            $this->state['atos'] = true;
         }
 
         // TOS checkbox
@@ -1867,6 +1921,8 @@ class Registration extends Form {
             ['emphasis', 'strikethrough', 'link', 'list', 'table'],
         )['c'];
 
+        $paymentsHost = $this->plugin->getGrav()['config']->get('plugins.akso-bridge.payments_host');
+
         return array(
             'disabled' => $this->getDisabledError(),
             'countries' => $this->getCachedCountries(),
@@ -1882,6 +1938,7 @@ class Registration extends Form {
             'payment_orgs' => $this->paymentOrgs,
             'is_donation' => $this->isDonation,
             'rendered_terms_label' => $renderedTermsLabel,
+            'aksopay_intent_base' => $paymentsHost . '/i/',
         );
     }
 
