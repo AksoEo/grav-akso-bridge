@@ -582,7 +582,7 @@ class Registration extends Form {
                             $item['expiryDate'] = $time->getTimestamp();
 
                             foreach ($item['purposes'] as &$purpose) {
-                                $triggered = $purpose['triggerAmount'];
+                                $triggered = $purpose['triggerAmount'] ?? null;
                                 if ($triggered != null && ($triggered['currency'] != $item['currency'] || $triggered['amount'] != $purpose['amount'])) {
                                     $purpose['triggerAmountFmt'] = Utils::formatCurrency($this->app->bridge, $triggered['amount'], $triggered['currency']);
                                 }
@@ -1206,15 +1206,17 @@ class Registration extends Form {
                 return $method;
             }
             $res = $this->app->bridge->get('/intermediaries', array(
-                'fields' => ['codeholderId', 'paymentDescription'],
+                'fields' => ['codeholders', 'countryCode'], // FIXME: requesting countryCode is useless. remove this (workaround for server crash)
                 'filter' => array(
                     'countryCode' => $this->state['codeholder']['feeCountry'],
                 ),
-                'limit' => 1,
+                'limit' => 100,
             ));
             if (!$res['k']) {
+                $country = $this->state['codeholder']['feeCountry'];
+                Grav::instance()['log']->error("Could not fetch intermediaries for country $country: " . $res['b']);
                 $method['available'] = false;
-                $method['error'] = '(Eraro)';
+                $method['error'] = '(Eraro 1)';
                 return $method;
             }
 
@@ -1224,28 +1226,35 @@ class Registration extends Form {
                 return $method;
             }
 
-            $method['intermediary'] = $res['b'][0];
+            $method['intermediaries'] = $res['b'][0]['codeholders'];
 
-            $intermediary = $method['intermediary']['codeholderId'];
-            $intermediary = $this->app->bridge->get("/codeholders/$intermediary", array(
-                'fields' => CodeholderLists::FIELDS,
-            ));
-            if (!$intermediary['k']) {
-                $method['available'] = false;
-                $method['error'] = '(Eraro)';
-                return $method;
-            }
-            $intermediary = $intermediary['b'];
-            $method['intermediary']['codeholder'] = $intermediary;
-            if ($method['intermediary']['paymentDescription']) {
-                $method['intermediary']['desc_rendered'] = $this->app->bridge->renderMarkdown(
-                    $method['intermediary']['paymentDescription'],
-                    ['emphasis', 'strikethrough', 'link', 'list', 'table'],
-                )['c'];
-            }
+            foreach ($method['intermediaries'] as &$intermediary) {
+                $chRes = $this->app->bridge->get("/codeholders/" . $intermediary['codeholderId'], array(
+                    'fields' => CodeholderLists::FIELDS,
+                ));
+                if (!$chRes['k']) {
+                    Grav::instance()['log']->error('Failed to fetch intermediary codeholder ' . $intermediary['codeholderId'] . ': ' . $chRes['b']);
+                    $method['available'] = false;
+                    $method['error'] = '(Eraro 2)';
+                    return $method;
+                }
+                $ch = $chRes['b'];
+                $intermediary['codeholder'] = $ch;
+                if ($intermediary['paymentDescription']) {
+                    $intermediary['desc_rendered'] = $this->app->bridge->renderMarkdown(
+                        $intermediary['paymentDescription'],
+                        ['emphasis', 'strikethrough', 'link', 'list', 'table'],
+                    )['c'];
+                }
 
-            $isMember = $this->plugin->aksoUser ? $this->plugin->aksoUser['member'] : false;
-            $method['intermediary_rendered'] = CodeholderLists::renderCodeholder($this->app->bridge, $intermediary, null, $isMember)->html();
+                $isMember = $this->plugin->aksoUser ? $this->plugin->aksoUser['member'] : false;
+                $intermediary['codeholder_rendered'] = CodeholderLists::renderCodeholder(
+                    $this->app->bridge,
+                    $intermediary['codeholder'],
+                    null,
+                    $isMember,
+                )->html();
+            }
 
             if (count($org['years']) != 1) {
                 $method['available'] = false;
@@ -1258,7 +1267,7 @@ class Registration extends Form {
                 $scriptCtx = $this->getPriceScriptCtx($offerYear['year']);
                 if (!$scriptCtx) {
                     $method['available'] = false;
-                    $method['error'] = '(Eraro)';
+                    $method['error'] = '(Eraro 3)';
                     return $method;
                 }
                 $scriptCtx->setFormVar('currency', $currency);
@@ -1289,7 +1298,7 @@ class Registration extends Form {
                             if ($offer['type'] === 'membership') {
                                 if (isset($categories[$offer['id']])) {
                                     $priceScript = $categories[$offer['id']]['price'];
-                                    $priceDesc = $categories[$offer['id']]['description'];
+                                    $priceDesc = $categories[$offer['id']]['description'] ?? null;
                                 }
                             } else if ($offer['type'] === 'magazine') {
                                 if (isset($magazines[$offer['id']])) {
