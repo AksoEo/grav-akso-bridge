@@ -1186,6 +1186,28 @@ class Registration extends Form {
                 $this->createIntent($paymentOrg, $paymentMethodId, $currency);
             }
         }
+
+        if ($this->state['step'] >= 3) {
+            if (isset($_POST['cancel_intent_id'])) {
+                $intentId = $_POST['cancel_intent_id'];
+
+                $res = $this->app->bridge->post("/aksopay/payment_intents/$intentId/!cancel", [], [], []);
+                if ($res['k']) {
+                    $this->state['intent_cancel_success'] = true;
+                    foreach ($this->state['year_payments'] as $y => $year) {
+                        foreach ($year as $i => $payment) {
+                            if ($payment['idEncoded'] == $intentId) {
+                                // this one was removed!
+                                unset($this->state['year_payments'][$y][$i]);
+                            }
+                        }
+                    }
+                } else {
+                    Grav::instance()['log']->error("Failed to cancel intermediary intent $intentId for a user");
+                    $this->state['form_error'] = $this->locale['payment_error_cancel_generic'];
+                }
+            }
+        }
     }
 
     private function deriveMethodState($org, $method) {

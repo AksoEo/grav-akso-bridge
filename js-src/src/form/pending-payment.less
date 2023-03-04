@@ -49,4 +49,41 @@
         margin-top: 0.5em;
         font-size: smaller;
     }
+
+    .item-cancel-details {
+        margin-top: 0.5em;
+
+        .inner-state-checkbox {
+            display: none;
+        }
+
+        .inner-summary {
+            text-align: right;
+        }
+        .inner-cancel-box {
+            display: none;
+            border-top: 1px solid rgb(var(--light-separator));
+            padding-top: 0.5em;
+
+            .inner-title {
+                margin: 0;
+            }
+
+            .inner-buttons {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+        }
+
+        .inner-state-checkbox:checked {
+            & ~ .inner-summary {
+                display: none;
+            }
+            & ~ .inner-cancel-box {
+                display: block;
+            }
+        }
+    }
 }

@@ -7,7 +7,7 @@ input parameters:
 - aksopay_intent_base: AKSO Pay intent URL base
 #}
 
-{% if payment.type != 'intermediary' or payment.status != 'canceled' %}
+{% if payment.type != 'intermediary' and payment.status != 'canceled' %}
     <div class="akso-pending-payment">
         {% set purpose = null %}
         {% for item in payment.purposes %}
@@ -61,20 +61,51 @@ input parameters:
                 </span>
             </div>
         </div>
-        {% if payment.paymentMethod.type != 'intermediary' %}
-            <div class="item-payment-details">
-                <div class="info-line">
-                    <span class="line-label">
-                        {{ akso_locale.registration_form.payment_item_total_amount }}
-                    </span>
-                    <span class="line-value">
-                            {{ payment.totalAmountFmt }}
-                    </span>
-                </div>
+        <div class="item-payment-details">
+            <div class="info-line">
+                <span class="line-label">
+                    {{ akso_locale.registration_form.payment_item_total_amount }}
+                </span>
+                <span class="line-value">
+                    {{ payment.totalAmountFmt }}
+                </span>
+            </div>
+            {% if payment.paymentMethod.type != 'intermediary' %}
                 <div class="inner-payment">
                     <a class="inner-intent-button link-button" target="_blank" rel="noopener" href="{{ aksopay_intent_base }}{{ payment.idEncoded }}">
                         {{ akso_locale.registration_form.payment_item_open_intent }}
                     </a>
+                </div>
+            {% endif %}
+        </div>
+        {% if payment.paymentMethod.type == 'intermediary' and payment.status == 'pending' %}
+            <div class="item-cancel-details">
+                {% set cancel_disclosure_id = payment.idEncoded ~ '-cancel-disclosure' %}
+                <input class="inner-state-checkbox" type="checkbox" id="{{ cancel_disclosure_id }}" />
+
+                <div class="inner-summary">
+                    <label for="{{ cancel_disclosure_id }}">
+                        <span role="button" class="link-button">
+                            {{ akso_locale.registration_form.payment_item_cancel_intent }}
+                        </span>
+                    </label>
+                </div>
+                <div class="inner-cancel-box">
+                    <h4 class="inner-title">{{ akso_locale.registration_form.payment_item_cancel_intent_title }}</h4>
+                    <p>{{ akso_locale.registration_form.payment_item_cancel_intent_description }}</p>
+                    <div class="inner-buttons">
+                        <label for="{{ cancel_disclosure_id }}">
+                            <span role="button" class="link-button">
+                                {{ akso_locale.registration_form.payment_item_cancel_intent_back }}
+                            </span>
+                        </label>
+                        <form method="POST">
+                            <input type="hidden" name="cancel_intent_id" value="{{ payment.idEncoded }}" />
+                            <button type="submit">
+                                {{ akso_locale.registration_form.payment_item_cancel_intent_confirm }}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         {% endif %}

@@ -28,6 +28,11 @@
                 {{akso_locale.registration.payment_success_return_msg}}
             </div>
         {% endif %}
+        {% if akso_registration.state.intent_cancel_success %}
+            <div class="message-banner">
+                {{akso_locale.registration.payment_intent_cancel_success_msg}}
+            </div>
+        {% endif %}
         <input
             class="hidden-input"
             type="hidden"
