@@ -123,6 +123,11 @@ class CongressRegistration {
             $res = $this->app->bridge->get('/aksopay/payment_orgs/' . $this->paymentOrg . '/methods/' . $this->paymentMethod, array(
                 'fields' => ['id', 'type', 'stripeMethods', 'name', 'descriptionPreview', 'currencies',
                     'feePercent', 'feeFixed.val', 'feeFixed.cur', 'internal'],
+                'filter' => array(
+                    '$not' => array(
+                        'type' => 'intermediary', // not supported at the moment
+                    ),
+                ),
             ), 60);
 
             $currency = $this->paymentCurrency;
