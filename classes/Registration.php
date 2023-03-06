@@ -589,6 +589,15 @@ class Registration extends Form {
                                 $purpose['amountFmt'] = Utils::formatCurrency($this->app->bridge, $purpose['amount'], $item['currency']);
                             }
                         }
+
+                        if ($item['paymentMethod']['type'] === 'intermediary') {
+                            if ($codeholder) {
+                                $item['paymentMethod'] = $this->addMethodIntermediaries($item['paymentMethod'], $codeholder['feeCountry']);
+                            } else {
+                                $item['paymentMethod']['error'] = $this->locale['payment_intermediary_err_login_required_informational'];
+                            }
+                        }
+
                         $item['totalAmountFmt'] = Utils::formatCurrency($this->app->bridge, $item['totalAmount'], $item['currency']);
                         $thisYearPayments[] = $item;
                     }
@@ -1210,6 +1219,70 @@ class Registration extends Form {
         }
     }
 
+    /**
+     * Adds data about intermediaries to the method in the 'intermediaries' field.
+     * @param $method array payment method
+     * @param $country string country code
+     * @return array the method again
+     */
+    private function addMethodIntermediaries(array $method, string $country): array {
+        $method['intermediaries'] = [];
+
+        $res = $this->app->bridge->get('/intermediaries', array(
+            'fields' => ['codeholders', 'countryCode'], // FIXME: requesting countryCode is useless. remove this (workaround for server crash)
+            'filter' => array(
+                'countryCode' => $country,
+            ),
+            'limit' => 100,
+        ));
+        if (!$res['k']) {
+            Grav::instance()['log']->error("Could not fetch intermediaries for country $country: " . $res['b']);
+            $method['available'] = false;
+            $method['error'] = '(Eraro 1)';
+            return $method;
+        }
+
+        if (empty($res['b'])) {
+            $method['available'] = false;
+            $method['error'] = $this->locale['payment_intermediary_err_none_for_country'];
+            return $method;
+        }
+
+        foreach ($res['b'][0]['codeholders'] as $intermediary) {
+            $chRes = $this->app->bridge->get("/codeholders/" . $intermediary['codeholderId'], array(
+                'fields' => CodeholderLists::FIELDS,
+            ));
+            if (!$chRes['k']) {
+                Grav::instance()['log']->error('Failed to fetch intermediary codeholder ' . $intermediary['codeholderId'] . ': ' . $chRes['b']);
+                $method['available'] = false;
+                $method['error'] = '(Eraro 2)';
+                return $method;
+            }
+            $ch = $chRes['b'];
+            $intermediary['codeholder'] = $ch;
+            if ($intermediary['paymentDescription']) {
+                $intermediary['desc_rendered'] = $this->app->bridge->renderMarkdown(
+                    $intermediary['paymentDescription'],
+                    ['emphasis', 'strikethrough', 'link', 'list', 'table'],
+                )['c'];
+            }
+
+            $isMember = $this->plugin->aksoUser ? $this->plugin->aksoUser['member'] : false;
+            $intermediary['codeholder_rendered'] = CodeholderLists::renderCodeholder(
+                $this->app->bridge,
+                $intermediary['codeholder'],
+                null,
+                $isMember,
+            )->html();
+
+            $intermediary['country_rendered'] = Utils::formatCountry($this->app->bridge, $country);
+
+            $method['intermediaries'][] = $intermediary;
+        }
+
+        return $method;
+    }
+
     private function deriveMethodState($org, $method) {
         $currency = $this->state['currency'];
         $method['currency_available'] = in_array($currency, $method['currencies']);
@@ -1227,56 +1300,10 @@ class Registration extends Form {
                 $method['error'] = $this->locale['payment_intermediary_err_login_required'];
                 return $method;
             }
-            $res = $this->app->bridge->get('/intermediaries', array(
-                'fields' => ['codeholders', 'countryCode'], // FIXME: requesting countryCode is useless. remove this (workaround for server crash)
-                'filter' => array(
-                    'countryCode' => $this->state['codeholder']['feeCountry'],
-                ),
-                'limit' => 100,
-            ));
-            if (!$res['k']) {
-                $country = $this->state['codeholder']['feeCountry'];
-                Grav::instance()['log']->error("Could not fetch intermediaries for country $country: " . $res['b']);
-                $method['available'] = false;
-                $method['error'] = '(Eraro 1)';
-                return $method;
-            }
+            $country = $this->state['codeholder']['feeCountry'];
 
-            if (empty($res['b'])) {
-                $method['available'] = false;
-                $method['error'] = $this->locale['payment_intermediary_err_none_for_country'];
-                return $method;
-            }
-
-            $method['intermediaries'] = $res['b'][0]['codeholders'];
-
-            foreach ($method['intermediaries'] as &$intermediary) {
-                $chRes = $this->app->bridge->get("/codeholders/" . $intermediary['codeholderId'], array(
-                    'fields' => CodeholderLists::FIELDS,
-                ));
-                if (!$chRes['k']) {
-                    Grav::instance()['log']->error('Failed to fetch intermediary codeholder ' . $intermediary['codeholderId'] . ': ' . $chRes['b']);
-                    $method['available'] = false;
-                    $method['error'] = '(Eraro 2)';
-                    return $method;
-                }
-                $ch = $chRes['b'];
-                $intermediary['codeholder'] = $ch;
-                if ($intermediary['paymentDescription']) {
-                    $intermediary['desc_rendered'] = $this->app->bridge->renderMarkdown(
-                        $intermediary['paymentDescription'],
-                        ['emphasis', 'strikethrough', 'link', 'list', 'table'],
-                    )['c'];
-                }
-
-                $isMember = $this->plugin->aksoUser ? $this->plugin->aksoUser['member'] : false;
-                $intermediary['codeholder_rendered'] = CodeholderLists::renderCodeholder(
-                    $this->app->bridge,
-                    $intermediary['codeholder'],
-                    null,
-                    $isMember,
-                )->html();
-            }
+            $method = $this->addMethodIntermediaries($method, $country);
+            if (isset($method['error'])) return $method;
 
             if (count($org['years']) != 1) {
                 $method['available'] = false;

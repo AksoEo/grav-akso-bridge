@@ -87,3 +87,47 @@
         }
     }
 }
+
+.payment-method-intermediary-info {
+    background: rgb(var(--bg2));
+    border: 1px solid rgb(var(--bg));
+    border-radius: var(--radius);
+    padding: 0.5em 1em;
+    margin-top: 0.5em;
+
+    .payment-desc-title {
+        font-weight: bold;
+    }
+    .payment-desc {
+        font-size: smaller;
+        p:first-child {
+            margin-top: 0;
+        }
+        p:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    .codeholder-card-container {
+        font-size: smaller;
+        margin: 0;
+        margin-top: 0.5em;
+        padding: 0;
+
+        .codeholder-item {
+            // TODO: use CSS variables instead of modifying codeholder list styles
+            .item-picture-container {
+                width: 48px;
+                height: 48px;
+
+                .item-back-picture {
+                    display: none;
+                }
+            }
+            .item-details {
+                padding-top: 0;
+            }
+        }
+    }
+}
+

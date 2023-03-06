@@ -4,6 +4,7 @@ input parameters:
 - payment: API payment struct
   should have an idEncoded field as well (base32)
   optional property expiryDate
+  optional property paymentMethod.intermediaries (list of { country_rendered, codeholder_rendered, desc_rendered })
 - aksopay_intent_base: AKSO Pay intent URL base
 #}
 
@@ -60,6 +61,26 @@ input parameters:
                     {{ payment.paymentMethod.name }}
                 </span>
             </div>
+            {% if payment.paymentMethod.error %}
+                <p>{{ payment.paymentMethod.error }}</p>
+            {% endif %}
+            {% if payment.paymentMethod.type == 'intermediary' %}
+                {% for intermediary in payment.paymentMethod.intermediaries %}
+                    <div class="payment-method-intermediary-info" role="group">
+                        <div class="payment-desc-title">
+                            {{akso_locale.registration.payment_method_intermediary_info_0}}
+                            {{intermediary.country_rendered|default('—')}}
+                            {{akso_locale.registration.payment_method_intermediary_info_1}}
+                        </div>
+                        <div class="payment-desc">
+                            {{intermediary.desc_rendered|raw|default(akso_locale.registration.payment_method_intermediary_no_desc)}}
+                        </div>
+                        <ul class="codeholder-card-container codeholder-list">
+                            {{intermediary.codeholder_rendered|raw}}
+                        </ul>
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
         <div class="item-payment-details">
             <div class="info-line">
