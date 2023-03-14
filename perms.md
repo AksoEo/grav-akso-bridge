@@ -5,6 +5,7 @@ These permissions must be granted to the AKSO bridge API client for this plugin 
     - used for the congress/instance selector in grav admin
     - used for markdown congress fields, locations, program, and participants
     - used for congress registration
+    - used for congress participations in account page
 - `congress_instances.participants.update.<org>`, `congress_instances.participants.create.<org>`
     - used for congress registration form
 - `codeholders.read`, `codeholder_roles.read`

@@ -17,6 +17,9 @@ gk_page_route_template: /komunikoj/%year%
 vote_orgs:
   - uea
   - tejo
+congress_participations_orgs:
+  - uea
+  - tejo
 newsletter_orgs:
   - uea
   - tejo

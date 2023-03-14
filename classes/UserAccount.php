@@ -1,10 +1,12 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridge\Registration;
 use Grav\Plugin\AksoBridge\UserVotes;
 use Grav\Plugin\AksoBridge\UserNotifications;
 use Grav\Plugin\AksoBridge\Utils;
+use Grav\Plugin\AksoBridgePlugin;
 
 // Handles the user’s “my account” page.
 class UserAccount {
@@ -297,7 +299,7 @@ class UserAccount {
                 foreach ($category['years'] as $y) if ($y > $newestYear) $newestYear = $y;
 
                 $wouldRenewToYear = $newestYear == $currentYear ? $currentYear + 1 : $currentYear;
-                $couldBeRenewed = $category['availableTo'] >= $wouldRenewToYear;
+                $couldBeRenewed = $category['availableTo'] === null || $category['availableTo'] >= $wouldRenewToYear;
 
                 if ($couldBeRenewed && $newestYear <= $currentYear) {
                     $category['canBeRenewed'] = true;
@@ -314,6 +316,72 @@ class UserAccount {
             );
         }
 
+        return null;
+    }
+
+    private function renderCongressParticipations() {
+        $codeholderId = $this->plugin->aksoUser['id'];
+        $res = $this->app->bridge->get("/codeholders/$codeholderId/congress_participations", array(
+            'fields' => ['congressId', 'congressInstanceId', 'dataId'],
+            'limit' => 100,
+        ));
+
+        if ($res['k']) {
+            $cpOrgs = Grav::instance()['config']->get('plugins.akso-bridge.congress_participations_orgs');
+
+            $items = [];
+            foreach ($res['b'] as $part) {
+                $congress = $part['congressId'];
+                $instance = $part['congressInstanceId'];
+                $dataId = bin2hex($part['dataId']);
+
+                $res2 = $this->app->bridge->get("/congresses/$congress", array(
+                    'fields' => ['name', 'org'],
+                ), 60);
+                if (!$res2['k']) continue;
+                $part['congress'] = $res2['b'];
+
+                if (!in_array($part['congress']['org'], $cpOrgs)) continue;
+
+                $res2 = $this->app->bridge->get("/congresses/$congress/instances/$instance", array(
+                    'fields' => ['name', 'dateFrom', 'dateTo', 'tz'],
+                ), 60);
+                if (!$res2['k']) continue;
+                $part['instance'] = $res2['b'];
+
+                $timeZone = isset($part['instance']['tz']) ? new \DateTimeZone($part['instance']['tz']) : new \DateTimeZone('+00:00');
+                $dateStr = $part['instance']['dateTo'] . ' 23:59:59';
+                $congressEndTime = \DateTime::createFromFormat("Y-m-d H:i:s", $dateStr, $timeZone);
+                $part['instance']['isOver'] = !$congressEndTime->diff(new \DateTime())->invert;
+
+                $congressInstanceKey = "$congress/$instance";
+                foreach (Grav::instance()['pages']->all() as $page) {
+                    if (!$page->published()) continue;
+                    if ($page->template() !== 'akso_congress_instance') continue;
+                    $head = $page->header();
+                    if (isset($head->congress_instance) && $head->congress_instance == $congressInstanceKey) {
+                        $part['congressPagePath'] = $page->route();
+                        $routeWithSlash = $page->route();
+                        if (!str_ends_with($routeWithSlash, "/")) $routeWithSlash .= '/';
+                        $regPath = $routeWithSlash . AksoBridgePlugin::CONGRESS_REGISTRATION_PATH . '?'
+                            . CongressRegistration::DATAID . '=' . $dataId;
+                        $part['congressRegPath'] = $regPath;
+                    }
+                }
+
+                $res2 = $this->app->bridge->get("/congresses/$congress/instances/$instance/participants/$dataId", array(
+                    'fields' => ['createdTime', 'cancelledTime', 'isValid'],
+                ));
+                if (!$res2['k']) continue;
+                $part['participant'] = $res2['b'];
+                $items[] = $part;
+            }
+            usort($items, function ($a, $b) {
+                return $b['instance']['dateFrom'] <=> $a['instance']['dateFrom'];
+            });
+
+            return $items;
+        }
         return null;
     }
 
@@ -549,6 +617,10 @@ class UserAccount {
     }
 
     public function run() {
+        if (!$this->plugin->aksoUser) {
+            return null;
+        }
+
         if ($this->page === 'votes') {
             $votes = new UserVotes($this->plugin, $this->app, $this->bridge, $this->path);
             return $votes->run();
@@ -588,6 +660,7 @@ class UserAccount {
 
             $details = $this->renderDetails();
             $membership = $this->renderMembership();
+            $congressParts = $this->renderCongressParticipations();
             $resetPassword = $this->renderResetPassword();
             $pendingReq = $this->getPendingRequest();
             $pendingDetails = null;
@@ -608,6 +681,7 @@ class UserAccount {
                 'pending_details' => $pendingDetails,
                 'details' => $details,
                 'membership' => $membership,
+                'congress_participations' => $congressParts,
                 'reset_password' => $resetPassword,
                 'logins_link' => $this->loginsPath,
                 'editing' => $this->editing,

@@ -1,6 +1,6 @@
 @import '../registration/index.less';
 
-.account-details, .account-memberships, .account-profile-picture-page {
+.account-details, .account-memberships, .account-profile-picture-page, .account-congress-participations {
     background: rgb(var(--bg));
     border-radius: var(--radius);
     margin: 1em 0;
@@ -204,6 +204,42 @@
         padding: 0.5em 1em;
         font-size: 0.8em;
         border-top: 1px solid rgb(var(--light-separator));
+    }
+}
+
+.account-congress-participations {
+    & > .inner-title {
+        margin: 0;
+        padding: 0.5rem 1rem;
+    }
+
+    .participations-list {
+        padding: 0;
+        list-style: none;
+
+        .participation-item {
+            padding: 0.5em 1em;
+
+            & + .participation-item {
+                border-top: 1px solid rgb(var(--light-separator));
+            }
+
+            .congress-name {
+                font-weight: bold;
+
+                .congress-org {
+                    text-transform: uppercase;
+                    border: 1px solid rgb(var(--light-separator));
+                    font-size: smaller;
+                    padding: 0.1em 0.2em;
+                    border-radius: var(--radius);
+                }
+            }
+
+            .congress-date {
+                font-size: smaller;
+            }
+        }
     }
 }
 

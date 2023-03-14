@@ -509,7 +509,6 @@
                         <ul class="memberships-list">
                             {% for category in account.membership.categories %}
                             <li class="membership-category">
-                                {{ category.meow }}
                                 {% if category.canBeRenewed %}
                                     <button class="category-renew-button">
                                         {{ akso_locale.account.membership_category_renew }}
@@ -536,6 +535,47 @@
                         {% endif %}
                     {% endif %}
                 </div>
+                {% if account.congress_participations is not empty %}
+                    <div class="account-congress-participations">
+                        <h2 class="inner-title">{{ akso_locale.account.congress_participations_title }}</h2>
+                        <ul class="participations-list">
+                            {% for part in account.congress_participations %}
+                                {% if part.participant.cancelledTime is empty or not part.instance.isOver %}
+                                    <li class="participation-item">
+                                        <div class="congress-name">
+                                            <span class="congress-org">{{ part.congress.org }}</span>
+                                            {{ part.instance.name }}
+                                        </div>
+                                        <div class="congress-date">
+                                            {{ part.instance.dateFrom|akso_date }}–{{ part.instance.dateTo|akso_date }}
+                                        </div>
+                                        {% if not part.instance.isOver %}
+                                            <div class="item-status">
+                                                {% if part.participant.isValid %}
+                                                    {{ akso_locale.account.congress_participation_valid }}
+                                                {% elseif part.cancelledTime is not empty %}
+                                                    {{ akso_locale.account.congress_participation_canceled }}
+                                                {% else %}
+                                                    {{ akso_locale.account.congress_participation_pending }}
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                        {% if part.congressPagePath %}
+                                            <a class="link-button" href="{{ part.congressPagePath }}">
+                                                {{ akso_locale.account.congress_participation_link_congress }}
+                                            </a>
+                                            {% if not part.instance.isOver %}
+                                                <a class="link-button" href="{{ part.congressRegPath }}">
+                                                    {{ akso_locale.account.congress_participation_link_registration }}
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
             {% endif %}
         {% endif %}
     {% endif %}
