@@ -306,12 +306,8 @@ class ClientHandler {
     }
 
     onTimeout () {
-        if (this.waitTasks > 0) {
-            this.send({ t: '❤' });
-        } else {
-            debug('Connection timed out');
-            this.close('TXERR', 103, 'timed out');
-        }
+        // send heartbeat
+        this.send({ t: '❤' });
     }
 
     acquire(method, resPath, key) {
