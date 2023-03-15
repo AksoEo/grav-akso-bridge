@@ -201,19 +201,18 @@ class Utils {
         return $slugify->slugify($s);
     }
 
-    static function formatCurrency($bridge, $value, $currency) {
-        $res = $bridge->evalScript([array(
-            'value' => array('t' => 'n', 'v' => $value),
-            'currency' => array('t' => 's', 'v' => $currency),
-        )], array(), array(
-            't' => 'c',
-            'f' => 'currency_fmt',
-            'a' => ['currency', 'value'],
-        ));
-        if ($res['s']) {
-            return $res['v'] . '';
+    static function formatCurrency(int $value, string $currency, $withUnit = true): string {
+        if ($currency === 'JPY') {
+            $decimals = 0;
+        } else {
+            $decimals = 2;
         }
-        return null;
+
+        $number = number_format($value / pow(10, $decimals), $decimals, ',', "\u{202f}");
+        if ($withUnit) {
+            return $number . ' ' . $currency;
+        }
+        return $number;
     }
 
     static function obfuscateEmail($email) {

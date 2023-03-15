@@ -210,6 +210,16 @@ Same as members-only, but with the condition being that the user is logged in us
 
 Shows intermediaries.
 
+#### Currency Conversion
+```md
+[[valuto 200 EUR DKK]]
+
+[[valuto-horo]]
+```
+
+`valuto` converts a currency value from the first currency to the second currency, and displays the formatted result.
+`valuto-horo` displays the render date-time.
+
 ### Additional Extensions
 Probably not commonly used; mostly for the home page.
 

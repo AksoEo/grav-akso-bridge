@@ -580,14 +580,6 @@ class Registration extends Form {
                             $interval = DateInterval::createFromDateString($item['paymentMethod']['paymentValidity'] . ' seconds');
                             $time = $time->add($interval);
                             $item['expiryDate'] = $time->getTimestamp();
-
-                            foreach ($item['purposes'] as &$purpose) {
-                                $triggered = $purpose['triggerAmount'] ?? null;
-                                if ($triggered != null && ($triggered['currency'] != $item['currency'] || $triggered['amount'] != $purpose['amount'])) {
-                                    $purpose['triggerAmountFmt'] = Utils::formatCurrency($this->app->bridge, $triggered['amount'], $triggered['currency']);
-                                }
-                                $purpose['amountFmt'] = Utils::formatCurrency($this->app->bridge, $purpose['amount'], $item['currency']);
-                            }
                         }
 
                         if ($item['paymentMethod']['type'] === 'intermediary') {
@@ -598,7 +590,6 @@ class Registration extends Form {
                             }
                         }
 
-                        $item['totalAmountFmt'] = Utils::formatCurrency($this->app->bridge, $item['totalAmount'], $item['currency']);
                         $thisYearPayments[] = $item;
                     }
                 } else {

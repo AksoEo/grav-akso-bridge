@@ -365,6 +365,70 @@ class MarkdownExt {
             return null;
         };
 
+        $markdown->addInlineType('[', 'AksoCurrency');
+        $markdown->inlineAksoCurrency = function($excerpt) use ($self) {
+            if (preg_match('/^\[\[valuto (\d+) (\w+) (\w+)]]/u', $excerpt['text'], $matches)) {
+                $value = $matches[1];
+                $curSrc = $matches[2];
+                $curDest = $matches[3];
+
+                $res = $self->app->bridge->get('/aksopay/exchange_rates', array(
+                    'base' => $curSrc,
+                ), 60);
+                if (!$res['k']) {
+                    Grav::instance()['log']->error("Failed to fetch exchange rates for $curSrc: " . $res['b']);
+                    return array(
+                        'extent' => strlen($matches[0]),
+                        'element' => array(
+                            'name' => 'span',
+                            'attributes' => array(
+                                'class' => 'md-render-error',
+                            ),
+                            'text' => $self->plugin->locale['content']['render_error'],
+                        ),
+                    );
+                }
+
+                $rates = $res['b'];
+                $multipliers = $self->app->bridge->currencies();
+                $srcFloat = (int)$value / $multipliers[$curSrc];
+                $destFloat = $self->app->bridge->convertCurrency($rates, $curSrc, $curDest, $srcFloat)['v'];
+                $value = round($destFloat * $multipliers[$curDest]);
+                $value = Utils::formatCurrency($value, $curDest, false);
+
+                return array(
+                    'extent' => strlen($matches[0]),
+                    'element' => array(
+                        'name' => 'span',
+                        'text' => $value,
+                    ),
+                );
+            }
+            return null;
+        };
+
+        $markdown->addInlineType('[', 'AksoCurrencyRenderTime');
+        $markdown->inlineAksoCurrencyRenderTime = function($excerpt) {
+            if (preg_match('/^\[\[valuto-horo]]/u', $excerpt['text'], $matches)) {
+                // just output render time
+                $now = new DateTime();
+                $now->setTime($now->format('H'), $now->format('i'));
+
+                return array(
+                    'extent' => strlen($matches[0]),
+                    'element' => array(
+                        'name' => 'time',
+                        'attributes' => array(
+                            'class' => 'dyn-timestamp',
+                            'datetime' => $now->format(DateTime::RFC3339),
+                        ),
+                        'text' => Utils::formatDateTimeUtc($now),
+                    ),
+                );
+            }
+            return null;
+        };
+
         $markdown->addBlockType('[', 'AksoIntermediaries');
         $markdown->blockAksoIntermediaries = function($line) use ($self) {
             if (preg_match('/^\[\[perantoj]]/', $line['text'])) {

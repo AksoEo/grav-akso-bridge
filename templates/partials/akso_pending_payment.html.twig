@@ -35,19 +35,19 @@ input parameters:
         </header>
 
         <div class="purpose-info">
-            {% if purpose.triggerAmountFmt %}
+            {% if purpose.triggerAmount and (purpose.triggerAmount.value != purpose.amount or purpose.triggerAmount.currency != payment.currency) %}
                 <div class="info-line">
                     <span class="line-label">{{ akso_locale.registration_form.payment_item_trigger_amount }}</span>
-                    <span class="line-value">{{ purpose.triggerAmountFmt }}</span>
+                    <span class="line-value">{{ purpose.triggerAmount.value|akso_currency(purpose.triggerAmount.currency) }}</span>
                 </div>
                 <div class="info-line">
                     <span class="line-label">{{ akso_locale.registration_form.payment_item_purpose_amount_with_trigger_amount }}</span>
-                    <span class="line-value">{{ purpose.amountFmt }}</span>
+                    <span class="line-value">{{ purpose.amount|akso_currency(payment.currency) }}</span>
                 </div>
             {% else %}
                 <div class="info-line">
                     <span class="line-label">{{ akso_locale.registration_form.payment_item_trigger_amount }}</span>
-                    <span class="line-value">{{ purpose.amountFmt }}</span>
+                    <span class="line-value">{{ purpose.amount|akso_currency(payment.currency) }}</span>
                 </div>
             {% endif %}
         </div>
@@ -88,7 +88,7 @@ input parameters:
                     {{ akso_locale.registration_form.payment_item_total_amount }}
                 </span>
                 <span class="line-value">
-                    {{ payment.totalAmountFmt }}
+                    {{ payment.totalAmount|akso_currency(payment.currency) }}
                 </span>
             </div>
             {% if payment.paymentMethod.type != 'intermediary' %}

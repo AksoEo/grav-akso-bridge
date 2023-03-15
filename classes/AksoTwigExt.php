@@ -10,6 +10,7 @@ class AksoTwigExt extends AbstractExtension {
         return [
             new TwigFilter('akso_date', [$this, 'akso_date']),
             new TwigFilter('akso_datetime', [$this, 'akso_datetime']),
+            new TwigFilter('akso_currency', [$this, 'akso_currency']),
         ];
     }
 
@@ -39,5 +40,9 @@ class AksoTwigExt extends AbstractExtension {
         } catch (\Exception $e) {
             return '<' . $input . '>';
         }
+    }
+
+    public function akso_currency($input, $currency): string {
+        return Utils::formatCurrency($input, $currency);
     }
 }

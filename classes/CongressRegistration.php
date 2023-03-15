@@ -266,7 +266,7 @@ class CongressRegistration {
 
                 $feeFixedRendered = null;
                 if ($method['feeFixed']) {
-                    $feeFixedRendered = $this->formatCurrency($method['feeFixed']['val'], $currency);
+                    $feeFixedRendered = Utils::formatCurrency($method['feeFixed']['val'], $currency);
                 }
 
                 $approxConversionRate = $this->convertCurrency($currency, $this->currency, 1000000);
@@ -430,21 +430,6 @@ class CongressRegistration {
         return null;
     }
 
-    private function formatCurrency($value, $currency) {
-        $res = $this->app->bridge->evalScript([array(
-            'value' => array('t' => 'n', 'v' => $value),
-            'currency' => array('t' => 's', 'v' => $currency),
-        )], array(), array(
-            't' => 'c',
-            'f' => 'currency_fmt',
-            'a' => ['currency', 'value'],
-        ));
-        if ($res['s']) {
-            return $res['v'] . '';
-        }
-        return null;
-    }
-
     private function getParticipantIdentity() {
         $idName = $this->form['identifierName'];
         $idEmail = $this->form['identifierEmail'];
@@ -487,8 +472,8 @@ class CongressRegistration {
         if (!$price) return array('has_payment' => false, 'outstanding_payment' => false);
         $remaining = $price - $this->participant['amountPaid'];
 
-        $remainingRendered = $this->formatCurrency($remaining, $this->currency);
-        $totalRendered = $this->formatCurrency($price, $this->currency);
+        $remainingRendered = Utils::formatCurrency($remaining, $this->currency);
+        $totalRendered = Utils::formatCurrency($price, $this->currency);
 
         $link = $this->plugin->getGrav()['uri']->path() . '?' .
             self::DATAID . '=' . $this->dataId . '&' .
@@ -501,7 +486,7 @@ class CongressRegistration {
         }
         $isMinPayment = $this->participant['amountPaid'] < $minUpfront;
 
-        $minUpfrontRendered = $this->formatCurrency($minUpfront, $this->currency);
+        $minUpfrontRendered = Utils::formatCurrency($minUpfront, $this->currency);
 
         $paymentHistory = [];
 
@@ -524,16 +509,7 @@ class CongressRegistration {
                     $interval = DateInterval::createFromDateString($item['paymentMethod']['paymentValidity'] . ' seconds');
                     $time = $time->add($interval);
                     $item['expiryDate'] = $time->getTimestamp();
-
-                    foreach ($item['purposes'] as &$purpose) {
-                        $triggered = $purpose['triggerAmount'];
-                        if ($triggered != null && ($triggered['currency'] != $item['currency'] || $triggered['amount'] != $purpose['amount'])) {
-                            $purpose['triggerAmountFmt'] = Utils::formatCurrency($this->app->bridge, $triggered['amount'], $triggered['currency']);
-                        }
-                        $purpose['amountFmt'] = Utils::formatCurrency($this->app->bridge, $purpose['amount'], $item['currency']);
-                    }
                 }
-                $item['totalAmountFmt'] = Utils::formatCurrency($this->app->bridge, $item['totalAmount'], $item['currency']);
                 $paymentHistory[] = $item;
             }
         } else {
