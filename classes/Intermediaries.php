@@ -126,36 +126,14 @@ class Intermediaries {
             } else {
                 $node = new Element('ul');
                 $node->class = 'codeholder-list';
-                $lastCountry = null;
-                $li = null;
+
+                $countries = [];
 
                 foreach ($codeholders as $codeholder) {
                     $country = $codeholder['intermediary_country'];
-                    if ($country != $lastCountry) {
-                        $lastCountry = $country;
 
-                        if ($li) $node->appendChild($li);
-                        $li = new Element('li');
-                        $li->class = 'codeholder-list-category';
-                        $countryLabel = new Element('div');
-                        $countryLabel->class = 'category-label';
-
-                        $emoji = Utils::getEmojiForFlag($country);
-                        $flag = new Element('img');
-                        $flag->class = 'inline-flag-icon';
-                        $flag->src = $emoji['src'];
-                        $flag->alt = $emoji['alt'];
-                        $countryLabel->appendChild($flag);
-
-                        $label = new Element('span', ' ' . Utils::formatCountry($this->bridge, $country));
-                        $countryLabel->appendChild($label);
-
-                        $li->appendChild($countryLabel);
-                    }
-
-                    if (!$li) throw new \Exception('???');
-
-                    $li->appendChild(CodeholderLists::renderCodeholder($this->bridge, $codeholder, $dataOrgs, $isMember, 'div'));
+                    if (!isset($countries[$country])) $countries[$country] = [];
+                    $countries[$country][] = CodeholderLists::renderCodeholder($this->bridge, $codeholder, $dataOrgs, $isMember, 'div');
 
                     if ($codeholder['intermediary_description']) {
                         $paymentDescription = new Element('blockquote');
@@ -166,11 +144,44 @@ class Intermediaries {
                             ['emphasis', 'strikethrough', 'link', 'list', 'table'],
                         )['c']);
                         $paymentDescription->appendChild($doc->toElement());
-                        $li->appendChild($paymentDescription);
+                        $countries[$country][] = $paymentDescription;
                     }
                 }
 
-                if ($li) $node->appendChild($li);
+                $countryNames = [];
+                foreach (array_keys($countries) as $country) {
+                    $countryNames[$country] = Utils::formatCountry($this->bridge, $country);
+                }
+
+                $countryKeys = array_keys($countries);
+                usort($countryKeys, function ($a, $b) use ($countryNames) {
+                    return $countryNames[$a] <=> $countryNames[$b];
+                });
+
+                foreach ($countryKeys as $country) {
+                    $li = new Element('li');
+                    $li->class = 'codeholder-list-category';
+                    $countryLabel = new Element('div');
+                    $countryLabel->class = 'category-label';
+
+                    $emoji = Utils::getEmojiForFlag($country);
+                    $flag = new Element('img');
+                    $flag->class = 'inline-flag-icon';
+                    $flag->src = $emoji['src'];
+                    $flag->alt = $emoji['alt'];
+                    $countryLabel->appendChild($flag);
+
+                    $label = new Element('span', ' ' . Utils::formatCountry($this->bridge, $country));
+                    $countryLabel->appendChild($label);
+
+                    $li->appendChild($countryLabel);
+
+                    foreach ($countries[$country] as $item) {
+                        $li->appendChild($item);
+                    }
+
+                    $node->appendChild($li);
+                }
             }
         }
 
