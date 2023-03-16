@@ -15,7 +15,7 @@ en:
       API_SECRET: API-sekreto
       PAYMENTS_HOST: Adreso de AKSO-Pago-kliento
       VOTE_ORGS: Organizoj por voĉdonoj
-      CONGRESS_PARTICIPATIONS_ORGS: '[[Congress participations orgs]]'
+      CONGRESS_PARTICIPATIONS_ORGS: 'Organizoj por listo de kongresaj aliĝoj'
       NEWSLETTER_ORGS: Organizoj por bultenoj
       GK:
         TITLE: Gazetaraj Komunikoj
