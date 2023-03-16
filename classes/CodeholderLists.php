@@ -200,10 +200,12 @@ class CodeholderLists {
         $left = new Element('div');
         $left->class = 'item-picture-container';
         $imgBack = new Element('img');
+        $imgBack->loading = 'lazy';
         $imgBack->class = 'item-back-picture';
         $imgBack->width = '1';
         $imgBack->height = '1';
         $img = new Element('img');
+        $img->loading = 'lazy';
         $img->class = 'item-picture';
 
         $canSeePP = $codeholder['profilePicturePublicity'] === 'public'
