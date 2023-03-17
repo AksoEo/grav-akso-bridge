@@ -1,5 +1,7 @@
 {% extends 'partials/base.html.twig' %}
 {% block content %}
+    {{page.content|raw}}
+
     {% if akso_registration.disabled %}
     <div class="akso-registration-page">
         <h1>
