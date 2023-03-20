@@ -390,6 +390,21 @@ class MarkdownExt {
                 }
 
                 $rates = $res['b'];
+
+                if (!isset($rates[$curDest])) {
+                    Grav::instance()['log']->error("Error rendering currency conversion from $curSrc: no exchange rate for $curDest");
+                    return array(
+                        'extent' => strlen($matches[0]),
+                        'element' => array(
+                            'name' => 'span',
+                            'attributes' => array(
+                                'class' => 'md-render-error',
+                            ),
+                            'text' => $self->plugin->locale['content']['render_error'],
+                        ),
+                    );
+                }
+
                 $multipliers = $self->app->bridge->currencies();
                 $srcFloat = (int)$value / $multipliers[$curSrc];
                 $destFloat = $self->app->bridge->convertCurrency($rates, $curSrc, $curDest, $srcFloat)['v'];
