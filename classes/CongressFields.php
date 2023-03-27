@@ -3,6 +3,8 @@ namespace Grav\Plugin\AksoBridge;
 
 use \DiDom\Document;
 use \DiDom\Element;
+use Ds\Set;
+use Exception;
 use Grav\Common\Grav;
 use Grav\Plugin\AksoBridge\Utils;
 
@@ -535,8 +537,61 @@ class CongressFields {
             if (!$res['k']) return [$this->createError()];
             return [array('name' => 'span', 'text' => $res['h']['x-total-items'])];
         } else if ($field === 'kvantounikajlandoj') {
-            // TODO
-            throw new \Exception('unimplemented');
+            $formRes = $this->bridge->get('/congresses/' . $congressId . '/instances/' . $instanceId . '/registration_form', array(
+                'fields' => ['form', 'identifierCountryCode'],
+            ), 60);
+            if (!$formRes['k']) return [$this->createError()];
+            $regForm = $formRes['b']['form'];
+            $fields = [];
+            foreach ($regForm as $field) {
+                if ($field['el'] === 'input') {
+                    $fields[] = 'data.' . $field['name'];
+                }
+            }
+
+            $uniqueCountries = new Set();
+            $hasParticipants = 0;
+            $totalParticipants = 1;
+            $countryVar = $formRes['b']['identifierCountryCode'];
+
+            $stack = [];
+            foreach ($regForm as $formItem) {
+                if ($formItem['el'] === 'script') $stack[] = $formItem['script'];
+            }
+
+            while ($hasParticipants < $totalParticipants) {
+                $res = $this->bridge->get("/congresses/$congressId/instances/$instanceId/participants", array(
+                    'offset' => $hasParticipants,
+                    'limit' => 100,
+                    'fields' => $fields,
+                    'filter' => array('isValid' => true),
+                ), 60);
+                if (!$res['k']) return [$this->createError()];
+                $participants = $res['b'];
+                $totalParticipants = $res['h']['x-total-items'];
+                $hasParticipants += count($participants);
+
+                foreach ($participants as $participant) {
+                    $fvars = $participant['data'];
+                    $res = $this->bridge->evalScript($stack, $fvars, array('t' => 'c', 'f' => 'id', 'a' => [$countryVar]));
+                    if ($res['s']) {
+                        if (gettype($res['v']) === 'string') {
+                            $uniqueCountries->add($res['v']);
+                        }
+                    } else {
+                        Grav::instance()['log']->error(
+                            "markdown: could not get country for congress participant in $congressId/$instanceId: "
+                            . $res['e']
+                        );
+                        $totalParticipants = -1;
+                        break;
+                    }
+                }
+            }
+
+            return [array('name' => 'span', 'text' => $uniqueCountries->count())];
         }
+
+        throw new Exception('unexpected field type');
     }
 }
