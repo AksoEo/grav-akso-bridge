@@ -48,12 +48,11 @@ class CongressInstance {
         ), 60);
 
         $state = [];
+        $congressIsOver = false;
+
         do {
             if (!$res['k']) {
                 $state['akso_congress_error'] = $this->plugin->locale['content']['render_error'];
-                if ($res['sc'] == 404) {
-                    Grav::instance()->fireEvent('onPageNotFound');
-                }
                 break;
             }
 
@@ -63,20 +62,24 @@ class CongressInstance {
             if (!str_ends_with($linkBase, '/')) $linkBase .= '/';
 
             $state['akso_congress_registration_link'] = $linkBase . AksoBridgePlugin::CONGRESS_REGISTRATION_PATH;
+            $timeZone = isset($part['instance']['tz']) ? new \DateTimeZone($part['instance']['tz']) : new \DateTimeZone('+00:00');
 
-            $congressStartTime = null;
             if ($firstEventRes['k'] && sizeof($firstEventRes['b']) > 0) {
                 // use the start time of the first event if available
                 $firstEvent = $firstEventRes['b'][0];
                 $congressStartTime = \DateTime::createFromFormat("U", $firstEvent['timeFrom']);
             } else {
                 // otherwise just use noon in local time
-                $timeZone = isset($res['b']['tz']) ? new \DateTimeZone($res['b']['tz']) : new \DateTimeZone('+00:00');
                 $dateStr = $res['b']['dateFrom'] . ' 12:00:00';
                 $congressStartTime = \DateTime::createFromFormat("Y-m-d H:i:s", $dateStr, $timeZone);
             }
 
+            $dateStr = $res['b']['dateTo'] . ' 23:59:59';
+            $congressEndTime = \DateTime::createFromFormat("Y-m-d H:i:s", $dateStr, $timeZone);
+            $congressIsOver = !$congressEndTime->diff(new \DateTime())->invert;
+
             $state['akso_congress_start_time'] = $congressStartTime->getTimestamp();
+            $state['akso_congress_is_over'] = $congressIsOver;
             $state['akso_congress_id'] = $congressId;
             $state['akso_congress'] = $res['b'];
 
@@ -123,7 +126,7 @@ class CongressInstance {
         if ($formRes['k']) {
             // registration form exists
             $state['akso_congress_user_is_org'] = $this->plugin->aksoUser && str_starts_with($this->plugin->aksoUser['uea'], 'xx');
-            $state['akso_congress_registration_enabled'] = true;
+            $state['akso_congress_registration_enabled'] = !$congressIsOver;
             $state['akso_congress_registration_allowed'] = $formRes['b']['allowUse'];
             $state['akso_congress_registration_guest_not_allowed'] = !$formRes['b']['allowGuests'] && !$this->plugin->aksoUser;
 

@@ -305,16 +305,20 @@ class CongressFields {
                 foreach ($regForm as $formItem) {
                     if ($formItem['el'] === 'script') $stack[] = $formItem['script'];
                 }
-                $res = $this->bridge->evalScript($stack, $fvars, array('t' => 'c', 'f' => 'id', 'a' => [$show_name_var]));
-                if ($res['s']) {
-                    $should_show_name = $res['v'] === true;
+                if ($show_name_var === '@') {
+                    $should_show_name = true;
                 } else {
-                    Grav::instance()['log']->error(
-                        "markdown: could not load congress participants for $congressId/$instanceId: "
-                        . $res['e']
-                    );
-                    $totalParticipants = -1;
-                    break;
+                    $res = $this->bridge->evalScript($stack, $fvars, array('t' => 'c', 'f' => 'id', 'a' => [$show_name_var]));
+                    if ($res['s']) {
+                        $should_show_name = $res['v'] === true;
+                    } else {
+                        Grav::instance()['log']->error(
+                            "markdown: could not load congress participants for $congressId/$instanceId: "
+                            . $res['e']
+                        );
+                        $totalParticipants = -1;
+                        break;
+                    }
                 }
                 $res = $this->bridge->evalScript($stack, $fvars, array('t' => 'c', 'f' => 'id', 'a' => [$first_name_var]));
                 if ($res['s']) {

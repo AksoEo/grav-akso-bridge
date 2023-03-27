@@ -33,9 +33,11 @@
 </div>
 {% endif %}
 <div class="congress-meta">
+    {% if not akso_congress_is_over %}
     <div class="congress-countdown-container">
         <span class="congress-countdown is-large live-countdown" data-timestamp="{{ akso_congress_start_time|e('html_attr') }}" />
     </div>
+    {% endif %}
     <div class="congress-location-container">
         <span class="congress-location" data-name="{{ akso_congress.locationName|e('html_attr') }}" />
     </div>
@@ -43,7 +45,7 @@
         <span class="congress-date-span" data-from="{{ akso_congress.dateFrom|e('html_attr') }}" data-to="{{ akso_congress.dateTo|e('html_attr') }}" />
     </div>
 </div>
-{% if akso_congress_user_is_org %}
+{% if akso_congress_registration_enabled and akso_congress_user_is_org %}
 <div class="congress-registration big-actionable-button-container">
     <button disabled class="link-button congress-registration-button big-actionable-button has-emphasis">
         {{akso_locale.congress_instance.registration_button_org_not_allowed}}
