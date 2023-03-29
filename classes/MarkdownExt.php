@@ -51,7 +51,7 @@ class MarkdownExt {
                         'handler' => 'elements',
                         'text' => [
                             array(
-                                'name' => 'script', // prevents TNTSearch indexing
+                                'name' => 'akso-unprocessed', // prevents TNTSearch indexing
                                 'attributes' => array(
                                     'class' => 'akso-members-only-content-if-clause',
                                 ),
@@ -134,7 +134,7 @@ class MarkdownExt {
                         'handler' => 'elements',
                         'text' => [
                             array(
-                                'name' => 'script', // prevents TNTSearch indexing
+                                'name' => 'akso-unprocessed', // prevents TNTSearch indexing
                                 'attributes' => array(
                                     'class' => 'akso-logged-in-only-content-if-clause',
                                 ),
@@ -225,7 +225,7 @@ class MarkdownExt {
 
                 return array(
                     'element' => array(
-                        'name' => 'script',
+                        'name' => 'akso-unprocessed',
                         'attributes' => array(
                             'class' => 'unhandled-list',
                             'type' => 'application/json',
@@ -253,7 +253,7 @@ class MarkdownExt {
 
                 return array(
                     'element' => array(
-                        'name' => 'script',
+                        'name' => 'akso-unprocessed',
                         'attributes' => array(
                             'class' => 'unhandled-akso-magazines',
                             'type' => 'application/json',
@@ -278,7 +278,7 @@ class MarkdownExt {
                 $imgHref = $matches[5] ?? null;
                 return array(
                     'element' => array(
-                        'name' => 'script',
+                        'name' => 'akso-unprocessed',
                         'attributes' => array(
                             'class' => 'akso-congresses unhandled-akso-congress-poster',
                             'type' => 'application/json',
@@ -321,7 +321,7 @@ class MarkdownExt {
                 return array(
                     'extent' => $extent,
                     'element' => array(
-                        'name' => 'script',
+                        'name' => 'akso-unprocessed',
                         'attributes' => array(
                             'class' => 'akso-congresses unhandled-akso-congress-field',
                             'type' => 'application/json',

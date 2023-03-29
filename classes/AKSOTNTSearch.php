@@ -216,6 +216,10 @@ class AKSOTNTSearch
         // simple regex to try and strip scripts and styles
         $content = preg_replace('/<(script|style)[^>]*?>(?:.|\n)*?<\/\1>/i', '', $content) ?? $content;
 
+        // and unprocessed MD components
+        // FIXME: support nesting properly
+        $content = preg_replace('/<(akso-unprocessed)[^>]*?>(?:.|\n)*?<\/akso-unprocessed>/i', '', $content) ?? $content;
+
         $content = strip_tags($content);
         $content = preg_replace(['/[ \t]+/', '/\s*$^\s*/m'], [' ', "\n"], $content) ?? $content;
 
