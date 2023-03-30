@@ -1220,7 +1220,7 @@ class Registration extends Form {
         $method['intermediaries'] = [];
 
         $res = $this->app->bridge->get('/intermediaries', array(
-            'fields' => ['codeholders', 'countryCode'], // FIXME: requesting countryCode is useless. remove this (workaround for server crash)
+            'fields' => ['codeholders'],
             'filter' => array(
                 'countryCode' => $country,
             ),
@@ -1370,11 +1370,17 @@ class Registration extends Form {
                                 $scriptCtx->popScript();
 
                                 if ($result['s']) {
-                                    // i dont think intermediaries need currency conversion?
-                                    $convertedValue = $result['v'];
-                                    $method['offers'][$offerId]['value'] = $convertedValue;
-                                    $method['offers'][$offerId]['amount'] = $this->scriptCtxFmtCurrency($currency, $convertedValue);
-                                    $method['offers_sum'] += $convertedValue;
+                                    if ($result['v'] !== null) {
+                                        // i dont think intermediaries need currency conversion?
+                                        $convertedValue = $result['v'];
+                                        $method['offers'][$offerId]['value'] = $convertedValue;
+                                        $method['offers'][$offerId]['amount'] = $this->scriptCtxFmtCurrency($currency, $convertedValue);
+                                        $method['offers_sum'] += $convertedValue;
+                                    } else {
+                                        $method['available'] = false;
+                                        $method['error'] = $this->locale['payment_intermediary_offer_not_available'];
+                                        return $method;
+                                    }
                                 } else {
                                     $method['offers'][$offerId]['value'] = null;
                                     $method['offers'][$offerId]['amount'] = '(Eraro)';
