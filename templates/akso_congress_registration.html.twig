@@ -57,6 +57,11 @@
             {{ akso_congress_error|e }}
         </div>
     {% endif %}
+    {% if akso_congress_registration.error_message %}
+        <div class="error-banner">
+            {{ akso_congress_registration.error_message|e }}
+        </div>
+    {% endif %}
     {% if akso_congress_registration.is_payment %}
     <div class="registration-form is-payment is-intent-page">
         <div class="registration-congress-name">

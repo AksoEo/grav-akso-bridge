@@ -110,6 +110,7 @@ class CongressRegistration {
     private function runPayment() {
         $paymentInfo = $this->participantPaymentInfo();
         $editTarget = $this->plugin->getGrav()['uri']->path() . '?' . self::DATAID . '=' . $this->dataId;
+        $errorOut = null;
 
         if (!$paymentInfo['outstanding_payment']) {
             return array(
@@ -123,17 +124,20 @@ class CongressRegistration {
             $res = $this->app->bridge->get('/aksopay/payment_orgs/' . $this->paymentOrg . '/methods/' . $this->paymentMethod, array(
                 'fields' => ['id', 'type', 'stripeMethods', 'name', 'descriptionPreview', 'currencies',
                     'feePercent', 'feeFixed.val', 'feeFixed.cur', 'internal'],
-                'filter' => array(
-                    '$not' => array(
-                        'type' => 'intermediary', // not supported at the moment
-                    ),
-                ),
             ), 60);
 
             $currency = $this->paymentCurrency;
 
+            if ($res['k'] && $res['b']['type'] === 'intermediary') {
+                // not supported at the moment
+                $currency = null;
+            }
+
             if ($res['k'] && !in_array($currency, $res['b']['currencies'])) {
                 $currency = null;
+            } else if (!$res['k']) {
+                Grav::instance()['log']->warn('failed to fetch payment method ' . $this->paymentOrg . ' / ' . $this->paymentMethod . ': ' . $res['b']);
+                $errorOut = $this->plugin->locale['registration_form']['err_submit_generic'];
             }
 
             if ($res['k'] && $currency !== null) {
@@ -402,6 +406,7 @@ class CongressRegistration {
             }
 
             return array(
+                'error_message' => $errorOut,
                 'is_payment' => true,
                 'payment' => $paymentInfo,
                 'payment_methods' => array(
