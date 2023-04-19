@@ -24,7 +24,7 @@ class MarkdownExt {
 
     private function initAppIfNeeded() {
         if (isset($this->app) && $this->app) return;
-        $this->app = new AppBridge(Grav::instance());
+        $this->app = new AppBridge();
         $this->app->open();
         $this->bridge = $this->app->bridge;
 

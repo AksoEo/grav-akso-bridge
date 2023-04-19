@@ -2,19 +2,23 @@
 namespace Grav\Plugin\AksoBridge;
 
 /// Opens an AKSO Bridge with app access.
-class AppBridge {
-    private $grav = null;
-    public $bridge = null;
+use Grav\Common\Grav;
 
-    public function __construct($grav) {
-        $this->grav = $grav;
-        $this->apiHost = $this->grav['config']->get('plugins.akso-bridge.api_host');
+class AppBridge {
+    public $bridge = null;
+    private $apiHost;
+
+    public function __construct() {
+        $this->apiHost = Grav::instance()['config']->get('plugins.akso-bridge.api_host') ?? "";
+    }
+
+    public static function getApiKey() {
+        return Grav::instance()['config']->get('plugins.akso-bridge.api_key');
     }
 
     public function open() {
-        $grav = $this->grav;
-        $apiKey = $grav['config']->get('plugins.akso-bridge.api_key');
-        $apiSecret = $grav['config']->get('plugins.akso-bridge.api_secret');
+        $apiKey = $this::getApiKey() ?? "";
+        $apiSecret = Grav::instance()['config']->get('plugins.akso-bridge.api_secret') ?? "";
 
         // get ..
         $dirname = explode('/', __DIR__);

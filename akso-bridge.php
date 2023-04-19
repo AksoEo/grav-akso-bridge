@@ -136,6 +136,8 @@ class AksoBridgePlugin extends Plugin {
     private $pageVars = [];
 
     public function onPagesInitialized(Event $event) {
+        if (!AppBridge::getApiKey()) return;
+
         $this->runUserBridge();
 
         if ($this->path === $this->loginPath) {
@@ -147,30 +149,30 @@ class AksoBridgePlugin extends Plugin {
                 $this->grav->redirectLangSafe($this->loginPath . '?r=' . $this->path, 302);
             }
         } else if ($this->path === self::CONGRESS_LOC_THUMBNAIL_PATH) {
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             $loc = new CongressLocations($this, $app, null, null);
             $loc->runThumbnail();
             $app->close();
         } else if ($this->path === self::PAYMENT_METHOD_THUMBNAIL_PATH) {
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             $payments = new Payments($this, $app);
             $payments->runMethodThumbnail();
             $app->close();
         } else if ($this->path === self::CODEHOLDER_PICTURE_PATH) {
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             CodeholderLists::runListPicture($this, $app->bridge);
             $app->close();
         } else if ($this->path === self::MAGAZINE_COVER_PATH) {
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             $mag = new Magazines($this, $app->bridge);
             $mag->runThumbnail();
             $app->close();
         } else if ($this->pathStartsWithComponent($this->path, self::MAGAZINE_DOWNLOAD_PATH)) {
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             $magazines = new Magazines($this, $app->bridge);
             $magazines->runDownload();
@@ -181,6 +183,8 @@ class AksoBridgePlugin extends Plugin {
     }
 
     public function onPageInitialized(Event $event) {
+        if (!AppBridge::getApiKey()) return;
+
         $post = !empty($_POST) ? $_POST : [];
         $templateId = $this->grav['page']->template();
         $state = [];
@@ -201,7 +205,7 @@ class AksoBridgePlugin extends Plugin {
                 $state['akso_congress_error'] = 'Kongresa okazigo ne ekzistas';
             } else {
                 $isRegistration = $templateId === 'akso_congress_registration';
-                $app = new AppBridge($this->grav);
+                $app = new AppBridge();
                 $app->open();
                 $instance = new CongressInstance($this, $app, $congressId, $instanceId);
                 $state = $instance->run($paymentOrg, $isRegistration);
@@ -226,7 +230,7 @@ class AksoBridgePlugin extends Plugin {
             } else {
                 $this->grav['assets']->add('plugin://akso-bridge/js/dist/congress-loc.css');
                 $this->grav['assets']->add('plugin://akso-bridge/js/dist/congress-loc.js');
-                $app = new AppBridge($this->grav);
+                $app = new AppBridge();
                 $app->open();
                 $locations = new CongressLocations($this, $app, $congressId, $instanceId);
                 $locations->programsPath = $programsPath;
@@ -252,7 +256,7 @@ class AksoBridgePlugin extends Plugin {
             } else {
                 $this->grav['assets']->add('plugin://akso-bridge/js/dist/congress-prog.css');
                 $this->grav['assets']->add('plugin://akso-bridge/js/dist/congress-prog.js');
-                $app = new AppBridge($this->grav);
+                $app = new AppBridge();
                 $app->open();
                 $programs = new CongressPrograms($this, $app, $congressId, $instanceId);
                 $programs->locationsPath = $locationsPath;
@@ -272,7 +276,7 @@ class AksoBridgePlugin extends Plugin {
             $head = $this->grav['page']->header();
             $isDonation = isset($head->is_donation) && $head->is_donation;
 
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             $registration = new Registration($this, $app, $isDonation);
             $state['akso_registration'] = $registration->run();
@@ -280,7 +284,7 @@ class AksoBridgePlugin extends Plugin {
         } else if (str_starts_with($templateId, 'akso_magazines')) {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/magazines.css');
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/magazines.js');
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             $magazines = new Magazines($this, $app->bridge);
             $state['akso_magazine_cover_path'] = self::MAGAZINE_COVER_PATH;
@@ -294,7 +298,7 @@ class AksoBridgePlugin extends Plugin {
         } else if ($templateId === 'akso_country_org_list') {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/org-lists.css');
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/org-lists.js');
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             $countryLists = new CountryLists($this, $app->bridge);
             $state['akso_login_path'] = $this->loginPath;
@@ -304,7 +308,7 @@ class AksoBridgePlugin extends Plugin {
         } else if ($templateId === 'akso_delegates') {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegates.css');
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegates.js');
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             $delegates = new Delegates($this, $app->bridge);
             $state['akso_delegates'] = $delegates->run();
@@ -312,7 +316,7 @@ class AksoBridgePlugin extends Plugin {
         } else if ($templateId === 'akso_delegation_application') {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegation-applications.css');
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegation-applications.js');
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             $appl = new DelegationApplications($this, $app->bridge);
             $state['akso_delegates'] = $appl->run();
@@ -631,7 +635,7 @@ class AksoBridgePlugin extends Plugin {
         } else if ($this->pathStartsWithComponent($this->path, $this->accountPath)) {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/account.js');
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/account.css');
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
             $acc = new UserAccount($this, $app, $this->bridge, $this->path);
             $this->pageState = $acc->run();
