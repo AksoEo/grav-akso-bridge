@@ -170,6 +170,14 @@ class CongressRegistrationForm extends Form {
             $banner = $this->doc->createElement('div');
             $banner->setAttribute('class', 'registration-suggestion-banner');
             $banner->textContent = $this->localize('consider_signing_in_title');
+            $footer = $this->doc->createElement('div');
+            $footer->setAttribute('class', 'inner-footer');
+            $link = $this->doc->createElement('a');
+            $link->setAttribute('class', 'link-button is-primary');
+            $link->setAttribute('href', $this->plugin->loginPath);
+            $link->textContent = $this->localize('consider_signing_in_button');
+            $footer->appendChild($link);
+            $banner->appendChild($footer);
             return $banner;
         }
 
