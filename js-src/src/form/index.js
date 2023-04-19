@@ -408,7 +408,11 @@ class FormInput {
 
     setDisabled(disabled) {
         const { type } = this;
-        if (type === 'boolean' || type === 'number' || type === 'money' || type === 'date' || type === 'time' || type === 'datetime') {
+        if (type === 'boolean') {
+            for (const input of this.node.querySelector('input')) {
+                input.disabled = disabled;
+            }
+        } else if (type === 'number' || type === 'money' || type === 'date' || type === 'time' || type === 'datetime') {
             this.node.querySelector('input').disabled = disabled;
         } else if (type === 'text') {
             const input = this.node.querySelector('input') || this.node.querySelector('textarea');

@@ -455,6 +455,7 @@ class Form {
         return $out;
     }
 
+    public const DATA_VAR_EXISTENCE_PREFIX = '@@field@@';
     protected function loadPostData($data) {
         $existingData = false;
         if (!$this->data) $this->data = [];
@@ -466,11 +467,9 @@ class Form {
 
                 if (!$existingData || $item['editable']) {
                     $fieldData = isset($this->data[$name]) ? $this->data[$name] : null;
-                    // TODO: set fieldData to null if the user did mean to send the field, but it was
-                    // not present due to the browser not sending unchecked checkboxes
 
-                    if (isset($data[$name])) {
-                        $fieldData = $data[$name];
+                    if (isset($data[$name]) || isset($data[self::DATA_VAR_EXISTENCE_PREFIX . $name])) {
+                        $fieldData = $data[$name] ?? null;
                     }
 
                     $res = $this->readInputFieldFromPost($item, $fieldData);

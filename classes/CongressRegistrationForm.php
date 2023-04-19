@@ -269,6 +269,7 @@ class CongressRegistrationForm extends Form {
 
         $ty = $item['type'];
         $name = self::DATA_VAR_NAME . '[' . $item['name'] . ']';
+        $existenceName = self::DATA_VAR_NAME . '[' . self::DATA_VAR_EXISTENCE_PREFIX . $item['name'] . ']';
         $inputId = 'form-' . $item['name'];
 
         $value = null;
@@ -325,6 +326,7 @@ class CongressRegistrationForm extends Form {
 
         if ($ty === 'boolean') {
             $label->setAttribute('class', 'form-label is-boolean-label');
+
             $input = $this->doc->createElement('input');
             $input->setAttribute('id', $inputId);
             $input->setAttribute('name', $name);
@@ -332,6 +334,14 @@ class CongressRegistrationForm extends Form {
             if ($value) $input->setAttribute('checked', '');
             if ($disabled) $input->setAttribute('disabled', '');
 
+            $existenceMarker = $this->doc->createElement('input');
+            $existenceMarker->setAttribute('class', 'field-existence-marker');
+            $existenceMarker->setAttribute('name', $existenceName);
+            $existenceMarker->setAttribute('type', 'hidden');
+            $existenceMarker->setAttribute('value', '1');
+            if ($disabled) $existenceMarker->setAttribute('disabled', '');
+
+            $root->appendChild($existenceMarker);
             $root->appendChild($input);
             $root->appendChild($label);
             if ($description) $root->appendChild($description);
