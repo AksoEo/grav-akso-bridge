@@ -241,9 +241,9 @@ Probably not commonly used; mostly for the home page.
 ```md
 [[intro]]
 eo text
-[[en]]
+[[en English]]
 en text
-[[de]]
+[[de Deutsch]]
 ...
 [[/intro]]
 ```

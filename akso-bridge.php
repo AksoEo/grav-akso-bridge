@@ -504,6 +504,7 @@ class AksoBridgePlugin extends Plugin {
                 return;
             }
         }
+        $_SESSION['akso_is_probably_logged_in'] = !!$this->aksoUser;
 
         if ($this->path === $this->loginPath && $_SERVER['REQUEST_METHOD'] === 'POST') {
             // user login
@@ -609,6 +610,7 @@ class AksoBridgePlugin extends Plugin {
                 $result = $this->bridge->login($canonUsername, $post['password']);
 
                 if ($result['s']) {
+                    $_SESSION['akso_is_probably_logged_in'] = true;
                     $this->aksoUser = $result;
 
                     if (!$result['totp']) {
@@ -628,6 +630,7 @@ class AksoBridgePlugin extends Plugin {
         } else if ($this->path === $this->logoutPath) {
             $result = $this->bridge->logout();
             if ($result['s']) {
+                $_SESSION['akso_is_probably_logged_in'] = false;
                 $this->aksoUser = null;
                 $this->redirectTarget = $this->getReferrerPath();
                 $this->redirectStatus = 303;
