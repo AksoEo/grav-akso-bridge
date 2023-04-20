@@ -49,6 +49,7 @@ class CongressInstance {
 
         $state = [];
         $congressIsOver = false;
+        $congressName = null;
 
         do {
             if (!$res['k']) {
