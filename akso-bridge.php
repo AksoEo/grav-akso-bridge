@@ -513,7 +513,7 @@ class AksoBridgePlugin extends Plugin {
 
             $canonUsername = '';
             if (isset($post['username'])) {
-                $canonUsername = $post['username'];
+                $canonUsername = mb_strtolower($post['username']);
                 if (preg_match('/^\w{4}-\w$/', $canonUsername)) {
                     $canonUsername = substr($canonUsername, 0, 4);
                 }
