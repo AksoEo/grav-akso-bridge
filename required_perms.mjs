@@ -22,7 +22,8 @@ export function getRequiredPerms(orgs) {
 
     {
         // member fields
-        memberFields.push('id');
+        memberFields.push('roles');
+        // - used for markdown codeholder lists
 
         memberFields.push(`honorific`, `firstNameLegal`, `lastNameLegal`, `firstName`, `lastName`, `lastNamePublicity`);
         // - used to render codeholder names in the congress participant list
@@ -46,38 +47,38 @@ export function getRequiredPerms(orgs) {
 
         memberFields.push(`email`, `website`);
         // - used for congress registration form autofill
-        // - used for org details in country lists
         // - used for markdown codeholder lists
         // - used for registration
         // - used for vote options
 
         memberFields.push(`officePhone`);
         // - used for congress registration form autofill
-        // - used for org details in country lists
+        // - used for omarkdown codeholder lists
 
         memberFields.push(`address.country`);
         // - used for congress registration form autofill
         // - used to automatically determine user's preferred country in country lists & delegates
-        // - used for org details in country lists
         // - used for delegates
         // - used for markdown codeholder lists
         // - used for registration
         // - used for vote options
+
         memberFields.push(`address.countryArea`, `address.city`, `address.cityArea`, `address.streetAddress`, `address.postalCode`, `address.sortingCode`);
         // - used for congress registration form autofill
-        // - used for org details in country lists
         // - used for delegates
         // - used for markdown codeholder lists
         // - used for registration
+
         memberFields.push(`mainDescriptor`, `factoids`, `biography`, `publicEmail`, `emailPublicity`, `officePhonePublicity`, `addressPublicity`, `publicCountry`);
-        // - used for org details in country lists
         // - used for delegates
         // - used for markdown codeholder lists
         // - used for vote options
+
         memberFields.push(`codeholderType`, `profilePictureHash`, `profilePicturePublicity`);
         // - used for delegates
         // - used for markdown codeholder lists
         // - used for vote options
+
         memberFields.push(`membership`);
         // - used for registration
     }
@@ -140,5 +141,5 @@ export function getRequiredPerms(orgs) {
     perms.push(`ratelimit.disable`);
     // - so the website doesn't get rate limited
 
-    return { perms, memberFields };
+    return { perms, memberFields: Object.fromEntries(memberFields.map(f => [f, 'r'])) };
 }
