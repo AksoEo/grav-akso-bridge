@@ -1,10 +1,11 @@
 @import '../registration/index.less';
 
-.account-details, .account-memberships, .account-profile-picture-page, .account-congress-participations {
+.account-section-box {
     background: rgb(var(--bg));
     border-radius: var(--radius);
     margin: 1em 0;
     text-align: left;
+    box-shadow: @shade-both;
 }
 
 .account-details {
@@ -240,6 +241,26 @@
                 font-size: smaller;
             }
         }
+    }
+}
+
+.account-security {
+    padding: 0.5em 1em;
+
+    .security-title {
+        margin-top: 0;
+    }
+}
+
+.account-notifs-summary {
+    padding: 0.5em 1em;
+    display: flex;
+    gap: 1em;
+    align-items: center;
+    justify-content: space-between;
+
+    .notifs-title {
+        margin: 0;
     }
 }
 

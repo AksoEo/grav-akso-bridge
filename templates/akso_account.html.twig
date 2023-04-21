@@ -19,7 +19,7 @@
                 {{ akso_locale.account.reset_password_back }}
             </a>
             <div class="form-aux">
-                <input name="reset_password" value="1" />
+                <input name="reset_password" type="hidden" value="1" />
             </div>
             {% if account.reset_password.state is same as('none') %}
             <button class="is-primary" type="submit">
@@ -55,7 +55,7 @@
                     {{ akso_locale.account.cancel_chgreq_back }}
                 </a>
                 <div class="form-aux">
-                    <input name="cancel_request" value="1" />
+                    <input name="cancel_request" type="hidden" value="1" />
                 </div>
                 {% if account.cancel_chgreq.state is same as('none') %}
                 <button class="is-primary" type="submit">
@@ -70,7 +70,7 @@
             <span class="back-icon"></span>
             {{ akso_locale.account.edit_pfp_back }}
         </a>
-        <div class="account-profile-picture-page">
+        <div class="account-profile-picture-page account-section-box">
             {% if account.error %}
                 <div class="error-banner">
                     {{account.error}}
@@ -117,14 +117,14 @@
                 <input type="hidden" name="action" value="delete" />
                 <input class="delete-switch" type="checkbox" id="pfp-delete" />
                 <div class="delete-button-container">
-                    <label aria-role="button" tabindex="0" class="link-button delete-button" for="pfp-delete">
+                    <label role="button" tabindex="0" class="link-button delete-button" for="pfp-delete">
                         {{ akso_locale.account.delete_pfp }}
                     </label>
                 </div>
                 <div class="delete-confirmation">
                     {{ akso_locale.account.delete_pfp_sure }}
                     <div class="confirmation-buttons">
-                        <label aria-role="button" tabindex="0" class="link-button cancel-button" for="pfp-delete">
+                        <label role="button" tabindex="0" class="link-button cancel-button" for="pfp-delete">
                             {{ akso_locale.account.delete_pfp_sure_no }}
                         </label>
                         <button type="submit" class="submit-button">
@@ -175,7 +175,7 @@
                         {{account.error}}
                     </div>
                 {% endif %}
-                <form class="account-details registration-settings" method="POST" action="{{ account.edit_path }}">
+                <form class="account-details account-section-box registration-settings" method="POST" action="{{ account.edit_path }}">
                     <input
                         type="hidden"
                         name="codeholder[codeholderType]"
@@ -228,7 +228,7 @@
                         <div class="inner-field">
                             <label for="codeholder-public-country">{{akso_locale.account.publicCountry}}</label>
                             <select
-                                id="registration-public-country"
+                                id="codeholder-public-country"
                                 name="codeholder[publicCountry]">
                                 <option value="">—</option>
                                 {% for country in account.countries %}
@@ -272,7 +272,7 @@
                 </form>
             </div>
         {% else %}
-            <div class="account-details">
+            <div class="account-details account-section-box">
                 {% macro pending_field(pfd, name, render_name, render_raw = false) %}
                     {% set rname = name %}
                     {% if render_name %}
@@ -334,7 +334,7 @@
                         {{ akso_locale.account.add_pfp }}
                     </a>
                 {% endif %}
-                <div class="table-clear" />
+                <div class="table-clear"></div>
                 {% if account.details.profilePictureHash %}
                     <div class="field-visibility">
                     {{akso_locale.account.profile_picture_visibility}}:
@@ -481,19 +481,23 @@
                     {{ akso_locale.account.begin_edit }}
                 </a>
             </div>
-            <div class="account-management">
+            <div class="account-security account-section-box">
+                <h2 class="security-title">{{ akso_locale.account.account_security_title }}</h2>
                 <a class="link-button" href="{{ account.reset_password.link }}">
                     {{ akso_locale.account.reset_password }}
                 </a>
                 <a class="link-button" href="{{ account.logins_link }}">
                     {{ akso_locale.account.logins_title }}
                 </a>
+            </div>
+            <div class="account-notifs-summary account-section-box">
+                <h2 class="notifs-title">{{ akso_locale.account_notifs.title }}</h2>
                 <a class="link-button" href="{{ account.notifs_link }}">
-                    {{ akso_locale.account_notifs.title }}
+                    {{ akso_locale.account_notifs.manage }}
                 </a>
             </div>
             {% if account.details.codeholderType == 'human' %}
-                <div class="account-memberships">
+                <div class="account-memberships account-section-box">
                     <h2 class="memberships-title">{{ akso_locale.account.memberships_title }}</h2>
                     <div class="sign-up-container">
                         <a class="link-button" href="{{ account.registration_link }}">
@@ -536,7 +540,7 @@
                     {% endif %}
                 </div>
                 {% if account.congress_participations is not empty %}
-                    <div class="account-congress-participations">
+                    <div class="account-congress-participations account-section-box">
                         <h2 class="inner-title">{{ akso_locale.account.congress_participations_title }}</h2>
                         <ul class="participations-list">
                             {% for part in account.congress_participations %}
