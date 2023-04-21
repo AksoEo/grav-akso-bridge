@@ -643,7 +643,7 @@ class Delegates {
             $codeholder['data_factoids'] = [];
 
             if ($codeholder['biography']) {
-                $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['biography_field']] = array(
+                $codeholder['data_factoids'][$this->plugin->locale['codeholder_factoids']['biography_field']] = array(
                     'type' => 'text',
                     'publicity' => 'public',
                     'val' => $codeholder['biography'],
@@ -651,7 +651,7 @@ class Delegates {
             }
 
             if ($codeholder['publicEmail'] || $codeholder['email']) {
-                $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['public_email_field']] = array(
+                $codeholder['data_factoids'][$this->plugin->locale['codeholder_factoids']['public_email_field']] = array(
                     'type' => 'email',
                     'publicity' => $codeholder['publicEmail'] ? 'public' : $codeholder['emailPublicity'],
                     'val' => $codeholder['publicEmail'] ?: $codeholder['email'],
@@ -659,7 +659,7 @@ class Delegates {
             }
 
             if ($codeholder['website']) {
-                $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['website_field']] = array(
+                $codeholder['data_factoids'][$this->plugin->locale['codeholder_factoids']['website_field']] = array(
                     'type' => 'url',
                     'publicity' => 'public',
                     'val' => $codeholder['website'],
@@ -667,7 +667,7 @@ class Delegates {
             }
 
             if ($codeholder['officePhone']) {
-                $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['office_phone_field']] = array(
+                $codeholder['data_factoids'][$this->plugin->locale['codeholder_factoids']['office_phone_field']] = array(
                     'type' => 'tel',
                     'publicity' => $codeholder['officePhonePublicity'],
                     'val' => $codeholder['officePhone'],
@@ -686,7 +686,7 @@ class Delegates {
                     'postalCode' => $addr['postalCode'],
                     'sortingCode' => $addr['sortingCode'],
                 ), $countryName)['c'];
-                $codeholder['data_factoids'][$this->plugin->locale['country_org_lists']['address_field']] = array(
+                $codeholder['data_factoids'][$this->plugin->locale['codeholder_factoids']['address_field']] = array(
                     'type' => 'text',
                     'show_plain' => true,
                     'publicity' => $codeholder['addressPublicity'],

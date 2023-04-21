@@ -112,16 +112,6 @@ export default [
         },
     },
     {
-        input: 'src/org-lists.js',
-        preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/org-lists.css')),
-        output: {
-            dir: path.join(__dirname, '../js/dist/'),
-            chunkFileNames: 'col_[name].js',
-            format: 'amd',
-        },
-    },
-    {
         input: 'src/delegates.js',
         preserveEntrySignatures: false,
         plugins: plugins(path.join(__dirname, '../js/dist/delegates.css')),

@@ -295,16 +295,6 @@ class AksoBridgePlugin extends Plugin {
                 $state['page_title_override'] = $state['akso_magazines']['title'];
             }
             $app->close();
-        } else if ($templateId === 'akso_country_org_list') {
-            $this->grav['assets']->add('plugin://akso-bridge/js/dist/org-lists.css');
-            $this->grav['assets']->add('plugin://akso-bridge/js/dist/org-lists.js');
-            $app = new AppBridge();
-            $app->open();
-            $countryLists = new CountryLists($this, $app->bridge);
-            $state['akso_login_path'] = $this->loginPath;
-            $state['akso_registration_path'] = $this->registrationPath;
-            $state['akso_clist'] = $countryLists->run();
-            $app->close();
         } else if ($templateId === 'akso_delegates') {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegates.css');
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/delegates.js');
