@@ -129,9 +129,15 @@ Lists can be created as follows:
 
 ```md
 [[listo 3]]
+
+[[listo 3 lau-lando-en-rolo 1 2 3]]
+[[listo 3 lau-teksto-en-rolo 1 2 3]]
 ```
 
 The number following `listo` is the list ID.
+
+`lau-`?`-en-rolo` should be followed by one or more public role IDs.
+`lando` sorts by dataCountry, `teksto` sorts by dataString.
 
 #### Congresses
 Individual congress fields can be output inline:
