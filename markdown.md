@@ -158,6 +158,8 @@ Following inline fields are supported:
 | homaID | | yes | Prints the human ID
 | komenco | | yes | prints the start date
 | fino | | yes | prints the end date
+| kvantoaliĝintoj | | yes | prints number of participants
+| kvantounikajlandoj | yes | prints number of unique participant countries
 
 Additionally, following block fields are supported using the same syntax:
 

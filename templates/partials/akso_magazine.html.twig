@@ -17,13 +17,13 @@
             <ul class="magazine-edition-years">
                 {% for year, editions in akso_magazines.editions %}
                     <li class="edition-year-item">
-                        <a class="edition-year-link" href="#{{year}}">{{year}}</a>
+                        <a class="edition-year-link" href="{{akso_magazines.editions_year_path}}{{year}}">{{year}}</a>
                     </li>
                 {% endfor %}
             </ul>
         {% endif %}
 
-        {% for year, editions in akso_magazines.editions %}
+        {% for year, editions in akso_magazines.editions_shown %}
             <h3 class="section-marker edition-year-header" id="{{year}}">{{year}}</h3>
             <ul class="magazines-cover-gallery">
                 {% for edition in editions %}
@@ -167,7 +167,7 @@
                                 {% if akso_magazines.can_read %}
                                     <a href="{{toc_path}}" class="entry-title">{{entry.title_rendered|raw}}</a>
                                 {% else %}
-                                    <span class="entry-title">{{entry.title}}</span>
+                                    <span class="entry-title">{{entry.title_rendered|raw}}</span>
                                 {% endif %}
                                 <div class="entry-dots"></div>
                                 <span class="entry-page">

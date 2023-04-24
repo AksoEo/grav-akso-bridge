@@ -27,7 +27,7 @@ class Magazines {
         $size = isset($_GET[self::TH_SIZE]) ? $_GET[self::TH_SIZE] : '?';
         $path = "/magazines/$magazine/editions/$edition/thumbnail/$size";
 
-        $res = $this->bridge->getRaw($path, 60);
+        $res = $this->bridge->getRaw($path, 600);
         if ($res['k']) {
             header('Content-Type: ' . $res['h']['content-type']);
             try {
@@ -145,29 +145,35 @@ class Magazines {
         }
     }
 
-    function addEditionDownloadLinks($magazine, $edition, $magazineName) {
+    function addEditionDownloadLinks($magazine, $edition, $magazineName, $detailed = false) {
         $edition['downloads'] = array('pdf' => null, 'epub' => null);
         try {
             $editionId = $edition['id'];
-            $path = "/magazines/$magazine/editions/$editionId/files";
-            $res = $this->bridge->get($path, array(
-                'fields' => ['format', 'downloads', 'size'],
-            ), 120);
-            if ($res['k']) {
-                foreach ($res['b'] as $item) {
-                    $fileName = urlencode(Utils::escapeFileNameLossy($magazineName . ' - ' .$edition['idHuman'])) . '.' . $item['format'];
-
-                    $edition['downloads'][$item['format']] = array(
-                        'link' => AksoBridgePlugin::MAGAZINE_DOWNLOAD_PATH
-                            . '/' . $fileName
-                            . '?' . self::DL_MAGAZINE . '=' . $magazine
-                            . '&' . self::DL_EDITION . '=' . $editionId
-                            . '&' . self::DL_FORMAT . '=' . $item['format'],
-                        'size' => $item['size'],
-                    );
+            if ($detailed) {
+                $path = "/magazines/$magazine/editions/$editionId/files";
+                $res = $this->bridge->get($path, array(
+                    'fields' => ['format', 'downloads', 'size'],
+                ), 120);
+                if ($res['k']) {
+                    $files = $res['b'];
+                } else {
+                    $files = [];
                 }
+            } else {
+                $files = array_map(function ($format) { return array('format' => $format, 'size' => 0); }, $edition['files']);
             }
-            $this->bridge->releaseRaw($path);
+            foreach ($files as $item) {
+                $fileName = urlencode(Utils::escapeFileNameLossy($magazineName . ' - ' .$edition['idHuman'])) . '.' . $item['format'];
+
+                $edition['downloads'][$item['format']] = array(
+                    'link' => AksoBridgePlugin::MAGAZINE_DOWNLOAD_PATH
+                        . '/' . $fileName
+                        . '?' . self::DL_MAGAZINE . '=' . $magazine
+                        . '&' . self::DL_EDITION . '=' . $editionId
+                        . '&' . self::DL_FORMAT . '=' . $item['format'],
+                    'size' => $item['size'],
+                );
+            }
         } catch (\Exception $e) {}
         return $edition;
     }
@@ -239,14 +245,13 @@ class Magazines {
         } else {
             throw new \Exception("Failed to fetch magazine $id:\n" . $res['b']);
         }
-        return null;
     }
 
-    function getMagazineEditions($magazine, $magazineName, $offset = 0) {
+    function getMagazineEditions($magazine, $magazineName) {
         $allEditions = [];
         while (true) {
             $res = $this->bridge->get("/magazines/$magazine/editions", array(
-                'fields' => ['id', 'idHuman', 'date', 'hasThumbnail', 'subscribers', 'subscriberFiltersCompiled'],
+                'fields' => ['id', 'idHuman', 'date', 'hasThumbnail', 'subscribers', 'subscriberFiltersCompiled', 'files'],
                 'filter' => ['published' => true],
                 'order' => [['date', 'desc']],
                 'offset' => count($allEditions),
@@ -276,13 +281,13 @@ class Magazines {
 
     function getMagazineEdition($magazine, $edition, $magazineName) {
         $res = $this->bridge->get("/magazines/$magazine/editions/$edition", array(
-            'fields' => ['id', 'idHuman', 'date', 'description', 'hasThumbnail', 'published', 'subscribers', 'subscriberFiltersCompiled'],
+            'fields' => ['id', 'idHuman', 'date', 'description', 'hasThumbnail', 'published', 'subscribers', 'subscriberFiltersCompiled', 'files'],
         ), 240);
         if ($res['k']) {
             $edition = $res['b'];
-            $edition = $this->addEditionDownloadLinks($magazine, $edition, $magazineName);
+            $edition = $this->addEditionDownloadLinks($magazine, $edition, $magazineName, true);
             $edition['description_rendered'] = $this->bridge->renderMarkdown(
-                $edition['description'] ? $edition['description'] : '',
+                $edition['description'] ?: '',
                 ['emphasis', 'strikethrough', 'link', 'list', 'table'],
             )['c'];
             return $edition;
@@ -340,7 +345,7 @@ class Magazines {
                 if ($entry['highlighted']) $hasHighlighted = true;
                 $entry = $this->addEntryDownloadUrl($magazine, $edition, $entry, $magazineName, $editionName);
                 $entry['title_rendered'] = $this->bridge->renderMarkdown(
-                    $entry['title'] ? $entry['title'] : '',
+                    $entry['title'] ?: '',
                     ['emphasis', 'strikethrough'],
                     true,
                 )['c'];
@@ -531,17 +536,33 @@ class Magazines {
                 }
             }
 
+            $showYear = 0;
+            foreach ($editions as $year => $items) {
+                if ($year > $showYear) $showYear = $year;
+            }
+
+            $yearParam = $this->plugin->locale['magazines']['edition_year_param'];
+            if (isset($_GET[$yearParam]) && gettype($_GET[$yearParam]) === 'string' && isset($editions[(int) $_GET[$yearParam]])) {
+                $showYear = (int)$_GET[$yearParam];
+            }
+
             foreach ($editions as &$year) {
                 foreach ($year as &$edition) {
                     $edition['can_read'] = $this->canUserReadMagazine($this->plugin->aksoUser, $magazine, $edition, 'access');
                 }
             }
+            $editionsShown = array();
+            $editionsShown[$showYear] = $editions[$showYear];
+
+            $editionsYearPath = Grav::instance()['page']->route() . '?' . $yearParam . '=';
 
             return array(
                 'path_components' => $pathComponents,
                 'type' => $route['type'],
                 'magazine' => $magazine,
                 'editions' => $editions,
+                'editions_shown' => $editionsShown,
+                'editions_year_path' => $editionsYearPath,
                 'show_access_banner' => $showAccessBanner,
                 'title' => $this->plugin->locale['magazines']['title_prefix'] . $magazine['name'],
             );

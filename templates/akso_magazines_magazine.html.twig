@@ -1,4 +1,8 @@
 {% extends 'partials/base.html.twig' %}
 {% block content %}
+    {% if akso_magazines.show_access_banner %}
+        {% include 'partials/akso_magazines_access_banner.html.twig' %}
+    {% endif %}
+
     {% include 'partials/akso_magazine.html.twig' %}
 {% endblock %}
