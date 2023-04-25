@@ -1398,10 +1398,10 @@ class Registration extends Form {
                 }
             }
 
-            if ($method['feePercent']) $method['fee_total'] += $method['offers_sum'] * $method['feePercent'] / 100;
+            if ($method['feePercent']) $method['fee_total'] += $method['offers_sum'] * $method['feePercent'];
         } else {
             $method['fee_total'] = 0;
-            if ($method['feePercent']) $method['fee_total'] += $org['offers_sum'] * $method['feePercent'] / 100;
+            if ($method['feePercent']) $method['fee_total'] += $org['offers_sum'] * $method['feePercent'];
         }
 
         if ($method['fee_total']) {
