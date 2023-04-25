@@ -387,24 +387,36 @@ class Magazines {
         return null;
     }
 
+    private $magazineAccessCache = [];
     private function canUserReadMagazine($user, $magazine, $edition, $accessType) {
         $effectiveSubscribers = $edition['subscribers'] ?: $magazine['subscribers'];
         $effectiveCompiledFilters = $edition['subscriberFiltersCompiled'] ?: $magazine['subscriberFiltersCompiled'];
 
         if (!$effectiveSubscribers) return false;
 
-        if ($user) {
-            $res = $this->bridge->get("/codeholders", array(
-                'filter' => array(
-                    '$and' => [
-                        $effectiveCompiledFilters[$accessType],
-                        array('id' => $user['id']),
-                    ],
-                ),
-                'limit' => 1,
-            ));
-            if (!$res['k']) throw new \Exception("failed to check codeholder magazine access");
-            if ($res['h']['x-total-items'] > 0) {
+        if ($effectiveCompiledFilters[$accessType] === true) return true;
+
+        if ($user && gettype($effectiveCompiledFilters[$accessType]) === 'array') {
+            $cacheKey = json_encode($effectiveCompiledFilters[$accessType]) . ' ' . $user['id'];
+            if (isset($this->magazineAccessCache[$cacheKey])) {
+                $result = $this->magazineAccessCache[$cacheKey];
+            } else {
+                $res = $this->bridge->get("/codeholders", array(
+                    'filter' => array(
+                        '$and' => [
+                            $effectiveCompiledFilters[$accessType],
+                            array('id' => $user['id']),
+                        ],
+                    ),
+                    'limit' => 1,
+                ));
+                if (!$res['k']) throw new \Exception("failed to check codeholder magazine access");
+                $result = $res['h']['x-total-items'] > 0;
+
+                $this->magazineAccessCache[$cacheKey] = $result;
+            }
+
+            if ($result) {
                 return true;
             }
         }
@@ -548,11 +560,16 @@ class Magazines {
 
             foreach ($editions as &$year) {
                 foreach ($year as &$edition) {
-                    $edition['can_read'] = $this->canUserReadMagazine($this->plugin->aksoUser, $magazine, $edition, 'access');
+                    $edition['can_read'] = false; // default value
                 }
             }
             $editionsShown = array();
             $editionsShown[$showYear] = $editions[$showYear];
+
+            // actually compute access here
+            foreach ($editionsShown[$showYear] as &$edition) {
+                $edition['can_read'] = $this->canUserReadMagazine($this->plugin->aksoUser, $magazine, $edition, 'access');
+            }
 
             $editionsYearPath = Grav::instance()['page']->route() . '?' . $yearParam . '=';
 
