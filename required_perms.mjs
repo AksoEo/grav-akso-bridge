@@ -128,7 +128,7 @@ export function getRequiredPerms(orgs) {
     perms.push(`intermediaries.read`);
     // - used for intermediary payment methods
 
-    orgs.forEach(org => perms.push(`newsletters.read.${org}`));
+    orgs.forEach(org => perms.push(`newsletters.${org}.read`));
     // - used for user notification settings / newsletter subscriptions
     // - used for GK send to subscribers
 
