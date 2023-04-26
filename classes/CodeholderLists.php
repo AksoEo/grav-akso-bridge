@@ -33,7 +33,9 @@ class CodeholderLists {
         'website',
         'profilePictureHash',
         'profilePicturePublicity',
-        'publicCountry'
+        'publicCountry',
+        'mainDescriptor',
+        'factoids',
     ];
 
     static function fetchCodeholderList($bridge, $listId, $sortBy, $sortByRoles) {
@@ -369,14 +371,89 @@ class CodeholderLists {
             $right->appendChild($addressContainer);
         }
 
+        if (!empty($codeholder['factoids'])) {
+            foreach ($codeholder['factoids'] as &$fact) {
+                self::renderFactoidValue($bridge, $fact);
+            }
+            $right->appendChild(self::renderFactoids($codeholder['factoids']));
+        }
+
         if ($codeholder['biography']) {
             $bioContainer = new Element('div', $codeholder['biography']);
             $bioContainer->class = 'item-bio';
             $right->appendChild($bioContainer);
         }
 
+        if ($codeholder['mainDescriptor']) {
+            $bioContainer = new Element('div');
+            $bioContainer->class = 'item-bio';
+            $lines = preg_split("/\n/", $codeholder['mainDescriptor']);
+            foreach ($lines as $line) {
+                $bioContainer->appendChild(new Element('div', $line));
+            }
+            $right->appendChild($bioContainer);
+        }
+
         $chNode->appendChild($left);
         $chNode->appendChild($right);
         return $chNode;
+    }
+
+    public static function renderFactoidValue($bridge, &$fact) {
+        if ($fact['type'] == 'text') {
+            $fact['val_rendered'] = $bridge->renderMarkdown('' . $fact['val'], ['emphasis', 'strikethrough', 'link'])['c'];
+        } else if ($fact['type'] == 'email') {
+            $fact['val_rendered'] = Utils::obfuscateEmail('' . $fact['val'])->html();
+        } else if ($fact['type'] == 'tel') {
+            $phoneFmt = $bridge->evalScript([array(
+                'number' => array('t' => 's', 'v' => $fact['val']),
+            )], [], array('t' => 'c', 'f' => 'phone_fmt', 'a' => ['number']));
+            if ($phoneFmt['s']) $fact['val_rendered'] = $phoneFmt['v'];
+            else $fact['val_rendered'] = $fact['val'];
+        }
+    }
+
+    public static function renderFactoids($factoids): Element {
+        $table = new Element('table');
+        $table->class = 'akso-codeholder-factoids';
+
+        $tbody = new Element('tbody');
+
+        foreach ($factoids as $factKey => $fact) {
+            $tr = new Element('tr');
+            $tr->class = 'ch-factoid';
+            $tr->setAttribute('data-type', $fact['type']);
+
+            $label = new Element('th', $factKey);
+            $label->class = 'factoid-label';
+            $tr->appendChild($label);
+
+            $contents = new Element('td');
+            $contents->class = 'factoid-contents';
+
+            if ($fact['type'] === 'tel') {
+                $a = new Element('a', $fact['val_rendered']);
+                $a->href = "tel:" . $fact['val'];
+                $contents->appendChild($a);
+            } else if ($fact['type'] === 'text') {
+                $contents->setInnerHtml($fact['val_rendered']);
+            } else if ($fact['type'] === 'number') {
+                $contents->setValue($fact['val']);
+            } else if ($fact['type'] === 'email') {
+                $contents->setInnerHtml($fact['val_rendered']);
+            } else if ($fact['type'] === 'url') {
+                $a = new Element('a', $fact['val']);
+                $a->class = 'factoid-url';
+                $a->href = $fact['val'];
+                $contents->appendChild($a);
+            }
+
+            $tr->appendChild($contents);
+            $tbody->appendChild($tr);
+        }
+
+        $table->appendChild($tbody);
+
+        return $table;
     }
 }

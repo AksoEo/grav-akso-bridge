@@ -697,27 +697,13 @@ class Delegates {
             {
                 foreach ($codeholder['factoids'] as &$fact) {
                     $fact['publicity'] = 'public';
-                    $this->renderFactoid($fact);
+                    CodeholderLists::renderFactoidValue($this->bridge, $fact);
                 }
                 foreach ($codeholder['data_factoids'] as &$fact) {
-                    $this->renderFactoid($fact);
+                    CodeholderLists::renderFactoidValue($this->bridge, $fact);
                 }
             }
         }
         return $codeholder;
-    }
-
-    private function renderFactoid(&$fact) {
-        if ($fact['type'] == 'text') {
-            $fact['val_rendered'] = $this->bridge->renderMarkdown('' . $fact['val'], ['emphasis', 'strikethrough', 'link'])['c'];
-        } else if ($fact['type'] == 'email') {
-            $fact['val_rendered'] = Utils::obfuscateEmail('' . $fact['val'])->html();
-        } else if ($fact['type'] == 'tel') {
-            $phoneFmt = $this->bridge->evalScript([array(
-                'number' => array('t' => 's', 'v' => $fact['val']),
-            )], [], array('t' => 'c', 'f' => 'phone_fmt', 'a' => ['number']));
-            if ($phoneFmt['s']) $fact['val_rendered'] = $phoneFmt['v'];
-            else $fact['val_rendered'] = $fact['val'];
-        }
     }
 }
