@@ -1,6 +1,6 @@
 import countrySelector from '../common/country-selector';
 import initMap from './map';
-import initSubjectPicker from './subjects';
+import { initSubjectSearch, initSubjectPicker } from './subjects';
 import './index.less';
 
 function init() {
@@ -26,6 +26,7 @@ function init() {
     }
 
     initMap();
+    initSubjectSearch();
     initSubjectPicker();
 }
 

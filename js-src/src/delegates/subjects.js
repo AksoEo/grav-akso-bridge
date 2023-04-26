@@ -1,6 +1,49 @@
 import { delegates as locale } from '../../../locale.ini';
+import { fuzzyScore } from '../util/fuzzy';
 
-export default function initSubjectPicker() {
+export function initSubjectSearch() {
+    const searchQuery = document.querySelector('.delegate-search-form .search-query');
+    const subjectResultsList = document.querySelector('.delegation-subject-results .subject-list');
+
+    // only activate on page with all tags and no search
+    if (!searchQuery || searchQuery.value || !subjectResultsList) return;
+
+    const searchSubmit = document.querySelector('.delegate-search-form .search-submit');
+
+    const items = [...subjectResultsList.querySelectorAll('.subject-item')];
+
+    const updateSearch = () => {
+        const query = searchQuery.value.trim();
+        const threshold = query.length > 3 ? 0.3 : 0.1;
+
+        subjectResultsList.innerHTML = '';
+        let filtered = [];
+
+        if (query) {
+            for (const item of items) {
+                const score = fuzzyScore(item.dataset.name, query);
+                if (score > threshold) {
+                    filtered.push([item, score]);
+                }
+            }
+            filtered.sort(([, a], [, b]) => b - a);
+            filtered = filtered.map(([item]) => item);
+        } else {
+            filtered = items;
+        }
+
+        for (const item of filtered) subjectResultsList.appendChild(item);
+    };
+
+    searchSubmit.addEventListener('click', e => {
+        e.preventDefault();
+        updateSearch();
+    });
+    searchQuery.addEventListener('input', updateSearch);
+    searchQuery.addEventListener('change', updateSearch);
+}
+
+export function initSubjectPicker() {
     const subjectResults = document.querySelector('.delegation-subject-results');
     if (!subjectResults) return;
 

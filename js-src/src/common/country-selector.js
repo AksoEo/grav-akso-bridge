@@ -31,7 +31,7 @@ export default function init() {
             const searchInput = document.createElement('input');
             searchInput.className = 'search-input';
             searchInput.type = 'text';
-            searchInput.placeholder = locale.country_org_lists.search_label;
+            searchInput.placeholder = locale.content.generic_search_label;
             searchBox.appendChild(searchInput);
             searchBoxContainer.appendChild(searchBox);
             overview.insertBefore(searchBoxContainer, overview.firstElementChild.nextElementSibling); // after title

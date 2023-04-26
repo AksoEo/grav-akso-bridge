@@ -1,6 +1,7 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridgePlugin;
 use Grav\Plugin\AksoBridge\Utils;
 
@@ -314,7 +315,6 @@ class Delegates {
             $subjectFilter = null;
             $searchMode = null;
             if (!empty($search_query) || $subjectId == self::VIEW_ALL) {
-                // TODO: sort by popularity
                 $options = array(
                     'fields' => ['id', 'name', 'description'],
                     'limit' => $itemsPerPage,
@@ -329,13 +329,29 @@ class Delegates {
                         'str' => $this->bridge->transformSearch($search_query)['s'],
                     );
                 }
-                $res = $this->bridge->get('/delegations/subjects', $options);
-                if (!$res['k']) {
-                    // throw new \Exception('failed to search subjects');
-                    // HACK: we'll pretend nothing happened (the search query is probably invalid)
-                    $res = array('h' => array('x-total-items' => 0), 'b' => []);
+
+                $totalItems = 1;
+                while (count($subjectResults) < $totalItems) {
+                    $res = $this->bridge->get('/delegations/subjects', array_merge(array(
+                        'offset' => count($subjectResults),
+                    ), $options), 240);
+                    if (!$res['k']) {
+                        // throw new \Exception('failed to search subjects');
+                        // HACK: we'll pretend nothing happened (the search query is probably invalid)
+                        Grav::instance()['log']->error("error loading delegation subjects: " . $res['b']);
+                        break;
+                    }
+                    $totalItems = $res['h']['x-total-items'];
+                    foreach ($res['b'] as $item) $subjectResults[] = $item;
                 }
-                $subjectResults = $res['b'];
+
+                // sort alphabetically
+                usort($subjectResults, function ($a, $b) {
+                    $aName = Utils::latinizeEsperanto(mb_strtolower($a['name']), true);
+                    $bName = Utils::latinizeEsperanto(mb_strtolower($b['name']), true);
+                    return $aName <=> $bName;
+                });
+
                 $subjectResultIds = array_map(function ($sub) { return $sub['id']; }, $subjectResults);
                 $searchMode = 'search';
             } else if ($subjectId != self::VIEW_ALL) {
@@ -538,6 +554,9 @@ class Delegates {
                 throw new \Exception("Failed to fetch cities");
             }
             foreach ($res['b'] as $city) {
+                if ($city['eoLabel'] && $city['nativeLabel'] && $city['eoLabel'] !== $city['nativeLabel']) {
+                    $city['showNativeLabel'] = true;
+                }
                 $city['label'] = $city['eoLabel'] ?: $city['nativeLabel'];
                 $city['urlId'] = Utils::escapeFileNameLossy($city['label']);
                 $city['subdivision'] = $city['subdivision_eoLabel'] ?: $city['subdivision_nativeLabel'];
