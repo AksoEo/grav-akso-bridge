@@ -185,6 +185,9 @@ class AksoBridgePlugin extends Plugin {
     public function onPageInitialized(Event $event) {
         if (!AppBridge::getApiKey()) return;
 
+        $this->grav['assets']->add('plugin://akso-bridge/js/dist/md-components.js');
+        $this->grav['assets']->add('plugin://akso-bridge/js/dist/md-components.css');
+
         $post = !empty($_POST) ? $_POST : [];
         $templateId = $this->grav['page']->template();
         $state = [];

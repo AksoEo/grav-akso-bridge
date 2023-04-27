@@ -501,6 +501,52 @@ class MarkdownExt {
         return $this->cleanupTags($document->html());
     }
 
+    protected function renderChListCountrySelector($countryCodes, $id): Element {
+        $selector = new Element('div');
+        $selector->class = 'country-overview-selector init-collapsed';
+        $selector->id = "landoj-$id";
+        $overviewTitle = new Element('h3', $this->plugin->locale['content']['country_selector_title']);
+        $overviewTitle->class = 'overview-title';
+        $selector->appendChild($overviewTitle);
+
+        $overviewItems = new Element('ul');
+        $overviewItems->setAttribute('aria-label', $this->plugin->locale['content']['country_selector_all_label']);
+        $overviewItems->class = 'overview-items';
+
+        $param = $this->plugin->locale['content']['country_selector_param'];
+        $current = $_GET[$param] ?? null;
+
+        foreach ($countryCodes as $code) {
+            $countryName = Utils::formatCountry($this->bridge, $code);
+
+            $li = new Element('li');
+            $li->setAttribute('data-code', $code);
+            $li->setAttribute('data-name', $countryName);
+            $li->class = 'country-item';
+            if ($current === $code) $li->class .= ' is-current';
+
+            $a = new Element('a');
+            $a->href = Grav::instance()['page']->route() . '?' . $param . '=' . $code . '#' . $selector->id;
+            $a->class = 'inner-item';
+
+            $img = new Element('img');
+            $img->class = 'inline-flag-icon';
+            $img->draggable = 'false';
+            $emoji = Utils::getEmojiForFlag($code);
+            $img->src = $emoji['src'];
+            $img->alt = $emoji['alt'];
+            $a->appendChild($img);
+
+            $name = new Element('span', ' ' . $countryName);
+            $a->appendChild($name);
+            $li->appendChild($a);
+            $overviewItems->appendChild($li);
+        }
+
+        $selector->appendChild($overviewItems);
+        return $selector;
+    }
+
     protected function handleHTMLLists($doc) {
         $isMember = false;
         if ($this->plugin->aksoUser !== null) {
@@ -511,12 +557,16 @@ class MarkdownExt {
         foreach ($unhandledLists as $list) {
             $textContent = $list->text();
 
+            $newListContainer = new Element('div');
+            $newListContainer->class = 'codeholder-list-container';
+
             $newList = new Element('ul');
             $newList->class = 'codeholder-list';
 
             try {
                 $data = json_decode($textContent, true);
-                $data = CodeholderLists::fetchCodeholderList($this->app->bridge, $data['list'], $data['sortBy'], $data['sortByRoles']);
+                $listId = $data['list'];
+                $data = CodeholderLists::fetchCodeholderList($this->app->bridge, $listId, $data['sortBy'], $data['sortByRoles']);
 
                 $codeholders = $data['codeholders'];
                 $dataOrgs = $data['data_orgs'];
@@ -551,7 +601,25 @@ class MarkdownExt {
                         }
                     }
 
-                    sort($sortingKeys);
+                    if ($field === 'dataCountry') {
+                        $self = $this;
+                        usort($sortingKeys, function ($a, $b) use ($self) {
+                            $aName = Utils::latinizeEsperanto(Utils::formatCountry($self->bridge, $a), true);
+                            $bName = Utils::latinizeEsperanto(Utils::formatCountry($self->bridge, $b), true);
+                            return $aName <=> $bName;
+                        });
+
+                        $newListContainer->appendChild($this->renderChListCountrySelector($sortingKeys, $listId));
+                        $param = $this->plugin->locale['content']['country_selector_param'];
+                        $current = $_GET[$param] ?? null;
+                        if ($current && in_array($current, $sortingKeys)) {
+                            $sortingKeys = [$current];
+                            $restItems = [];
+                        }
+
+                    } else {
+                        sort($sortingKeys);
+                    }
 
                     foreach ($sortingKeys as $key) {
                         $items = $sortedItems[$key];
@@ -604,9 +672,10 @@ class MarkdownExt {
                     }
                 }
 
-                $list->replace($newList);
+                $newListContainer->appendChild($newList);
+                $list->replace($newListContainer);
             } catch (Exception $e) {
-                Grav::instance()['log']->error("exception rendering codeholder list: " . $e->getMessage() . " - " . $e->getFile() . ":" . $e->getLine());
+                Grav::instance()['log']->error("exception rendering codeholder list: " . $e->getMessage() . " - " . $e->getFile() . ":" . $e->getLine() . " - " . $e->getTraceAsString());
                 // oh no
                 $list->replace($this->createError($doc));
             }

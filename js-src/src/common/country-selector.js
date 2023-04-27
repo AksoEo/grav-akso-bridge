@@ -6,6 +6,8 @@ export default function init() {
     const overviews = document.querySelectorAll('.country-overview-selector');
     for (let i = 0; i < overviews.length; i++) {
         const overview = overviews[i];
+        if (overview.dataset.handled) return;
+        overview.dataset.handled = 'true';
 
         // scroll currently selected item into view
         {

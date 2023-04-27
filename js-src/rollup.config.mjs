@@ -40,98 +40,29 @@ const plugins = lessOut => [
     isProd && terser(),
 ].filter(x => x);
 
-export default [
-    {
-        input: 'src/form.js',
-        preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/form.css')),
-        output: {
-            dir: path.join(__dirname, '../js/dist/'),
-            chunkFileNames: 'f_[name].js',
-            format: 'amd',
-        },
-    },
-    {
-        input: 'src/congress-loc.js',
-        preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/congress-loc.css')),
-        output: {
-            dir: path.join(__dirname, '../js/dist/'),
-            chunkFileNames: 'c_[name].js',
-            format: 'amd',
-        },
-    },
-    {
-        input: 'src/congress-prog.js',
-        preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/congress-prog.css')),
-        output: {
-            dir: path.join(__dirname, '../js/dist/'),
-            chunkFileNames: 'cp_[name].js',
-            format: 'amd',
-        },
-    },
-    {
-        input: 'src/congress-reg.js',
-        preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/congress-reg.css')),
-        output: {
-            dir: path.join(__dirname, '../js/dist/'),
-            chunkFileNames: 'cr_[name].js',
-            format: 'amd',
-        },
-    },
-    {
-        input: 'src/account.js',
-        preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/account.css')),
-        output: {
-            dir: path.join(__dirname, '../js/dist/'),
-            chunkFileNames: 'acc_[name].js',
-            format: 'amd',
-        },
-    },
-    {
-        input: 'src/registration.js',
-        preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/registration.css')),
-        output: {
-            dir: path.join(__dirname, '../js/dist/'),
-            chunkFileNames: 'reg_[name].js',
-            format: 'amd',
-        },
-    },
-    {
-        input: 'src/magazines.js',
-        preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/magazines.css')),
-        output: {
-            dir: path.join(__dirname, '../js/dist/'),
-            chunkFileNames: 'mag_[name].js',
-            format: 'amd',
-        },
-    },
-    {
-        input: 'src/delegates.js',
-        preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/delegates.css')),
-        output: {
-            dir: path.join(__dirname, '../js/dist/'),
-            chunkFileNames: 'del_[name].js',
-            format: 'amd',
-        },
-    },
-    {
-        input: 'src/delegation-applications.js',
-        preserveEntrySignatures: false,
-        plugins: plugins(path.join(__dirname, '../js/dist/delegation-applications.css')),
-        output: {
-            dir: path.join(__dirname, '../js/dist/'),
-            chunkFileNames: 'dela_[name].js',
-            format: 'amd',
-        },
-    },
+const items = [
+    'account',
+    'congress-loc',
+    'congress-prog',
+    'congress-reg',
+    'delegates',
+    'delegation-applications',
+    'form',
+    'magazines',
+    'md-components',
+    'registration',
 ];
+
+export default items.map(item => ({
+    input: `src/${item}.js`,
+    preserveEntrySignatures: false,
+    plugins: plugins(path.join(__dirname, `../js/dist/${item}.css`)),
+    output: {
+        dir: path.join(__dirname, '../js/dist/'),
+        chunkFileNames: `${item}_[name].js`,
+        format: 'amd',
+    },
+}));
 
 function iniPlugin() {
     return {
