@@ -328,6 +328,7 @@ class CongressRegistrationForm extends Form {
             $label->setAttribute('class', 'form-label is-boolean-label');
 
             $input = $this->doc->createElement('input');
+            $input->setAttribute('class', 'field-value-input');
             $input->setAttribute('id', $inputId);
             $input->setAttribute('name', $name);
             $input->setAttribute('type', 'checkbox');

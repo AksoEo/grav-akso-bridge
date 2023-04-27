@@ -21,7 +21,6 @@ function followIntentRedirect() {
 removeNoscripts();
 followIntentRedirect();
 
-// TODO: load if needed/show progress?
 loadCountryFmt().then(() => console.log('Loaded ASC countries'));
 loadPhoneFmt().then(() => console.log('Loaded ASC phone-numbers'));
 
@@ -276,7 +275,7 @@ class FormInput {
     getValue() {
         const { type } = this;
         if (type === 'boolean') {
-            return this.node.querySelector('input').checked;
+            return this.node.querySelector('input.field-value-input').checked;
         } else if (type === 'number' || type === 'money') {
             const input = this.node.querySelector('input');
             const { value } = input;
@@ -347,7 +346,7 @@ class FormInput {
 
         const { type } = this;
         if (type === 'boolean') {
-            this.node.querySelector('input').checked = !!value;
+            this.node.querySelector('input.field-value-input').checked = !!value;
         } else if (type === 'number' || type === 'money') {
             const input = this.node.querySelector('input');
             if (type === 'money') input.value = Number.isFinite(value) ? value / +input.dataset.currencyMultiplier : '';

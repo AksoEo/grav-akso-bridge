@@ -543,7 +543,7 @@ class CongressRegistration {
             $this->plugin,
             $this->app,
             $this->form['form'],
-            $this->form['customFormVars'],
+            $this->form['customFormVars'] ?? [],
             $this->congressId,
             $this->instanceId,
             $this->currency

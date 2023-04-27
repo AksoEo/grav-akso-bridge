@@ -54,6 +54,7 @@ class CongressInstance {
         do {
             if (!$res['k']) {
                 $state['akso_congress_error'] = $this->plugin->locale['content']['render_error'];
+                Grav::instance()['log']->error("Failed to load congress $congressId/$instanceId: " . $res['b']);
                 break;
             }
 
