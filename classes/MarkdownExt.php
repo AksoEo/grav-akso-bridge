@@ -606,6 +606,7 @@ class MarkdownExt {
 
                 $list->replace($newList);
             } catch (Exception $e) {
+                Grav::instance()['log']->error("exception rendering codeholder list: " . $e->getMessage() . " - " . $e->getFile() . ":" . $e->getLine());
                 // oh no
                 $list->replace($this->createError($doc));
             }

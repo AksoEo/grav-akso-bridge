@@ -51,7 +51,7 @@ class CodeholderLists {
             $res = $bridge->get('/lists/' . $listId . '/codeholders', array(
                 'offset' => $currentItemCount,
                 'limit' => 100
-            ), 60);
+            ), 60 * 30);
             if (!$res['k']) {
                 Grav::instance()['log']->error('failed to fetch codeholder list: ' . $res['b']);
                 return null;
@@ -63,7 +63,7 @@ class CodeholderLists {
                 'filter' => array('id' => array('$in' => $codeholderIds)),
                 'fields' => CodeholderLists::FIELDS,
                 'limit' => 100,
-            ), 60);
+            ), 60 * 30);
             if (!$res['k']) {
                 Grav::instance()['log']->error('failed to fetch codeholders in list: ' . $res['b']);
                 return null;
@@ -74,30 +74,37 @@ class CodeholderLists {
                 $chDataById[$ch['id']] = $ch;
             }
 
-            foreach ($codeholderIds as $id) {
+            $res2 = $bridge->get("/codeholders/roles", array(
+                'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString', 'role.id', 'codeholderId'],
+                'filter' => array(
+                    'isActive' => true,
+                    'role.public' => true,
+                    'codeholderId' => array('$in' => $codeholderIds),
+                ),
+                'order' => [['role.name', 'asc']],
+                'limit' => 100,
+            ), 60 * 30);
+            if (!$res2['k']) {
+                Grav::instance()['log']->error("could not fetch codeholder roles in list: " . $res2['b']);
+                return null;
+            }
+
+            foreach ($res2['b'] as $role) {
+                $id = $role['codeholderId'];
                 if (!isset($chDataById[$id])) continue;
-                $ch = $chDataById[$id];
-                $ch['profilePictureHash'] = bin2hex($ch['profilePictureHash']);
+                if (!isset($chDataById[$id]['activeRoles'])) $chDataById[$id]['activeRoles'] = [];
 
-                $res2 = $bridge->get("/codeholders/$id/roles", array(
-                    'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString', 'role.id'],
-                    'filter' => array('isActive' => true, 'role.public' => true),
-                    'order' => [['role.name', 'asc']],
-                    'limit' => 100,
-                ), 240);
-                if ($res2['k']) {
-                    $ch['activeRoles'] = $res2['b'];
+                $chDataById[$id]['activeRoles'][] = $role;
 
-                    foreach ($res2['b'] as $role) {
-                        if ($role['dataOrg'] && !in_array($role['dataOrg'], $dataOrgIds)) {
-                            $dataOrgIds[] = $role['dataOrg'];
-                        }
-                    }
-                } else {
-                    Grav::instance()['log']->warn("could not fetch roles for codeholder $id");
-                    $ch['activeRoles'] = [];
+                if ($role['dataOrg'] && !in_array($role['dataOrg'], $dataOrgIds)) {
+                    $dataOrgIds[] = $role['dataOrg'];
                 }
+            }
 
+            foreach ($codeholderIds as $id) {
+                $ch = $chDataById[$id];
+                $ch['activeRoles'] = $ch['activeRoles'] ?? [];
+                $ch['profilePictureHash'] = bin2hex($ch['profilePictureHash']);
                 $codeholders[] = $ch;
             }
 
@@ -303,10 +310,16 @@ class CodeholderLists {
                     if ($role['dataOrg']) {
                         if ($role['dataCountry']) $roleDetails->appendChild(new Element('span', ': '));
                         $orgId = $role['dataOrg'];
-                        $dOrg = new Element('span', $dataOrgs[$orgId]['nameAbbrev']);
-                        $dOrg->title = $dataOrgs[$orgId]['fullName'];
-                        $dOrg->class = 'detail-org';
-                        $roleDetails->appendChild($dOrg);
+                        if ($dataOrgs[$orgId]['nameAbbrev']) {
+                            $dOrg = new Element('abbr', $dataOrgs[$orgId]['nameAbbrev']);
+                            $dOrg->title = $dataOrgs[$orgId]['fullName'];
+                            $dOrg->class = 'detail-org is-abbrev';
+                            $roleDetails->appendChild($dOrg);
+                        } else {
+                            $dOrg = new Element('span', $dataOrgs[$orgId]['fullName']);
+                            $dOrg->class = 'detail-org';
+                            $roleDetails->appendChild($dOrg);
+                        }
                     }
 
                     if ($role['dataString']) {
