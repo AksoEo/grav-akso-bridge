@@ -302,7 +302,11 @@ class UserAccount {
                 $couldBeRenewed = $category['availableTo'] === null || $category['availableTo'] >= $wouldRenewToYear;
 
                 if ($couldBeRenewed && $newestYear <= $currentYear) {
-                    $category['canBeRenewed'] = true;
+                    $payload = Registration::createCategoryRenewalPayload($this->app->bridge, $category['categoryId'], $wouldRenewToYear);
+                    if ($payload) {
+                        $category['canBeRenewed'] = true;
+                        $category['renewalPayload'] = $payload;
+                    }
                 }
             }
 
@@ -310,6 +314,7 @@ class UserAccount {
             $hasMore = $totalCount > count($res['b']);
 
             return array(
+                'renew_target' => $this->plugin->registrationPath,
                 'categories' => $categories,
                 'history' => $res['b'],
                 'historyHasMore' => $hasMore,

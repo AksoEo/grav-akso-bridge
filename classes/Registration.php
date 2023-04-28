@@ -691,6 +691,7 @@ class Registration extends Form {
             $this->state['unsafe_deserialized'] = $_SESSION[self::SESSION_KEY_NAME];
         }
     }
+
     private function updateCurrencyState() {
         $serializedState = $this->state['unsafe_deserialized'];
         $currencies = $this->getCachedCurrencies();
@@ -1114,6 +1115,34 @@ class Registration extends Form {
                 $scriptCtx->popScript();
             }
         }
+    }
+
+    public static function createCategoryRenewalPayload($bridge, $categoryId, $year) {
+        $res = $bridge->get("/registration/options/$year", array(
+            'fields' => ['offers'],
+        ), 120);
+        if (!$res['k']) return null;
+        $yearOffers = $res['b']['offers'];
+        for ($i = 0; $i < count($yearOffers); $i++) {
+            $group = $yearOffers[$i];
+            for ($j = 0; $j < count($group['offers']); $j++) {
+                $offer = $group['offers'][$j];
+                if ($offer['type'] === 'membership' && $offer['id'] === $categoryId) {
+                    return json_encode(array(
+                        'offers' => array(
+                            $year => array(
+                                ("$i-$j") => array(
+                                    'type' => 'membership',
+                                    'id' => $categoryId,
+                                ),
+                            ),
+                        ),
+                    ));
+                }
+            }
+        }
+
+        return null;
     }
 
     private function updatePaymentsState() {

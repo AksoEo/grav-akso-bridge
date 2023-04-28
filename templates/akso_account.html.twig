@@ -514,9 +514,12 @@
                             {% for category in account.membership.categories %}
                             <li class="membership-category">
                                 {% if category.canBeRenewed %}
-                                    <button class="category-renew-button">
-                                        {{ akso_locale.account.membership_category_renew }}
-                                    </button>
+                                    <form action="{{ account.membership.renew_target }}" method="POST">
+                                        <input type="hidden" name="state_serialized" value="{{ category.renewalPayload }}" />
+                                        <button class="category-renew-button" type="submit">
+                                            {{ akso_locale.account.membership_category_renew }}
+                                        </button>
+                                    </form>
                                 {% endif %}
                                 <div class="category-name">{{ category.name|e }}</div>
                                 <ul class="membership-years">

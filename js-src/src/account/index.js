@@ -51,23 +51,6 @@ function initMembershipsList() {
             category.years.appendChild(node);
             category.years.appendChild(document.createTextNode(' '));
         }
-        function renderRenewButton(category) {
-            const currentYear = new Date().getFullYear();
-            const hasThisYear = category.yearValues.includes(currentYear);
-            const couldRenew = (category.hasThisYear && category.item.availableNextYear) || category.item.availableThisYear;
-            const canBeRenewed = !category.item.lifetime && couldRenew;
-
-            if (canBeRenewed === !!category.renewButton) return;
-            if (canBeRenewed && !category.renewButton) {
-                category.renewButton = document.createElement('button');
-                category.renewButton.className = 'category-renew-button';
-                category.renewButton.textContent = locale.account.membership_category_renew;
-                category.node.insertBefore(category.renewButton, category.node.firstChild);
-            } else if (!canBeRenewed) {
-                category.node.removeChild(category.renewButton);
-                category.renewButton = null;
-            }
-        }
 
         const categoryNodes = {};
         function renderAdditionalItems(items) {
@@ -76,10 +59,6 @@ function initMembershipsList() {
                     categoryNodes[item.categoryId] = renderCategory(item);
                 }
                 renderYearItem(categoryNodes[item.categoryId], item);
-            }
-
-            for (const k in categoryNodes) {
-                renderRenewButton(categoryNodes[k]);
             }
         }
 
