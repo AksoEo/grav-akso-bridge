@@ -1,4 +1,5 @@
 @import '../registration/index.less';
+@import '../prelude.less';
 
 .account-section-box {
     background: rgb(var(--bg));
@@ -138,7 +139,7 @@
 
 .account-memberships {
     .memberships-title {
-        padding: 0.5em 1em;
+        padding: 0.5rem 1rem;
         margin: 0;
         float: left;
     }
@@ -249,6 +250,31 @@
 
     .security-title {
         margin-top: 0;
+    }
+
+    .totp-setup-button {
+        display: inline-flex;
+        align-items: center;
+        padding-right: 0.2em;
+        gap: 0.3em;
+
+        .totp-setup-status {
+            font-size: smaller;
+            text-transform: uppercase;
+            background: rgb(var(--button-primary));
+            color: rgb(var(--button-primary-fg));
+            padding: 0.1em 0.2em;
+            border-radius: calc(var(--radius) - 0.2em);
+            box-shadow: @inset-top;
+
+            &[data-active="true"]::before {
+                content: '✓ ';
+            }
+            &[data-active="false"] {
+                background: rgb(var(--warning-bg));
+                color: rgb(var(--warning-fg));
+            }
+        }
     }
 }
 
@@ -460,7 +486,7 @@
     }
 }
 
-.account-profile-picture-page {
+.account-profile-picture-page, .account-totp-setup-page {
     padding: 1em;
 
     .error-banner, .message-banner {
@@ -476,7 +502,9 @@
         background: rgb(var(--light-accent));
         color: rgb(var(--light-accent-fg));
     }
+}
 
+.account-profile-picture-page {
     .inner-title {
         margin-top: 0;
     }
@@ -578,6 +606,46 @@
         }
         .delete-switch:checked ~ .delete-confirmation {
             display: block;
+        }
+    }
+}
+
+.account-totp-setup-page {
+    #totp-delete-prompt, .totp-delete-prompt-contents,
+    #totp-delete-prompt:checked ~ .totp-delete-prompt-button {
+        display: none;
+    }
+    #totp-delete-prompt:checked ~ .totp-delete-prompt-contents {
+        display: block;
+    }
+
+    .totp-delete-prompt-contents {
+        padding: 0.5em 1em;
+        border: 1px solid rgb(var(--error));
+        background: rgb(var(--bg));
+        border-radius: var(--radius);
+
+        .inner-buttons {
+            margin-top: 0.5em;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5em;
+        }
+    }
+
+    .totp-setup-code-container {
+    }
+
+    .inner-setup {
+        margin: 1em auto;
+        text-align: center;
+
+        .totp-setup-description {
+            text-align: left;
+        }
+
+        .inner-buttons {
+            margin-top: 0.5em;
         }
     }
 }

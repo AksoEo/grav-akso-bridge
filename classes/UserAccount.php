@@ -463,6 +463,69 @@ class UserAccount {
         );
     }
 
+    function renderTotpSetup() {
+        $returnLink = $this->plugin->getGrav()['uri']->path();
+        $link = $returnLink . '?' . $this->plugin->locale['account']['totp_path'];
+        $active = false;
+        $setup = null;
+        $message = null;
+        $error = null;
+
+        if (isset($_GET[$this->plugin->locale['account']['totp_path']])) {
+            $active = true;
+
+            $post = !empty($_POST) ? $_POST : [];
+            $action = $post['totp_action'] ?? null;
+
+            if ($action === 'enter_setup' || $action === 'do_setup') {
+                $result = array('s' => false);
+
+                $setupData = !empty($post['totpSetup']) ? UserLogin::readTotpSetup($post['totpSetup']) : null;
+                if ($setupData) {
+                    $this->plugin->aksoUser['totp_setup_data'] = $setupData;
+
+                    if ($action === 'do_setup' && isset($post['totp'])) {
+                        try {
+                            $result = $this->bridge->totpSetup($post['totp'], $setupData['secret'], false);
+                        } catch (\Exception $e) {}
+                    }
+                }
+
+                if ($action === 'do_setup') {
+                    if ($result['s']) {
+                        $message = $this->plugin->locale['account']['totp_setup_success'];
+                        $this->plugin->aksoUser['has_totp'] = true;
+                    } else {
+                        $setup = $this->plugin->userLogin->getTotpSetup();
+                        $error = $this->plugin->locale['login']['error_invalid_totp_setup'];
+                    }
+                } else {
+                    $setup = $this->plugin->userLogin->getTotpSetup();
+                }
+            } else if ($action === 'disable') {
+                $res = $this->bridge->delete('/auth/totp', [], []);
+                if ($res['k']) {
+                    $message = $this->plugin->locale['account']['totp_delete_success'];
+                    $this->plugin->aksoUser['has_totp'] = false;
+                } else {
+                    $error = $this->plugin->locale['account']['totp_delete_error'];
+                }
+            }
+        }
+
+        return array(
+            'active' => $active,
+            'link' => $link,
+            'return_link' => $returnLink,
+            'submit_link' => $link,
+            'is_enabled' => $this->plugin->aksoUser['has_totp'],
+            'setup' => $setup,
+            'message' => $message,
+            'error' => $error,
+            'can_disable' => !$this->plugin->aksoUser['admin'],
+        );
+    }
+
     private function runCancelChgReq() {
         $state = 'none';
         $submitLink = $this->cancelRequestPath;
@@ -667,6 +730,7 @@ class UserAccount {
             $membership = $this->renderMembership();
             $congressParts = $this->renderCongressParticipations();
             $resetPassword = $this->renderResetPassword();
+            $totpSetup = $this->renderTotpSetup();
             $pendingReq = $this->getPendingRequest();
             $pendingDetails = null;
             if ($pendingReq) {
@@ -688,6 +752,7 @@ class UserAccount {
                 'membership' => $membership,
                 'congress_participations' => $congressParts,
                 'reset_password' => $resetPassword,
+                'totp_setup' => $totpSetup,
                 'logins_link' => $this->loginsPath,
                 'editing' => $this->editing,
                 'edit_link' => $this->editPath,

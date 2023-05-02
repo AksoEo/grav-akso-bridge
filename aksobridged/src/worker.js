@@ -443,7 +443,9 @@ const messageHandlers = {
             uea: sesx.newCode,
             id: sesx.id,
             totp: needsTotp || (sesx.totpSetUp && !sesx.totpUsed),
+            has_totp: sesx.totpSetUp,
             needs_totp: needsTotp,
+            admin: sesx.isAdmin,
             member: sesx.isActiveMember,
         };
     },

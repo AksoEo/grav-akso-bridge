@@ -27,6 +27,78 @@
             </button>
             {% endif %}
         </form>
+    {% elseif account.totp_setup.active %}
+        <a class="link-button back-button" href="{{ account.totp_setup.return_link }}">
+            <span class="back-icon"></span>
+            {{ akso_locale.account.totp_back }}
+        </a>
+        <h2>{{ akso_locale.account.totp_title }}</h2>
+        <div class="account-section-box account-totp-setup-page">
+            <p>
+                {{ akso_locale.account.totp_description }}
+            </p>
+            {% if account.totp_setup.message %}
+                <div class="message-banner">
+                    {{ account.totp_setup.message }}
+                </div>
+            {% elseif account.totp_setup.error %}
+                <div class="error-banner">
+                    {{ account.totp_setup.error }}
+                </div>
+            {% endif %}
+
+            {% if account.totp_setup.setup %}
+                <form method="POST" action="{{ account.totp_setup.submit_link }}">
+                    <input type="hidden" name="totp_action" value="do_setup" />
+                    {% set akso_totp_setup = account.totp_setup.setup %}
+                    <div class="inner-setup">
+                        {% include 'partials/akso_totp_setup.html.twig' %}
+                        <footer class="inner-buttons">
+                            <button class="is-primary" type="submit">
+                                {{ akso_locale.account.totp_setup_submit }}
+                            </button>
+                        </footer>
+                    </div>
+                </form>
+            {% elseif account.totp_setup.is_enabled %}
+                {% if not account.totp_setup.can_disable %}
+                    <p>
+                        {{ akso_locale.account.totp_delete_admin }}
+                    </p>
+                {% endif %}
+                <input type="checkbox" id="totp-delete-prompt" />
+                <label for="totp-delete-prompt" class="totp-delete-prompt-button">
+                    <span class="link-button" role="button">
+                        {{ akso_locale.account.totp_delete }}
+                    </span>
+                </label>
+                <div class="totp-delete-prompt-contents">
+                    <div>
+                        {{ akso_locale.account.totp_delete_sure }}
+                    </div>
+                    <div class="inner-buttons">
+                        <label for="totp-delete-prompt">
+                            <span class="link-button is-primary" role="button">
+                                {{ akso_locale.account.totp_delete_sure_no }}
+                            </span>
+                        </label>
+                        <form method="POST" action="{{ account.totp_setup.submit_link }}">
+                            <input type="hidden" name="totp_action" value="disable" />
+                            <button type="submit">
+                                {{ akso_locale.account.totp_delete_sure_yes }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <form method="POST" action="{{ account.totp_setup.submit_link }}">
+                    <input type="hidden" name="totp_action" value="enter_setup" />
+                    <button type="submit">
+                        {{ akso_locale.account.totp_setup_button }}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
     {% elseif account.cancel_chgreq.active %}
         <h1>{{ akso_locale.account.title }}</h1>
         <h2>{{ akso_locale.account.cancel_chgreq_title }}</h2>
@@ -483,6 +555,16 @@
             </div>
             <div class="account-security account-section-box">
                 <h2 class="security-title">{{ akso_locale.account.account_security_title }}</h2>
+                <a class="link-button totp-setup-button" href="{{ account.totp_setup.link }}">
+                    {{ akso_locale.account.totp_title }}
+                    <span class="totp-setup-status" data-active="{{ account.totp_setup.is_enabled ? 'true' : 'false' }}">
+                        {% if account.totp_setup.is_enabled %}
+                            {{ akso_locale.account.totp_status_active }}
+                        {% else %}
+                            {{ akso_locale.account.totp_status_inactive }}
+                        {% endif %}
+                    </span>
+                </a>
                 <a class="link-button" href="{{ account.reset_password.link }}">
                     {{ akso_locale.account.reset_password }}
                 </a>

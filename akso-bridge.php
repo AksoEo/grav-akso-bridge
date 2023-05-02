@@ -2,10 +2,10 @@
 namespace Grav\Plugin;
 
 use Grav\Common\Plugin;
-use Grav\Common\Uri;
 use Grav\Plugin\AksoBridge\AksoTwigExt;
 use Grav\Plugin\AksoBridge\CodeholderLists;
 use Grav\Plugin\AksoBridge\Payments;
+use Grav\Plugin\AksoBridge\UserLogin;
 use RocketTheme\Toolbox\Event\Event;
 use Grav\Common\Page\Page;
 use Grav\Plugin\AksoBridge\MarkdownExt;
@@ -13,7 +13,6 @@ use Grav\Plugin\AksoBridge\AppBridge;
 use Grav\Plugin\AksoBridge\CongressInstance;
 use Grav\Plugin\AksoBridge\CongressLocations;
 use Grav\Plugin\AksoBridge\CongressPrograms;
-use Grav\Plugin\AksoBridge\CountryLists;
 use Grav\Plugin\AksoBridge\Delegates;
 use Grav\Plugin\AksoBridge\DelegationApplications;
 use Grav\Plugin\AksoBridge\GkSendToSubscribers;
@@ -119,6 +118,7 @@ class AksoBridgePlugin extends Plugin {
         }
     }
 
+    public $userLogin = null;
     // akso bridge connection
     public $bridge = null;
     // if set, will contain info on the akso user
@@ -130,15 +130,50 @@ class AksoBridgePlugin extends Plugin {
     private $redirectStatus = null;
     private $redirectTarget = null;
 
-    // page state for twig variables; see impl for details
-    private $pageState = null;
-    // TODO: merge pageState with pageVars
+    // will be passed to twig
     private $pageVars = [];
 
     public function onPagesInitialized(Event $event) {
         if (!AppBridge::getApiKey()) return;
 
-        $this->runUserBridge();
+        $this->userLogin = new UserLogin($this);
+        $this->userLogin->tryLogin();
+        $this->bridge = $this->userLogin->bridge;
+        $this->aksoUser = $this->userLogin->aksoUser;
+
+        {
+            if ($this->aksoUser !== null && $this->aksoUser['totp']) {
+                // user is logged in and needs to still use totp
+                if ($this->path !== $this->loginPath && $this->path !== $this->logoutPath) {
+                    // redirect to login path if the user isn’t already there
+                    $this->redirectTarget = $this->loginPath;
+                    $this->redirectStatus = 303;
+                }
+            }
+            $_SESSION['akso_is_probably_logged_in'] = !!$this->aksoUser;
+
+            if ($this->path === $this->logoutPath) {
+                $result = $this->bridge->logout();
+                if ($result['s']) {
+                    $_SESSION['akso_is_probably_logged_in'] = false;
+                    $_SESSION['akso_unset_cookies'] = true;
+                    $this->aksoUser = null;
+                    $this->redirectTarget = $this->getReferrerPath();
+                    $this->redirectStatus = 303;
+                }
+            } else if (!$this->aksoUser && isset($_SESSION['akso_unset_cookies'])) {
+                // manually unset these cookies here because the redirect messes this up :(
+                unset($_SESSION['akso_unset_cookies']);
+                setcookie('akso_session', null, -1, '/');
+                setcookie('akso_session.sig', null, -1, '/');
+            }
+        }
+        $this->updateFormattedName();
+        $this->userLogin->flush();
+
+        if ($this->redirectTarget !== null) {
+            $this->grav->redirectLangSafe($this->redirectTarget, $this->redirectStatus);
+        }
 
         if ($this->path === $this->loginPath) {
             $this->addLoginPage();
@@ -188,7 +223,6 @@ class AksoBridgePlugin extends Plugin {
         $this->grav['assets']->add('plugin://akso-bridge/js/dist/md-components.js');
         $this->grav['assets']->add('plugin://akso-bridge/js/dist/md-components.css');
 
-        $post = !empty($_POST) ? $_POST : [];
         $templateId = $this->grav['page']->template();
         $state = [];
         if ($templateId === 'akso_congress_instance' || $templateId === 'akso_congress_registration') {
@@ -266,8 +300,14 @@ class AksoBridgePlugin extends Plugin {
                 $state['akso_congress'] = $programs->run();
                 $app->close();
             }
-        } else if (str_starts_with($templateId, 'akso_account')) {
-            $state['account'] = $this->pageState;
+        } else if ($this->pathStartsWithComponent($this->path, $this->accountPath) && str_starts_with($templateId, 'akso_account')) {
+            $this->grav['assets']->add('plugin://akso-bridge/js/dist/account.js');
+            $this->grav['assets']->add('plugin://akso-bridge/js/dist/account.css');
+            $app = new AppBridge();
+            $app->open();
+            $acc = new UserAccount($this, $app, $this->bridge, $this->path);
+            $state['account'] = $acc->run();
+            $app->close();
         } else if ($templateId === 'akso_registration') {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/registration.css');
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/registration.js');
@@ -314,329 +354,26 @@ class AksoBridgePlugin extends Plugin {
             $appl = new DelegationApplications($this, $app->bridge);
             $state['akso_delegates'] = $appl->run();
             $app->close();
-        }
-
-        if ($this->grav['uri']->path() === $this->loginPath) {
+        } else if ($this->grav['uri']->path() === $this->loginPath) {
             // add login css
             $this->grav['assets']->add('plugin://akso-bridge/css/login.css');
 
-            $state['akso_login_path'] = $this->loginPath;
-
-            $createPasswordPathComponent = $this->locale['login']['create_password_path'];
-            $resettingPassword = false;
-            if (!isset($_GET[$createPasswordPathComponent])) {
-                $createPasswordPathComponent = $this->locale['login']['reset_password_path'];
-                $resettingPassword = true;
-            }
-            $createPasswordData = isset($_GET[$createPasswordPathComponent]) && gettype($_GET[$createPasswordPathComponent]) === 'string'
-                ? $_GET[$createPasswordPathComponent]
-                : null;
-            $createPasswordData = explode('/', $createPasswordData);
-            if (count($createPasswordData) == 2) {
-                $state['akso_login_create_password_data'] = array(
-                    'login' => $createPasswordData[0],
-                    'token' => $createPasswordData[1],
-                );
-                $state['akso_login_creating_password'] = $createPasswordData != null;
-                $state['akso_login_resetting_password'] = $resettingPassword;
-            }
-
-            $resetPasswordPathComponent = $this->locale['login']['forgot_password_path'];
-            $isResettingPassword = isset($_GET[$resetPasswordPathComponent]);
-            $state['akso_login_is_pw_reset'] = $isResettingPassword;
-
-            $forgotLoginPathComponent = $this->locale['login']['forgot_login_path'];
-            $didForgetLogin = isset($_GET[$forgotLoginPathComponent]);
-            $state['akso_login_forgot_login'] = $didForgetLogin;
-
-            $lostCodePathComponent = $this->locale['login']['lost_code_path'];
-            $lostCode = isset($_GET[$lostCodePathComponent]);
-            $state['akso_login_lost_code'] = $lostCode;
-
-            // set return path
-            $rpath = '/';
-            if (isset($post['return'])) {
-                // keep return path if it already exists
-                $rpath = $post['return'];
-            } else if (isset($_GET['r']) && gettype($_GET['r']) === 'string' && str_starts_with($_GET['r'], '/')) {
-                $rpath = $_GET['r'];
-            } else {
-                $rpath = $this->getReferrerPath();
-            }
-            $state['akso_login_return_path'] = $rpath;
-
-            $state['akso_login_forgot_password_path'] = $this->loginPath . '?' . $resetPasswordPathComponent;
-            $state['akso_login_forgot_login_path'] = $this->loginPath . '?' . $forgotLoginPathComponent;
-            $state['akso_login_lost_code_path'] = $this->loginPath . '?' . $lostCodePathComponent;
+            $state = $this->userLogin->runLoginPage();
+            $this->aksoUser = $this->userLogin->aksoUser;
+            $this->updateFormattedName();
         }
 
-        $state['akso_auth_failed'] = $this->loginConnFailed;
+        $state['akso_auth_failed'] = $this->userLogin->loginConnFailed;
         $state['akso_auth'] = $this->aksoUser !== null;
-        $state['akso_full_auth'] = $this->aksoUser ? !$this->aksoUser['totp'] : false;
+        $state['akso_full_auth'] = $this->aksoUser && !$this->aksoUser['totp'];
         $state['akso_user_is_member'] = $this->aksoUser ? $this->aksoUser['member'] : false;
+
         if ($this->aksoUser !== null) {
             $state['akso_user_fmt_name'] = $this->aksoUserFormattedName;
             $state['akso_uea_code'] = $this->aksoUser['uea'];
-
-            if ($this->aksoUser['totp']) {
-                // user still needs to log in with totp
-                $state['akso_login_totp'] = true;
-
-                if ($this->aksoUser['needs_totp']) {
-                    $state['akso_login_totp_setup'] = true;
-                    if (isset($this->aksoUser['totp_setup_data'])) {
-                        $state['akso_login_totp_secrets'] = $this->aksoUser['totp_setup_data'];
-                    } else {
-                        $state['akso_login_totp_secrets'] = $this->bridge->generateTotp($this->aksoUser['uea']);
-                    }
-                    $secrets = $state['akso_login_totp_secrets'];
-                    $secrets['secret'] = base64_encode($secrets['secret']);
-                    $state['akso_login_totp_secrets_enc'] = base64_encode(json_encode($secrets));
-                }
-            }
-        }
-
-        if (isset($this->pageState['login_state'])) {
-            $istate = $this->pageState;
-            if ($istate['login_state'] === 'login-error') {
-                $state['akso_login_username'] = $istate['username'];
-                if (isset($istate['isBad'])) {
-                    $state['akso_login_error'] = 'loginbad';
-                } else if ($istate['noPassword']) {
-                    $state['akso_login_error'] = 'nopw';
-                } else if ($istate['isEmail']) {
-                    $state['akso_login_error'] = 'authemail';
-                } else {
-                    $state['akso_login_error'] = 'authuea';
-                }
-            } else if ($istate['login_state'] === 'totp-error') {
-                if ($istate['nosx']) {
-                    $state['akso_login_error'] = 'totpnosx';
-                } else if ($istate['bad']) {
-                    $state['akso_login_error'] = 'totpbad';
-                } else {
-                    $state['akso_login_error'] = 'totpauth';
-                }
-            } else if ($istate['login_state'] === 'reset-error') {
-                $state['akso_login_error'] = 'reset-error';
-            } else if ($istate['login_state'] === 'reset-success') {
-                $state['akso_login_pw_reset_success'] = true;
-            } else if ($istate['login_state'] === 'create-error') {
-                $state['akso_login_error'] = 'create-error';
-            } else if ($istate['login_state'] === 'create-error-mismatch') {
-                $state['akso_login_error'] = 'create-error-mismatch';
-            }
         }
 
         $this->pageVars = $state;
-    }
-
-    private $loginConnFailed = false;
-    private function runUserBridge() {
-        $this->bridge = new \AksoBridge(__DIR__ . '/aksobridged/run/aksobridge');
-
-        // basic default state so stuff doesn’t error
-        $this->pageState = array('state' => '');
-
-        $ip = Uri::ip();
-        if ($ip === 'UNKNOWN') {
-            // i don't know why this happens
-            // so if it does just fall back to the $_SERVER value
-            $ip = $_SERVER['REMOTE_ADDR'];
-        }
-
-        $cookies = $_COOKIE;
-
-        // php renames cookies with a . in the name
-        // so we need to fix that before passing cookies to the api
-        if (isset($cookies['akso_session_sig'])) {
-            $cookies['akso_session.sig'] = $cookies['akso_session_sig'];
-            unset($cookies['akso_session_sig']);
-        }
-
-        $isLogin = $this->path === $this->loginPath && $_SERVER['REQUEST_METHOD'] === 'POST';
-        if (isset($cookies['akso_session']) || $isLogin) {
-            // run akso user bridge if this is the login page or if there's a session cookie
-
-            try {
-            $aksoUserState = $this->bridge->open($this->apiHost, $ip, $cookies);
-            } catch (\Exception $e) {
-                // connection failed probably
-                $this->loginConnFailed = true;
-                return;
-            }
-            if ($aksoUserState['auth']) {
-                $this->aksoUser = $aksoUserState;
-            }
-
-            $this->updateAksoState();
-            $this->updateFormattedName();
-
-            // FIXME: better state management
-            // $this->bridge->close();
-            $this->bridge->flushCookies();
-        }
-
-        foreach ($this->bridge->setCookies as $cookie) {
-            header('Set-Cookie: ' . $cookie, FALSE);
-        }
-
-        if ($this->redirectTarget !== null) {
-            $this->grav->redirectLangSafe($this->redirectTarget, $this->redirectStatus);
-        }
-    }
-
-    // updates AKSO state, handling the current page/action etc
-    private function updateAksoState() {
-        if ($this->aksoUser !== null && $this->aksoUser['totp']) {
-            // user is logged in and needs to still use totp
-            if ($this->path !== $this->loginPath && $this->path !== $this->logoutPath) {
-                // redirect to login path if the user isn’t already there
-                $this->redirectTarget = $this->loginPath;
-                $this->redirectStatus = 303;
-                return;
-            }
-        }
-        $_SESSION['akso_is_probably_logged_in'] = !!$this->aksoUser;
-
-        if ($this->path === $this->loginPath && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            // user login
-            $post = !empty($_POST) ? $_POST : [];
-            // TODO: use a form nonce
-
-            $canonUsername = '';
-            if (isset($post['username'])) {
-                $canonUsername = mb_strtolower($post['username']);
-                if (preg_match('/^\w{4}-\w$/', $canonUsername)) {
-                    $canonUsername = substr($canonUsername, 0, 4);
-                }
-            }
-
-            if (isset($post['reset_password'])) {
-                // we're resetting the password actually
-
-                $res = $this->bridge->forgotPassword($canonUsername);
-                if (!$res['k']) {
-                    $this->pageState = array(
-                        'login_state' => 'reset-error',
-                    );
-                } else {
-                    $this->pageState = array(
-                        'login_state' => 'reset-success',
-                    );
-                }
-                return;
-            } else if (isset($post['create_password_token'])) {
-                $password = $post['password'];
-                $password2 = $post['password2'];
-                if ($password !== $password2) {
-                    $this->pageState = array(
-                        'login_state' => 'create-error-mismatch',
-                    );
-                    return;
-                }
-                $canonUsername = $post['create_password_username'];
-                $token = $post['create_password_token'];
-                $res = $this->bridge->createPassword($canonUsername, $password, $token);
-                if (!$res['k']) {
-                    $this->pageState = array(
-                        'login_state' => 'create-error',
-                    );
-                    return;
-                }
-                // fall through to normal login on success
-            }
-
-            $rpath = '/';
-            if (isset($post['return'])) {
-                // if return is a valid-ish path, set it as the return path
-                if (strpos($post['return'], '/') == 0) $rpath = $post['return'];
-            }
-
-            if (isset($post['termsofservice']) || (isset($post['email']) && $post['email'] !== '')) {
-                // these inputs were invisible and shouldn't've been triggered
-                // so this was probably a spam bot
-                $this->pageState = array(
-                    'login_state' => 'login-error',
-                    'isBad' => true,
-                    'isEmail' => false,
-                    'username' => 'roboto',
-                    'noPassword' => false,
-                );
-                return;
-            }
-
-            if ($this->aksoUser !== null && $this->aksoUser['totp'] && isset($post['totp'])) {
-                $remember = isset($post['remember']);
-
-                $result = null;
-                if ($this->aksoUser['needs_totp'] && isset($post['totpSetup'])) {
-                    $setupData = null;
-                    try {
-                        $setupData = json_decode(base64_decode($post['totpSetup']), true);
-                        $setupData['secret'] = base64_decode($setupData['secret']);
-                    } catch (\Exception $e) {
-                        $result = array('s' => false, 'bad' => true, 'nosx' => false);
-                    }
-                    $result = $this->bridge->totpSetup($post['totp'], $setupData['secret'], $remember);
-                    $this->aksoUser['totp_setup_data'] = $setupData;
-                } else {
-                    $result = $this->bridge->totp($post['totp'], $remember);
-                }
-
-                if ($result['s']) {
-                    $this->redirectTarget = $rpath;
-                    $this->redirectStatus = 303;
-                } else {
-                    $this->pageState = array(
-                        'login_state' => 'totp-error',
-                        'bad' => $result['bad'],
-                        'nosx' => $result['nosx'],
-                    );
-                }
-            } else {
-                if (!isset($post['username']) || !isset($post['password'])) {
-                    http_response_code(401);
-                    die();
-                }
-
-                $result = $this->bridge->login($canonUsername, $post['password']);
-
-                if ($result['s']) {
-                    $_SESSION['akso_is_probably_logged_in'] = true;
-                    $this->aksoUser = $result;
-
-                    if (!$result['totp']) {
-                        // redirect to return page unless user still needs to use totp
-                        $this->redirectTarget = $rpath;
-                        $this->redirectStatus = 303;
-                    }
-                } else {
-                    $this->pageState = array(
-                        'login_state' => 'login-error',
-                        'isEmail' => strpos($post['username'], '@') !== false,
-                        'username' => $post['username'],
-                        'noPassword' => $result['nopw']
-                    );
-                }
-            }
-        } else if ($this->path === $this->logoutPath) {
-            $result = $this->bridge->logout();
-            if ($result['s']) {
-                $_SESSION['akso_is_probably_logged_in'] = false;
-                $this->aksoUser = null;
-                $this->redirectTarget = $this->getReferrerPath();
-                $this->redirectStatus = 303;
-            }
-        } else if ($this->pathStartsWithComponent($this->path, $this->accountPath)) {
-            $this->grav['assets']->add('plugin://akso-bridge/js/dist/account.js');
-            $this->grav['assets']->add('plugin://akso-bridge/js/dist/account.css');
-            $app = new AppBridge();
-            $app->open();
-            $acc = new UserAccount($this, $app, $this->bridge, $this->path);
-            $this->pageState = $acc->run();
-            $app->close();
-        }
     }
 
     public function updateFormattedName() {
@@ -781,7 +518,7 @@ class AksoBridgePlugin extends Plugin {
         $this->grav['twig']->twig->addExtension(new AksoTwigExt());
     }
 
-    private function getReferrerPath() {
+    public function getReferrerPath() {
         if (!isset($_SERVER['HTTP_REFERER'])) return '/';
         $ref = $_SERVER['HTTP_REFERER'];
         $refp = parse_url($ref);

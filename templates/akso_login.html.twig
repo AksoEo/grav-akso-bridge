@@ -6,40 +6,15 @@
         </div>
     {% elseif akso_login_error %}
         <div id="akso-login-error">
-            {% if akso_login_error == 'loginbad' %}
-                {{ akso_locale.login.generic_error }}
-            {% elseif akso_login_error == 'authuea' %}
-                {{ akso_locale.login.error_invalid_uea }}
-            {% elseif akso_login_error == 'authemail' %}
-                {{ akso_locale.login.error_invalid_email }}
-            {% elseif akso_login_error == 'nopw' %}
-                {{ akso_locale.login.error_no_password_0 }}
-                {{ akso_login_username }}
-                {{ akso_locale.login.error_no_password_1 }}
-            {% elseif akso_login_error == 'totpauth' %}
-                {% if akso_login_totp_setup %}
-                    {{ akso_locale.login.error_invalid_totp_setup }}
-                {% else %}
-                    {{ akso_locale.login.error_invalid_totp }}
-                {% endif %}
-            {% elseif akso_login_error == 'totpbad' %}
-                {# user cannot use totp in their current state #}
-                {# possibly already used totp, did not set up totp, etc. #}
-                {{ akso_locale.login.generic_error }}
-            {% elseif akso_login_error == 'totpnosx' %}
-                {# no user session #}
-                {{ akso_locale.login.generic_error }}
-            {% elseif akso_login_error == 'reset-error' %}
-                {{ akso_locale.login.generic_error }}
-            {% elseif akso_login_error == 'create-error' %}
-                {{ akso_locale.login.generic_error }}
-            {% elseif akso_login_error == 'create-error-mismatch' %}
-                {{ akso_locale.login.error_create_mismatch }}
-            {% endif %}
+            {{ akso_login_error }}
         </div>
     {% endif %}
     <form id="akso-login" method="POST">
-        {% if akso_login_forgot_login %}
+        {% if akso_full_auth %}
+            <p>
+                {{ akso_locale.login.already_logged_in }}
+            </p>
+        {% elseif akso_login_forgot_login %}
             <p>
                 {{ akso_locale.login.forgot_login_message }}
             </p>
@@ -61,15 +36,15 @@
                     {{ akso_locale.login.username }}
                 </label>
                 <input
-                    id="akso-login-username"
-                    name="username"
-                    type="text"
-                    value="{{ akso_login_username|e('html_attr') }}"
-                    {% if not akso_login_username|e('html_attr') %} autofocus {% endif %} />
+                        id="akso-login-username"
+                        name="username"
+                        type="text"
+                        value="{{ akso_login_username|e('html_attr') }}"
+                        {% if not akso_login_username|e('html_attr') %} autofocus {% endif %} />
             </div>
             <div class="form-aux">
-                <input name="return" value="{{ akso_login_return_path|e('html_attr') }}" />
-                <input type="text" name="reset_password" value="yes" />
+                <input type="hidden" name="return" value="{{ akso_login_return_path|e('html_attr') }}" />
+                <input type="hidden" name="reset_password" value="yes" />
             </div>
             <footer class="form-footer">
                 <a class="link-button" href="{{ akso_login_path }}">
@@ -140,41 +115,7 @@
         {% elseif akso_login_totp_setup %}
             <h1 class="title">{{akso_locale.login.totp_title}}</h1>
             <div class="totp-setup-alert">{{akso_locale.login.totp_setup_message}}</div>
-            <p class="totp-setup-description">
-                {{akso_locale.login.totp_setup_setup_0}}<a target="_blank" rel="nofollow noreferrer" href="{{akso_locale.login.totp_setup_setup_1_link}}">{{akso_locale.login.totp_setup_setup_1}}</a>{{akso_locale.login.totp_setup_setup_2}}
-            </p>
-            <div class="totp-setup-code-container">
-                <div class="totp-setup-instruction">
-                    {{akso_locale.login.totp_setup_scan_code}}
-                </div>
-                <div class="totp-setup-qr-container">
-                    <img
-                        aria-hidden="true"
-                        src="{{akso_login_totp_secrets.qrCode}}" />
-                </div>
-                <div class="totp-setup-otpauth-link">
-                    {{akso_locale.login.totp_setup_open_app_0}}
-                    <a href="{{akso_login_totp_secrets.otpURL}}">
-                        {{akso_locale.login.totp_setup_open_app_1}}
-                    </a>
-                </div>
-            </div>
-            <div class="totp-setup-instruction">
-                {{akso_locale.login.totp_setup_enter_code}}
-            </div>
-            <input type="hidden" name="totpSetup" value="{{akso_login_totp_secrets_enc}}" />
-            <div class="form-field">
-                <input
-                    id="akso-login-totp"
-                    name="totp"
-                    type="text"
-                    placeholder="000000"
-                    {# \d* seems to be the only way to get a numpad input on iOS #}
-                    pattern="\d*"
-                    inputmode="numeric"
-                    autocomplete="off"
-                    autofocus />
-            </div>
+            {% include 'partials/akso_totp_setup.html.twig' %}
             <div class="totp-remember">
                 <input type="checkbox" name="remember" id="akso-login-totp-remember" />
                 <label for="akso-login-totp-remember">
@@ -251,7 +192,7 @@
                     {% if akso_login_username %} autofocus {% endif %} />
             </div>
             <div class="form-aux">
-                <input name="return" value="{{ akso_login_return_path|e('html_attr') }}" />
+                <input type="hidden" name="return" value="{{ akso_login_return_path|e('html_attr') }}" />
                 {# fake inputs to prevent bots #}
                 ne ŝaltu ĉi tiun butonon:
                 <input type="checkbox" name="termsofservice" />

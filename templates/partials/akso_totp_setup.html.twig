@@ -1,0 +1,35 @@
+<p class="totp-setup-description">
+    {{akso_locale.login.totp_setup_setup_0}}<a target="_blank" rel="nofollow noreferrer" href="{{akso_locale.login.totp_setup_setup_1_link}}">{{akso_locale.login.totp_setup_setup_1}}</a>{{akso_locale.login.totp_setup_setup_2}}
+</p>
+<div class="totp-setup-code-container">
+    <div class="totp-setup-instruction">
+        {{akso_locale.login.totp_setup_scan_code}}
+    </div>
+    <div class="totp-setup-qr-container">
+        <img
+            aria-hidden="true"
+            src="{{akso_totp_setup.secrets.qrCode}}" />
+    </div>
+    <div class="totp-setup-otpauth-link">
+        {{akso_locale.login.totp_setup_open_app_0}}
+        <a href="{{akso_totp_setup.secrets.otpURL}}">
+            {{akso_locale.login.totp_setup_open_app_1}}
+        </a>
+    </div>
+</div>
+<div class="totp-setup-instruction">
+    {{akso_locale.login.totp_setup_enter_code}}
+</div>
+<input type="hidden" name="totpSetup" value="{{akso_totp_setup.secrets_enc}}" />
+<div class="form-field">
+    <input
+        id="akso-login-totp"
+        name="totp"
+        type="text"
+        placeholder="000000"
+        {# \d* seems to be the only way to get a numpad input on iOS #}
+        pattern="\d*"
+        inputmode="numeric"
+        autocomplete="off"
+        autofocus />
+</div>
