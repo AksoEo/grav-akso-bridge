@@ -13,6 +13,11 @@ class AppBridge {
     }
 
     public static function getApiKey() {
+        if (!isset($_SERVER['HTTP_USER_AGENT']) || !$_SERVER['HTTP_USER_AGENT']) {
+            // required for akso bridge! if not present, pretend akso bridge is unavailable
+            return null;
+        }
+
         return Grav::instance()['config']->get('plugins.akso-bridge.api_key');
     }
 
