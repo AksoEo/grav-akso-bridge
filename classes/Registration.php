@@ -1155,8 +1155,9 @@ class Registration extends Form {
             $scriptCtx = new FormScriptExecCtx($this->app);
 
             // add additional derived data to payment orgs
-            foreach ($this->paymentOrgs as &$org) {
+            foreach ($this->paymentOrgs as $orgKey => &$org) {
                 $org['years'] = [];
+                $org['active_years'] = [];
                 $org['statuses'] = [];
                 $org['can_pay'] = false;
                 $org['offers_sum'] = 0;
@@ -1175,12 +1176,19 @@ class Registration extends Form {
                         }
 
                         if (isset($this->state['offers'][$offerYear['year']])) {
+                            $org['active_years'][] = $offerYear['year'];
                             $offers = $this->state['offers'][$offerYear['year']];
                             foreach ($offers as $offer) {
                                 $org['offers_sum'] += $offer['amount'];
                             }
                         }
                     }
+                }
+
+                if (empty($org['active_years'])) {
+                    // nothing selected here; remove it
+                    unset($this->paymentOrgs[$orgKey]);
+                    continue;
                 }
 
                 $scriptCtx->pushScript(array(
@@ -1454,6 +1462,7 @@ class Registration extends Form {
         $errors = [];
         foreach ($years as $year) {
             if (isset($this->state['locked_offers'][$year])) continue;
+            unset($yearItems); // break reference from previous loop iteration
             $yearItems = [];
             if (isset($this->state['offers'][$year])) {
                 $yearItems = &$this->state['offers'][$year];

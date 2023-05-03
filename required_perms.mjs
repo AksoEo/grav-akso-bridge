@@ -117,7 +117,7 @@ export function getRequiredPerms(orgs) {
     });
     // - used for delegation applications
 
-    orgs.forEach(org => perms.push(`magazines.read.${org}`));
+    orgs.forEach(org => perms.push(`magazines.read.${org}`, `magazines.subscriptions.read.${org}`));
     // - used for magazines
     // - used for markdown magazine lists
     // - used for registration

@@ -582,12 +582,12 @@
         <div class="payment-orgs">
             {% for org in akso_registration.payment_orgs %}
             {% set po_title = '' %}
-            {% if count(org.years) > 1 %}
+            {% if count(org.active_years) > 1 %}
                 {% set po_title = akso_locale.registration.payment_org_for_years %}
             {% else %}
                 {% set po_title = akso_locale.registration.payment_org_for_year %}
             {% endif %}
-            {% for i, year in org.years %}
+            {% for i, year in org.active_years %}
                 {% if i > 0 %}
                     {% set po_title = po_title ~ ',' %}
                 {% endif %}
