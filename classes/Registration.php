@@ -1600,7 +1600,7 @@ class Registration extends Form {
         $categories = $this->loadAllCategories($this->getRegisteredOfferCategoryIds($this->state['offers']));
         $magazines = $this->loadAllMagazines($this->getRegisteredOfferMagazineIds($this->state['offers']));
         foreach ($org['years'] as $year) {
-            $purposeTitle = $this->locale['payment_purpose_title_singular'] . ' ' . $org['years'][0];
+            $purposeTitle = $this->locale['payment_purpose_title_singular'] . ' ' . $year;
             $purposeDescription = '';
 
             if (!isset($this->state['offers'][$year])) continue;
