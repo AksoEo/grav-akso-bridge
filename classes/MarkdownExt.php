@@ -491,7 +491,6 @@ class MarkdownExt {
         $this->handleHTMLIfLoggedIn($document);
         $this->handleHTMLCongressPosters($document);
         $this->handleHTMLCongressFields($document);
-        $this->handleHTMLMailLinks($document);
         $this->handleHTMLLists($document);
         $this->congressFields->handleHTMLCongressStuff($document);
         $this->intermediaries->handleHTMLIntermediaries($document);
@@ -1052,42 +1051,6 @@ class MarkdownExt {
             } else {
                 $fieldNode->replace($this->createError($doc));
             }
-        }
-    }
-
-    protected function handleHTMLMailLinks($doc) {
-        $anchors = $doc->find('a');
-        foreach ($anchors as $anchor) {
-            $href = $anchor->getAttribute('href');
-            if (!str_starts_with($href, 'mailto:')) {
-                continue;
-            }
-            $href = substr($href, strlen('mailto:'));
-            // split off ?query params
-            $hrefParts = explode('?', $href, 2);
-            $mailAddress = $hrefParts[0];
-            $params = $hrefParts[1] ?? '';
-
-            $textContent = trim($anchor->text());
-            if (mb_strtolower($textContent) !== mb_strtolower($mailAddress)) {
-                // can't obfuscate with contents
-                $addrParts = explode('@', $mailAddress, 2);
-                if ($params) {
-                    $anchor->setAttribute('data-params', $params);
-                }
-                $anchor->setAttribute('data-extra2', $addrParts[1]);
-                $anchor->setAttribute('data-extra', $addrParts[0]);
-                $anchor->setAttribute('href', 'javascript:void(0)');
-                $anchor->setAttribute('class', ($anchor->getAttribute('class') ?: '') . ' non-interactive-address');
-                continue;
-            }
-
-            $mailAnchor = Utils::obfuscateEmail($mailAddress);
-            if ($params) {
-                $mailAnchor->setAttribute('data-params', $params);
-            }
-
-            $anchor->replace($mailAnchor);
         }
     }
 
