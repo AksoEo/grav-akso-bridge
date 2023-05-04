@@ -43,6 +43,7 @@ class AksoTwigExt extends AbstractExtension {
     }
 
     public function akso_currency($input, $currency): string {
+        if ($input === null) return '?';
         return Utils::formatCurrency($input, $currency);
     }
 }
