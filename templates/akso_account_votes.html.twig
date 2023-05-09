@@ -70,6 +70,11 @@
             </li>
             {% endfor %}
         </ul>
+        {% if account.votes is empty %}
+            <div class="account-votes-empty">
+                {{ akso_locale.account_votes.no_votes }}
+            </div>
+        {% endif %}
     {% elseif account.page == 'vote' %}
         <div class="vote-detail">
             {% set vote = account.vote %}
