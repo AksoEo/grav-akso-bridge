@@ -206,8 +206,12 @@ class AksoBridge {
         return $this->request('-totp', array());
     }
 
-    public function forgotPassword(string $username) {
-        return $this->request('forgot_pw', array('un' => urlencode($username)));
+    public function forgotPassword(string $username, string $org, bool $create) {
+        return $this->request('forgot_pw', array(
+            'un' => urlencode($username),
+            'org' => $org,
+            'create' => $create,
+        ));
     }
 
     public function createPassword(string $username, string $password, string $token) {

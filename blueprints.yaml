@@ -57,6 +57,14 @@ form:
     payments_host:
       type: text
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.PAYMENTS_HOST
+    account_org:
+      type: select
+      label: PLUGIN_AKSO_BRIDGE.SETTINGS.ACCOUNT_ORG
+      default: 'akso'
+      options:
+        akso: 'AKSO'
+        uea: 'UEA'
+        tejo: 'TEJO'
     vote_orgs:
       type: selectize
       label: PLUGIN_AKSO_BRIDGE.SETTINGS.VOTE_ORGS

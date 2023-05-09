@@ -36,11 +36,11 @@
                     {{ akso_locale.login.username }}
                 </label>
                 <input
-                        id="akso-login-username"
-                        name="username"
-                        type="text"
-                        value="{{ akso_login_username|e('html_attr') }}"
-                        {% if not akso_login_username|e('html_attr') %} autofocus {% endif %} />
+                    id="akso-login-username"
+                    name="username"
+                    type="text"
+                    value="{{ akso_login_username|e('html_attr') }}"
+                    {% if not akso_login_username|e('html_attr') %} autofocus {% endif %} />
             </div>
             <div class="form-aux">
                 <input type="hidden" name="return" value="{{ akso_login_return_path|e('html_attr') }}" />

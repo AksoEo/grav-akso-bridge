@@ -544,13 +544,14 @@ const messageHandlers = {
             }
         }
     },
-    forgot_pw: async (conn, { un }) => {
+    forgot_pw: async (conn, { un, create, org }) => {
         assertType(un, 'string', 'expected un to be a string');
+        assertType(org, 'string', 'expected org to be a string');
         try {
             const res = await conn.client.req({
                 method: 'POST',
-                path: `/codeholders/${un}/!forgot_password`,
-                body: { org: 'uea' },
+                path: `/codeholders/${un}/!${create ? 'create' : 'forgot'}_password`,
+                body: { org },
                 _allowLoggedOut: true,
             });
             return { k: res.ok, sc: res.res.status, h: {}, b: res.body };

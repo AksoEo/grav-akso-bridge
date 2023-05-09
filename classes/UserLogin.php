@@ -148,7 +148,31 @@ class UserLogin {
         if (isset($post['reset_password'])) {
             // we're resetting the password actually
 
-            $res = $this->bridge->forgotPassword($canonUsername);
+            $app = new AppBridge();
+            $app->open();
+            $res = $app->bridge->get("/codeholders", array(
+                'filter' => array(
+                    '$or' => [
+                        array('newCode' => $canonUsername),
+                        array('oldCode' => $canonUsername),
+                        array('email' => $canonUsername),
+                    ],
+                ),
+                'fields' => ['hasPassword'],
+                'limit' => 2,
+            ));
+            if (!$res['k']) {
+                Grav::instance()['log']->error('Failed to fetch codeholders for reset password: ' . $res['b']);
+                return array(
+                    'akso_login_error' => $this->plugin->locale['login']['generic_error'],
+                );
+            }
+            if (count($res['b']) === 1) {
+                $hasPassword = $res['b'][0]['hasPassword'];
+                $org = Grav::instance()['config']->get('plugins.akso-bridge.account_org') ?? 'akso';
+                $res = $this->bridge->forgotPassword($canonUsername, $org, !$hasPassword);
+            }
+
             if (!$res['k']) {
                 return array(
                     'akso_login_error' => $this->plugin->locale['login']['generic_error'],
