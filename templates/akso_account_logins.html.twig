@@ -10,7 +10,9 @@
     {% for item in account.logins %}
         <li class="login-item">
             <div class="item-timestamp">
-                {{item.time|date("c")}}
+                <time class="dyn-timestamp" datetime="{{ item.time|date('c') }}">
+                    {{item.time|akso_datetime}}
+                </time>
             </div>
             <div class="item-location">
                 <span class="item-label">{{akso_locale.account.logins_location}}:</span>
