@@ -270,7 +270,7 @@ class MarkdownExt {
 
         $markdown->addBlockType('[', 'AksoCongresses');
         $markdown->blockAksoCongresses = function($line) use ($self) {
-            if (preg_match('/^\[\[kongreso(\s+tempokalkulo)?\s+(\d+)\/(\d+)\s+(\S+)(?:\s+(\S+))?]]/', $line['text'], $matches)) {
+            if (preg_match('/^\[\[kongreso(\s+tempokalkulo)?\s+(\d+)\/(\d+)\s+(\S+?)(?:\s+(\S+?))?]]/', $line['text'], $matches)) {
                 $showCountdown = isset($matches[1]) && $matches[1];
                 $congressId = $matches[2];
                 $instanceId = $matches[3];
