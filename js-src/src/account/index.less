@@ -279,14 +279,63 @@
 }
 
 .account-notifs-summary {
-    padding: 0.5em 1em;
-    display: flex;
-    gap: 1em;
-    align-items: center;
-    justify-content: space-between;
+    .inner-header {
+        padding: 0.5em 1em;
+        padding-bottom: 0.2em;
+        display: flex;
+        gap: 1em;
+        align-items: center;
+        justify-content: space-between;
+    }
 
     .notifs-title {
         margin: 0;
+    }
+
+    .global-prefs-summary {
+        padding: 0 1em;
+        opacity: 0.8;
+    }
+
+    .newsletters-summary {
+        .inner-title {
+            padding: 0 1rem;
+            margin: 0;
+            margin-top: 0.5em;
+        }
+        .newsletter-items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            .newsletter-item {
+                padding: 0.3em 1em;
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: wrap;
+
+                .newsletter-org {
+                    border: 1px solid rgb(var(--light-separator));
+                    border-radius: var(--radius);
+                    padding: 0.1em 0.2em;
+                    font-size: smaller;
+                    text-transform: uppercase;
+                }
+
+                .newsletter-status {
+                    opacity: 0.8;
+                }
+
+                & + li {
+                    border-top: 1px solid rgb(var(--light-separator));
+                }
+            }
+
+            .newsletters-more {
+                padding: 0.2em 1em;
+                color: ~"rgb(var(--fg) / 0.8)";
+            }
+        }
     }
 }
 

@@ -1,13 +1,14 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridgePlugin;
 use Grav\Plugin\AksoBridge\Utils;
 
 class UserNotifications {
     private $plugin, $app, $bridge;
 
-    public function __construct($plugin, $app, $bridge, $path) {
+    public function __construct($plugin, $app, $bridge) {
         $this->plugin = $plugin;
         $this->app = $app;
         $this->bridge = $bridge;
@@ -59,6 +60,30 @@ class UserNotifications {
         } else {
             throw new \Exception('could not unlink telegram');
         }
+    }
+
+    function getSubscribedNewslettersSummary() {
+        $newsletterOrgs = $this->plugin->getGrav()['config']->get('plugins.akso-bridge.newsletter_orgs');
+        $res = $this->bridge->get('/codeholders/self/newsletter_subscriptions', array(
+            'fields' => ['id', 'org', 'name'],
+            'filter' => array(
+                'org' => array('$in' => $newsletterOrgs),
+            ),
+            'order' => [['name', 'desc']],
+            'offset' => 0,
+            'limit' => 10,
+        ));
+        if (!$res['k']) {
+            Grav::instance()['log']->warn('Failed to fetch codeholder newsletter subscriptions: ' . $res['b']);
+            return array(
+                'total' => -1,
+                'items' => [],
+            );
+        }
+        return array(
+            'total' => $res['h']['x-total-items'],
+            'items' => $res['b'],
+        );
     }
 
     private $newsletters = null;

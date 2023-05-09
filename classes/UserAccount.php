@@ -526,6 +526,20 @@ class UserAccount {
         );
     }
 
+    function renderNotifications() {
+        $notifs = new UserNotifications($this->plugin, $this->app, $this->bridge);
+        $isTelegramLinked = $notifs->isTelegramLinked();
+        $globalPrefs = $notifs->getGlobalNotifPrefs();
+        $subscribed = $notifs->getSubscribedNewslettersSummary();
+
+        return array(
+            'link' => $this->notifsPath,
+            'global_prefs' => $globalPrefs,
+            'is_telegram_linked' => $isTelegramLinked,
+            'subscribed' => $subscribed,
+        );
+    }
+
     private function runCancelChgReq() {
         $state = 'none';
         $submitLink = $this->cancelRequestPath;
@@ -731,6 +745,7 @@ class UserAccount {
             $congressParts = $this->renderCongressParticipations();
             $resetPassword = $this->renderResetPassword();
             $totpSetup = $this->renderTotpSetup();
+            $notifications = $this->renderNotifications();
             $pendingReq = $this->getPendingRequest();
             $pendingDetails = null;
             if ($pendingReq) {
@@ -753,13 +768,13 @@ class UserAccount {
                 'congress_participations' => $congressParts,
                 'reset_password' => $resetPassword,
                 'totp_setup' => $totpSetup,
+                'notifications' => $notifications,
                 'logins_link' => $this->loginsPath,
                 'editing' => $this->editing,
                 'edit_link' => $this->editPath,
                 'cancel_request_link' => $this->cancelRequestPath,
                 'edit_picture_link' => $this->editPicturePath,
                 'registration_link' => $this->plugin->registrationPath,
-                'notifs_link' => $this->notifsPath,
             );
         } else if ($this->page === 'logins') {
             $countries = [];

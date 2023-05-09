@@ -573,10 +573,49 @@
                 </a>
             </div>
             <div class="account-notifs-summary account-section-box">
-                <h2 class="notifs-title">{{ akso_locale.account_notifs.title }}</h2>
-                <a class="link-button" href="{{ account.notifs_link }}">
-                    {{ akso_locale.account_notifs.manage }}
-                </a>
+                <div class="inner-header">
+                    <h2 class="notifs-title">{{ akso_locale.account_notifs.title }}</h2>
+                    <a class="link-button" href="{{ account.notifications.link }}">
+                        {{ akso_locale.account_notifs.manage }}
+                    </a>
+                </div>
+                <div class="global-prefs-summary">
+                    {% if account.notifications.is_telegram_linked %}
+                        {{ akso_locale.account_notifs['summary_global_' ~ account.notifications.global_prefs] }}
+                    {% else %}
+                        {{ akso_locale.account_notifs.summary_global_e }}
+                    {% endif %}
+                </div>
+                {% if account.notifications.subscribed.total > 0 %}
+                    <div class="newsletters-summary">
+                        <h3 class="inner-title">{{ akso_locale.account_notifs.newsletters_title }}</h3>
+                        <ul class="newsletter-items">
+                            {% for newsletter in account.notifications.subscribed.items %}
+                                <li class="newsletter-item">
+                                    <div class="newsletter-info">
+                                        <span class="newsletter-org">{{ newsletter.org }}</span>
+                                        {{ newsletter.name }}
+                                    </div>
+                                    <div class="newsletter-status">
+                                        {{ akso_locale.account_notifs.summary_newsletter_subscribed }}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                            {% set rest_count = account.notifications.subscribed.total - count(account.notifications.subscribed.items) %}
+                            {% if rest_count > 0 %}
+                                <li class="newsletters-more">
+                                    {% if rest_count == 1 %}
+                                        {{ akso_locale.account_notifs.summary_newsletters_more_1 }}
+                                    {% else %}
+                                        {{ akso_locale.account_notifs.summary_newsletters_more_n_0 }}
+                                        {{ rest_count }}
+                                        {{ akso_locale.account_notifs.summary_newsletters_more_n_1 }}
+                                    {% endif %}
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                {% endif %}
             </div>
             {% if account.details.codeholderType == 'human' %}
                 <div class="account-memberships account-section-box">
