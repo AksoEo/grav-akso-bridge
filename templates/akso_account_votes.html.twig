@@ -102,6 +102,7 @@
 
             {% set context = { akso_user_is_member, akso_locale } %}
             {% macro render_stv_ballot(vote, ballot, context, verbose) %}
+                {% import 'partials/akso_vote_result.html.twig' as voteResult %}
                 {% if ballot is empty %}
                     <div class="vote-ballot empty-ballot">
                         {{context.akso_locale.account_votes.ranks_empty_ballot}}
@@ -117,6 +118,7 @@
                 {% endif %}
             {% endmacro %}
             {% macro render_rp_ballot(vote, ballot, context, verbose) %}
+                {% import 'partials/akso_vote_result.html.twig' as voteResult %}
                 {% if ballot is empty %}
                     <div class="vote-ballot empty-ballot">
                         {{context.akso_locale.account_votes.ranks_empty_ballot}}
@@ -138,6 +140,7 @@
                 {% endif %}
             {% endmacro %}
             {% macro render_tm_ballot(vote, ballot, context, verbose) %}
+                {% import 'partials/akso_vote_result.html.twig' as voteResult %}
                 {% if ballot is empty %}
                     <div class="vote-ballot empty-ballot">
                         {{context.akso_locale.account_votes.ranks_empty_ballot}}
@@ -198,9 +201,11 @@
                             <img src="/user/plugins/akso-bridge/assets/votes/voted.svg" />
                             {{akso_locale.account_votes.vote_status_voted}}
                         </div>
-                        <div class="review-ballot">
-                            {{_self.render_ballot(vote, vote.ballot.ballot, context, false)}}
-                        </div>
+                        {% if not vote.ballotsSecret %}
+                            <div class="review-ballot">
+                                {{_self.render_ballot(vote, vote.ballot.ballot, context, false)}}
+                            </div>
+                        {% endif %}
                         {% if vote.ballotsSecret %}
                         <div class="review-secret">
                             {{akso_locale.account_votes.vote_review_secret}}

@@ -1,6 +1,7 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridgePlugin;
 use Grav\Plugin\AksoBridge\Utils;
 
@@ -205,9 +206,26 @@ class UserVotes {
             if ($vote['type'] == 'yn' || $vote['type'] == 'ynb') {
                 $choice = $_POST['choice'];
 
-                $res = $this->bridge->put("/codeholders/self/votes/$voteId/ballot", array(
-                    'ballot' => $choice,
-                ), [], []);
+                if (isset($_POST['ballot'])) {
+                    try {
+                        $ballot = json_decode($_POST['choice']);
+                        if (gettype($ballot) === 'string') $choice = $ballot;
+                    } catch (\Exception $e) {}
+                }
+
+                if ($action === 'vote') {
+                    return array(
+                        'confirm' => true,
+                        'ballot' => $choice,
+                        'ballot_coded' => json_encode($choice),
+                    );
+                } else if ($action === 'confirm') {
+                    $res = $this->bridge->put("/codeholders/self/votes/$voteId/ballot", array(
+                        'ballot' => $choice,
+                    ), [], []);
+                } else {
+                    return array();
+                }
             } else if ($vote['type'] === 'stv' || $vote['type'] === 'rp') {
                 $optionCount = count($vote['options']);
                 $ranks = isset($_POST['ranks']) && gettype($_POST['ranks']) == 'array' ? $_POST['ranks'] : [];
@@ -328,6 +346,7 @@ class UserVotes {
             if ($res['k']) {
                 return array('message' => $this->plugin->locale['account_votes']['submit_msg_success']);
             } else if ($res['sc'] == 400) {
+                Grav::instance()['log']->error('Failed to submit vote: ' . $res['b']);
                 return array('values' => $rvalue, 'error' => $this->plugin->locale['account_votes']['submit_err_bad_request']);
             } else if ($res['sc'] == 404) {
                 return array('values' => $rvalue, 'error' => $this->plugin->locale['account_votes']['submit_err_not_allowed']);
