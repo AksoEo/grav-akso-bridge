@@ -556,7 +556,7 @@ const messageHandlers = {
             });
             return { k: res.ok, sc: res.res.status, h: {}, b: res.body };
         } catch (err) {
-            return { k: false, sc: err.statusCode, h: {}, b: err.toString() };
+            return { k: false, sc: err.statusCode, h: {}, b: err.stack || err.toString() };
         }
     },
     create_pw: async (conn, { un, pw, tok }) => {
@@ -575,7 +575,7 @@ const messageHandlers = {
             });
             return { k: res.ok, sc: res.res.status, h: {}, b: res.body };
         } catch (err) {
-            return { k: false, sc: err.statusCode, h: {}, b: err.toString() };
+            return { k: false, sc: err.statusCode, h: {}, b: err.stack || err.toString() };
         }
     },
     get: async (conn, { p, q, c }) => {
@@ -606,7 +606,7 @@ const messageHandlers = {
                 k: false,
                 sc: err.statusCode,
                 h: {},
-                b: err.toString(),
+                b: err.stack || err.toString(),
             };
         }
     },
@@ -627,7 +627,7 @@ const messageHandlers = {
                 k: false,
                 sc: err.statusCode,
                 h: {},
-                b: err.toString(),
+                b: err.stack || err.toString(),
             };
         }
     },
@@ -663,7 +663,7 @@ const messageHandlers = {
                 k: false,
                 sc: err.statusCode,
                 h: {},
-                b: err.toString(),
+                b: err.stack || err.toString(),
             };
         }
     },
@@ -699,7 +699,7 @@ const messageHandlers = {
                 k: false,
                 sc: err.statusCode,
                 h: {},
-                b: err.toString(),
+                b: err.stack || err.toString(),
             };
         }
     },
@@ -721,7 +721,7 @@ const messageHandlers = {
                 k: false,
                 sc: err.statusCode,
                 h: {},
-                b: err.toString(),
+                b: err.stack || err.toString(),
             };
         }
     },
@@ -789,7 +789,7 @@ const messageHandlers = {
             });
             return { s: true, v: res, e: null };
         } catch (err) {
-            return { s: false, v: null, e: err.toString() };
+            return { s: false, v: null, e: err.stack || err.toString() };
         }
     },
     currencies: async (conn) => {
@@ -974,7 +974,7 @@ const messageHandlers = {
             const number = phoneUtil.parse(n, c.toUpperCase());
             return { s: true, n: phoneUtil.format(number, PhoneNumberFormat.E164) };
         } catch (err) {
-            return { s: false, e: err.toString() };
+            return { s: false, e: err.stack || err.toString() };
         }
     },
     generate_totp: async (conn, { u }) => {
