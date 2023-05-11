@@ -353,7 +353,7 @@ class ClientHandler {
             this.send({
                 t: '~!',
                 i: message.i,
-                m: err.toString(),
+                m: err.stack || err.toString(),
             });
         }).then(() => {
             this.waitTasks--;
