@@ -446,9 +446,13 @@ class Magazines {
         $isSingleMagazine = false;
 
         $magazines = null;
+        $accessMessages = array();
         if (isset($header->magazines)) {
             $magazines = explode(',', $header->magazines);
             $isSingleMagazine = count($magazines) == 1;
+        }
+        if (isset($header->magazine_access_messages)) {
+            $accessMessages = $header->magazine_access_messages;
         }
 
         if (!$path) {
@@ -607,6 +611,11 @@ class Magazines {
                 die();
             }
 
+            $accessMessage = null;
+            if (!$canRead && isset($accessMessages[$magazine['id']])) {
+                $accessMessage = $this->bridge->renderMarkdown($accessMessages[$magazine['id']], ['emphasis', 'strikethrough', 'link'])['c'];
+            }
+
             return array(
                 'path_components' => $pathComponents,
                 'type' => 'edition',
@@ -616,6 +625,7 @@ class Magazines {
                     $route['magazine'], $route['edition'], $magazine['name'], $edition['idHuman']
                 ),
                 'can_read' => $canRead,
+                'access_message' => $accessMessage,
                 'is_single_magazine' => $isSingleMagazine,
                 'title' => $this->plugin->locale['magazines']['title_prefix'] . $magazine['name']
                     . ': ' . $edition['idHuman'],

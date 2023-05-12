@@ -45,15 +45,15 @@
                                         <a class="download-button link-button" href="{{edition.downloads.pdf.link}}">
                                             <img class="download-icon" src="/user/plugins/akso-bridge/assets/files/pdf.svg" draggable="false" aria-hidden="true" />
                                             <span class="download-label">
-                                    {{akso_locale.magazines.edition_downloads_download_pdf}}
-                                </span>
+                                                {{akso_locale.magazines.edition_downloads_download_pdf}}
+                                            </span>
                                         </a>
                                     {% elseif edition.downloads.epub %}
                                         <a class="download-button link-button" href="{{edition.downloads.epub.link}}">
                                             <img class="download-icon" src="/user/plugins/akso-bridge/assets/files/epub.svg" draggable="false" aria-hidden="true" />
                                             <span class="download-label">
-                                    {{akso_locale.magazines.edition_downloads_download_epub}}
-                                </span>
+                                                {{akso_locale.magazines.edition_downloads_download_epub}}
+                                            </span>
                                         </a>
                                     {% endif %}
                                 {% endif %}
@@ -139,10 +139,15 @@
                         </a>
                     {% else %}
                         <span class="downloads-empty-notice">
-                    {{akso_locale.magazines.edition_downloads_none}}
-                </span>
+                            {{akso_locale.magazines.edition_downloads_none}}
+                        </span>
                     {% endif %}
                 </div>
+                {% if not akso_magazines.can_read and akso_magazines.access_message %}
+                    <div class="edition-access-message">
+                        {{ akso_magazines.access_message|raw }}
+                    </div>
+                {% endif %}
             </div>
         </div>
         {% if akso_magazines.toc_entries is not empty %}

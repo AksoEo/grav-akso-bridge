@@ -7,4 +7,11 @@ form:
   fields:
     header.magazines:
       type: akso_magazine_list
-      label: 'Revuoj montrotaj'
+      label: PLUGIN_AKSO_BRIDGE.SETTINGS.MAGAZINE_PAGE.MAGAZINES_SHOWN
+    header.magazine_access_messages:
+      type: array
+      label: PLUGIN_AKSO_BRIDGE.SETTINGS.MAGAZINE_PAGE.MAGAZINE_ACCESS_MESSAGES
+      help: PLUGIN_AKSO_BRIDGE.SETTINGS.MAGAZINE_PAGE.MAGAZINE_ACCESS_MESSAGES_DESC
+      placeholder_key: PLUGIN_AKSO_BRIDGE.SETTINGS.MAGAZINE_PAGE.MAGAZINE_ACCESS_MESSAGES_PLACEHOLDER_KEY
+      placeholder_value: PLUGIN_AKSO_BRIDGE.SETTINGS.MAGAZINE_PAGE.MAGAZINE_ACCESS_MESSAGES_PLACEHOLDER_VALUE
+      value_type: textarea

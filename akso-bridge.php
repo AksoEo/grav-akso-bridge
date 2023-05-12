@@ -481,6 +481,9 @@ class AksoBridgePlugin extends Plugin {
                 if (isset($page->header()->magazines)) {
                     $generatedPage->header()->magazines = $page->header()->magazines;
                 }
+                if (isset($page->header()->magazine_access_messages)) {
+                    $generatedPage->header()->magazine_access_messages = $page->header()->magazine_access_messages;
+                }
                 $pages->addPage($generatedPage, $currentPath);
             }
         }

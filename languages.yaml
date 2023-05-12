@@ -29,3 +29,9 @@ en:
         TITLE: Content Security Policy
         IMG: Image Sources
         CHILD: IFrame Sources
+      MAGAZINE_PAGE:
+        MAGAZINES_SHOWN: Revuoj montrotaj
+        MAGAZINE_ACCESS_MESSAGES: '[[Magazine access messages]]'
+        MAGAZINE_ACCESS_MESSAGES_DESC: '[[Message shown when user does not have access to a magazine. You can use markdown in the message.]]'
+        MAGAZINE_ACCESS_MESSAGES_PLACEHOLDER_KEY: '[[Magazine ID]]'
+        MAGAZINE_ACCESS_MESSAGES_PLACEHOLDER_VALUE: '[[Message]]'
