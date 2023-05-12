@@ -16,6 +16,7 @@ window.aksoAdminLocale = {
         sendToSubs: {
             send: 'Sendi al abonantoj',
             willSend: 'Sendos al ĉiuj abonantoj',
+            willSendDescription: '[[Press the save button in the corner to confirm your action.]]',
             didSend: 'Sendita al abonantoj',
             willUnset: 'Forigos etikedon “Jam sendita al abonantoj”',
         },

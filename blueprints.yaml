@@ -87,16 +87,16 @@ form:
       type: section
       title: PLUGIN_AKSO_BRIDGE.SETTINGS.GK.TITLE
       fields:
-        newsletter:
+        gk_newsletter:
           type: number
           label: PLUGIN_AKSO_BRIDGE.SETTINGS.GK.NEWSLETTER
-        from:
+        gk_from:
           type: string
           label: PLUGIN_AKSO_BRIDGE.SETTINGS.GK.FROM
-        from_name:
+        gk_from_name:
           type: string
           label: PLUGIN_AKSO_BRIDGE.SETTINGS.GK.FROM_NAME
-        reply_to:
+        gk_reply_to:
           type: string
           label: PLUGIN_AKSO_BRIDGE.SETTINGS.GK.REPLY_TO
     csp:

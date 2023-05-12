@@ -36,18 +36,31 @@ class GkSendToSubscribers {
             );
         }
 
+        $org = $plugin->getGrav()['config']->get('plugins.akso-bridge.newsletter_send_org');
+        $from = $plugin->getGrav()['config']->get('plugins.akso-bridge.gk_from');
+        $fromName = $plugin->getGrav()['config']->get('plugins.akso-bridge.gk_from_name');
+        $replyTo = $plugin->getGrav()['config']->get('plugins.akso-bridge.gk_reply_to') ?: null;
+
+        if (!$org || !$from || !$fromName) {
+            header('Content-Type: text/plain');
+            echo("Eraro\n\n");
+            echo($plugin->locale['admin']['gk_send_to_subs_missing_config']);
+            die(400);
+        }
+
         $notifTemplate = $app->bridge->post('/notif_templates', array(
             'base' => 'inherit',
-            'org' => $plugin->getGrav()['config']->get('plugins.akso-bridge.newsletter_send_org'),
+            'org' => $org,
             'name' => $title,
             'intent' => 'newsletter',
             'subject' => $title,
-            'from' => $plugin->getGrav()['config']->get('plugins.akso-bridge.gk.from'),
-            'fromName' => $plugin->getGrav()['config']->get('plugins.akso-bridge.gk.from_name'),
-            'replyTo' => $plugin->getGrav()['config']->get('plugins.akso-bridge.gk.reply_to'),
+            'from' => $from,
+            'fromName' => $fromName,
+            'replyTo' => $replyTo,
             'modules' => $modules,
         ), [], []);
         if (!$notifTemplate['k']) {
+            header('Content-Type: text/plain');
             echo("Eraro\n\n");
             echo($notifTemplate['b']);
             die($notifTemplate['sc']);
@@ -57,7 +70,14 @@ class GkSendToSubscribers {
 
     function run($title, $content, $url) {
         $templateId = GkSendToSubscribers::createNotifTemplate($this->plugin, $this->app, $title, $content, $url);
-        $newsletterId = $this->plugin->getGrav()['config']->get('plugins.akso-bridge.gk.newsletter');
+        $newsletterId = $this->plugin->getGrav()['config']->get('plugins.akso-bridge.gk_newsletter');
+
+        if (!$newsletterId) {
+            header('Content-Type: text/plain');
+            echo("Eraro\n\n");
+            echo($this->plugin->locale['admin']['gk_send_to_subs_missing_config']);
+            die(400);
+        }
 
         $res = $this->app->bridge->post("/newsletters/$newsletterId/!send_notif_template", array(
             'notifTemplateId' => $templateId,
@@ -65,6 +85,7 @@ class GkSendToSubscribers {
         ), [], []);
 
         if (!$res['k']) {
+            header('Content-Type: text/plain');
             echo('Eraro');
             echo('');
             echo($res['b']);

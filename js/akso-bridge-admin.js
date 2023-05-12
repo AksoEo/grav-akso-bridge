@@ -522,6 +522,8 @@ $(document).ready(() => {
                 width: '100%',
                 height: '0',
                 margin: '0',
+                wordBreak: 'break-word',
+                whiteSpace: 'pre-wrap',
             });
 
             fetchRendered().then(result => {
@@ -548,6 +550,9 @@ $(document).ready(() => {
             sendButton.className = 'button';
             sendButton.type = 'button';
             checkbox.parentNode.appendChild(sendButton);
+
+            const sendDescription = document.createElement('p');
+            checkbox.parentNode.appendChild(sendDescription);
 
             const previewButtonContainer = document.createElement('div');
             previewButtonContainer.style.marginTop = '1em';
@@ -576,6 +581,7 @@ $(document).ready(() => {
                     sendButton.textContent = checkbox.checked
                         ? locale.sendToSubs.willSend
                         : locale.sendToSubs.send;
+                    sendDescription.textContent = checkbox.checked ? locale.sendToSubs.willSendDescription : '';
                     if (checkbox.checked) {
                         const icon = document.createElement('i');
                         icon.className = 'fa fa-send';
