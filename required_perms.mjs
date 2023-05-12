@@ -81,6 +81,9 @@ export function getRequiredPerms(orgs) {
 
         memberFields.push(`membership`);
         // - used for registration
+
+        memberFields.push(`hasPassword`);
+        // - used to distinguish create/forgot password
     }
 
     perms.push(`codeholders.change_requests.read`, `codeholders.change_requests.update`);
