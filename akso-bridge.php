@@ -140,6 +140,7 @@ class AksoBridgePlugin extends Plugin {
         $this->userLogin->tryLogin();
         $this->bridge = $this->userLogin->bridge;
         $this->aksoUser = $this->userLogin->aksoUser;
+        $unsetAksoCookies = false;
 
         {
             if ($this->aksoUser !== null && $this->aksoUser['totp']) {
@@ -161,15 +162,18 @@ class AksoBridgePlugin extends Plugin {
                     $this->redirectTarget = $this->getReferrerPath();
                     $this->redirectStatus = 303;
                 }
-            } else if (!$this->aksoUser && isset($_SESSION['akso_unset_cookies'])) {
-                // manually unset these cookies here because the redirect messes this up :(
-                unset($_SESSION['akso_unset_cookies']);
-                setcookie('akso_session', null, -1, '/');
-                setcookie('akso_session.sig', null, -1, '/');
+            } else if (!$this->aksoUser && (isset($_SESSION['akso_unset_cookies']) || isset($_COOKIE['akso_session']))) {
+                $unsetAksoCookies = true;
             }
         }
         $this->updateFormattedName();
         $this->userLogin->flush();
+
+        if ($unsetAksoCookies) {
+            unset($_SESSION['akso_unset_cookies']);
+            setcookie('akso_session', null, -1, '/');
+            setcookie('akso_session.sig', null, -1, '/');
+        }
 
         if ($this->redirectTarget !== null) {
             $this->grav->redirectLangSafe($this->redirectTarget, $this->redirectStatus);
