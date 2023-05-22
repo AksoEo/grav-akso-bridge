@@ -69,33 +69,33 @@ class CongressRegistrationForm extends Form {
             $args['codeholderId'] = $ch['id'];
         }
         $this->didSubmit = true;
+        $congressId = $this->congressId;
+        $instanceId = $this->instanceId;
 
         if ($this->dataId) {
             // PATCH
-            $res = $this->app->bridge->patch('/congresses/' . $this->congressId . '/instances/' . $this->instanceId . '/participants/' . $this->dataId, $args, [], []);
+            $dataId = $this->dataId;
+            $res = $this->app->bridge->patch('/congresses/' . $congressId . '/instances/' . $instanceId . '/participants/' . $dataId, $args, [], []);
             if ($res['k']) {
                 $this->message = $this->localize('msg_patch_success');
             } else if ($res['sc'] === 400) {
                 $this->error = $this->localize('err_submit_invalid');
+                Grav::instance()['log']->error("error updating congress registration in congress $congressId instance $instanceId data id $dataId: " . $res['b']);
             } else {
-                $congressId = $this->congressId;
-                $instanceId = $this->instanceId;
-                $dataId = $this->dataId;
                 Grav::instance()['log']->error("failed to update congress registration in congress $congressId instance $instanceId data id $dataId: " . $res['b']);
                 $this->error = $this->localize('err_submit_generic');
             }
         } else {
             // new registration
-            $res = $this->app->bridge->post('/congresses/' . $this->congressId . '/instances/' . $this->instanceId . '/participants', $args, [], []);
+            $res = $this->app->bridge->post('/congresses/' . $congressId . '/instances/' . $instanceId . '/participants', $args, [], []);
             if ($res['k']) {
                 $this->confirmDataId = $res['h']['x-identifier'];
             } else if ($res['sc'] === 400) {
                 $this->error = $this->localize('err_submit_invalid');
+                Grav::instance()['log']->error("error submitting congress registration in congress $congressId instance $instanceId: " . $res['b']);
             } else if ($res['sc'] === 409) {
                 $this->error = $this->localize('err_submit_already_registered');
             } else {
-                $congressId = $this->congressId;
-                $instanceId = $this->instanceId;
                 Grav::instance()['log']->error("failed to submit congress registration in congress $congressId instance $instanceId: " . $res['b']);
                 $this->error = $this->localize('err_submit_generic');
             }
