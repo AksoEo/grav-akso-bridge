@@ -1,0 +1,199 @@
+@import '../prelude';
+
+.payment-method-manual-warning-container {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.3);
+    animation: payment-method-manual-warning-in 0.3s;
+    padding: 1em;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+
+    @keyframes payment-method-manual-warning-in {
+        0% {
+            opacity: 0;
+        }
+    }
+
+    @keyframes payment-method-manual-warning-dialog-in {
+        0% {
+            transform: scale(1.1);
+        }
+    }
+
+    .inner-dialog {
+        background: rgb(var(--bg));
+        border-radius: var(--radius);
+        box-shadow: @shade-both;
+        width: 100%;
+        max-width: 50ch;
+        box-sizing: border-box;
+        max-height: 95vh;
+        overflow: auto;
+        animation: payment-method-manual-warning-dialog-in 0.3s cubic-bezier(.3, 1.5, .4, 1);
+
+        & > header {
+            padding: 1em;
+            background: rgb(var(--bg));
+
+            .back-button {
+                &:not(:active) {
+                    background: none;
+                    color: rgb(var(--accent));
+                }
+
+                .back-icon {
+                    width: 1em;
+                    height: 1em;
+                    position: relative;
+                    display: inline-block;
+                    vertical-align: -0.1em;
+                    margin-left: -0.5em;
+
+                    &::before, &::after {
+                        content: '';
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        background: currentColor;
+                        width: 0.5em;
+                        height: 0.1em;
+                        transform-origin: 0.05em 0.05em;
+                        transform: rotate(-45deg);
+                    }
+                    &::after {
+                        transform: rotate(45deg);
+                    }
+                }
+            }
+
+            .inner-title {
+                margin-top: 1em;
+                font-size: 1.1em;
+                font-weight: bold;
+            }
+        }
+        & > footer {
+            padding: 1em;
+        }
+
+        & > .inner-content {
+            padding: 0 1em;
+            padding-bottom: 1em;
+
+            .inner-payment-button-preview {
+                padding: 1em;
+                background: rgb(var(--bg1));
+                border: 1px solid currentColor;
+                border-radius: var(--radius);
+                max-width: 20em;
+                margin: 1em auto 0;
+                cursor: not-allowed;
+
+                .inner-payment-button {
+                    background: rgb(var(--button-primary));
+                    color: rgb(var(--button-primary-fg));
+                    border-radius: var(--radius);
+                    box-shadow: @shade-both;
+                    padding: 0.5em 1em;
+                    width: 100%;
+                    text-align: center;
+                    box-sizing: border-box;
+                }
+            }
+
+            & > .inner-line-container {
+                & > .inner-content {
+                    animation: payment-method-manual-warning-in 1s;
+                }
+                & > .inner-footer {
+                    height: 2em;
+                    position: relative;
+
+                    &::before {
+                        content: '';
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        top: 50%;
+                        height: 1px;
+                        background: rgb(var(--accent));
+                    }
+                }
+                & > .inner-footer .inner-next-button {
+                    display: none;
+                }
+                & > .inner-footer.is-visible .inner-next-button {
+                    position: absolute;
+                    right: 1em;
+                    top: 70%;
+                    transform: translateY(-50%);
+                    box-shadow: @shade-both, 0 2px 4px #0008;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5em;
+                    animation: payment-method-manual-warning-button-in 2s cubic-bezier(.2, .3, 0, 1);
+
+                    @keyframes payment-method-manual-warning-button-in {
+                        0% {
+                            opacity: 0;
+                            transform: translateY(-50%) scale(0.8);
+                        }
+                        100% {
+                            transform: translateY(-50%);
+                        }
+                    }
+
+                    .inner-button-prompt {
+                        position: relative;
+                        margin-right: -0.5em;
+                        border: 0.4em solid transparent;
+                        border-left-width: 0.5em;
+                        border-left-color: currentColor;
+                        animation: payment-method-manual-warning-inner-button-prompt 3s infinite cubic-bezier(.2, 0, .3, 1);
+                        @keyframes payment-method-manual-warning-inner-button-prompt {
+                            0% {
+                                transform: none;
+                            }
+                            50% {
+                                transform: translateX(0.2em);
+                            }
+                        }
+                    }
+                }
+                & > .inner-footer.is-activated .inner-next-button {
+                    transition: opacity 0.5s;
+                    opacity: 0;
+                }
+                & > .inner-footer.is-next .inner-next-button {
+                    display: none;
+                }
+            }
+
+            & > .inner-end-container {
+                animation: payment-method-manual-warning-in 1s;
+
+                & > .inner-footer {
+                    margin-top: 1em;
+                    text-align: right;
+
+                    .inner-submit-button {
+                        &.is-error {
+                            animation: payment-method-manual-warning-inner-submit-error 0.5s;
+                            @keyframes payment-method-manual-warning-inner-submit-error {
+                                20%, 60% {
+                                    transform: translateX(-0.3em);
+                                }
+                                40%, 80% {
+                                    transform: translateX(0.3em);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -2,6 +2,7 @@ import './index.less';
 import '../form';
 import countryCurrencies from '../../../country_currencies.ini';
 import initAddressFields from './address-fields';
+import './manual-warning';
 
 window.addEventListener('DOMContentLoaded', init);
 

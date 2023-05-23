@@ -729,12 +729,16 @@
                                             {{method.error}}
                                         </div>
                                     {% endif %}
+                                    {% set className = '' %}
+                                    {% if method.type == 'manual' %}
+                                        {% set className = 'method-show-manual-warning' %}
+                                    {% endif %}
                                     <form
                                         method="POST"
                                         {% if method.above_max_amount %}
                                         data-is-not-available
                                         {% endif %}
-                                        class="method-selection">
+                                        class="method-selection {{ className }}">
                                         <div class="method-selection-price">
                                             {{method.total_sum_rendered}}
                                         </div>
