@@ -84,6 +84,9 @@
             <div class="method-description">
                 {{ akso_congress_registration.payment_method.description_rendered|raw }}
             </div>
+            <div class="method-description">
+                {{ akso_congress_registration.payment_method.long_description_rendered|raw }}
+            </div>
             <h2 class="payment-amount">
                 {{akso_locale.registration_form.payment_outstanding}}
                 {{akso_congress_registration.payment.remaining_rendered|e}}
@@ -214,9 +217,11 @@
                             </div>
                         {% endif %}
                         <div class="method-details">
+                            {% set show_manual_warning = false %}
                             <div class="method-type">
                                 {% if method.type == 'manual' %}
                                     {{akso_locale.registration_form.payment_type_manual}}
+                                    {% set show_manual_warning = true %}
                                 {% elseif method.type == 'stripe' %}
                                     {{akso_locale.registration_form.payment_type_stripe}}
                                 {% endif %}
@@ -231,7 +236,10 @@
                             <div class="method-description">
                                 {{ method.description_rendered|raw }}
                             </div>
-                            <form method="GET" action="{{ akso_congress_registration.method_target|e('html_attr') }}" class="method-form">
+                            <form
+                                method="GET"
+                                action="{{ akso_congress_registration.method_target|e('html_attr') }}"
+                                class="method-form {{ show_manual_warning ? 'method-show-manual-warning' : '' }}">
                                 <div class="currency-select">
                                     {% if method.currencies|length > 1 %}
                                         {% set method_currency_select_id = 'payment-method-currency-' ~ method.id %}
@@ -257,10 +265,13 @@
                         </div>
                     </li>
                 {% endmacro %}
+                {% set has_method = false %}
+
                 {% if akso_congress_registration.payment_methods.other is not empty %}
                 <h4>{{akso_locale.registration_form.payment_methods_section_auto}}</h4>
                 <ul class="payment-methods">
                 {% for method in akso_congress_registration.payment_methods.auto %}
+                    {% set has_method = true %}
                     {{_self.render_payment_method(method, akso_locale, akso_congress_registration)}}
                 {% endfor %}
                 </ul>
@@ -269,8 +280,15 @@
                 <h4>{{akso_locale.registration_form.payment_methods_section_other}}</h4>
                 <ul class="payment-methods">
                 {% for method in akso_congress_registration.payment_methods.other %}
+                    {% set has_method = true %}
                     {{_self.render_payment_method(method, akso_locale, akso_congress_registration)}}
                 {% endfor %}
+                {% endif %}
+
+                {% if not has_method %}
+                    <div class="payment-methods-empty">
+                        {{ akso_locale.registration_form.payment_methods_empty }}
+                    </div>
                 {% endif %}
                 </ul>
             {% endif %}

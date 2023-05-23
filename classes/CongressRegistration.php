@@ -122,7 +122,7 @@ class CongressRegistration {
 
         if ($this->paymentMethod) {
             $res = $this->app->bridge->get('/aksopay/payment_orgs/' . $this->paymentOrg . '/methods/' . $this->paymentMethod, array(
-                'fields' => ['id', 'type', 'stripeMethods', 'name', 'descriptionPreview', 'currencies',
+                'fields' => ['id', 'type', 'stripeMethods', 'name', 'descriptionPreview', 'description', 'currencies',
                     'feePercent', 'feeFixed.val', 'feeFixed.cur', 'internal'],
             ), 60);
 
@@ -284,6 +284,11 @@ class CongressRegistration {
                     ['emphasis', 'strikethrough', 'link'],
                 )['c'];
 
+                $method['long_description_rendered'] = $this->app->bridge->renderMarkdown(
+                    $method['description'] ?: '',
+                    ['emphasis', 'strikethrough', 'link'],
+                )['c'];
+
                 return array(
                     'is_payment' => true,
                     'is_payment_method' => true,
@@ -366,7 +371,7 @@ class CongressRegistration {
                 $res = $this->app->bridge->get('/aksopay/payment_orgs/' . $this->paymentOrg . '/methods', array(
                     'fields' => ['id', 'type', 'stripeMethods', 'name', 'descriptionPreview', 'currencies',
                         'feePercent', 'feeFixed.val', 'feeFixed.cur', 'isRecommended'],
-                    'filter' => array('internal' => false),
+                    'filter' => array('internal' => false, 'type' => array('$neq' => 'intermediary')),
                     'limit' => 100,
                     'order' => [['name', 'asc']],
                 ), 60);

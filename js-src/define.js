@@ -54,7 +54,7 @@ if (!window.define) {
               .pop()
               .replace(/\.js$/i, '');
 
-          console.debug('define() on script with no ID. Inferred: ' + id);
+          //console.debug('define() on script with no ID. Inferred: ' + id);
         }
         if (modules[id]) return;
         var exports = {};
@@ -68,7 +68,7 @@ if (!window.define) {
             }
             return Promise.all(toLoad);
         }).then(function(loaded) {
-            console.debug('exec module ' + id);
+            //console.debug('exec module ' + id);
             var result = run.apply(window, loaded);
             if (!exports.default) exports.default = result;
             return exports;
