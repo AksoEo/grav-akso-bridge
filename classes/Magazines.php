@@ -69,6 +69,8 @@ class Magazines {
             return;
         }
 
+        $shouldBumpDownloadCount = !isset($_SERVER['HTTP_RANGE']);
+
         if ($entry !== '?') {
             $res = $this->bridge->get("/magazines/$magazine/editions/$edition/toc/$entry/recitation", array(
                 'fields' => ['format', 'url'],
@@ -89,6 +91,10 @@ class Magazines {
                 $this->plugin->getGrav()->fireEvent('onPageNotFound');
                 return;
             }
+
+            if ($shouldBumpDownloadCount) {
+                $this->bridge->post("/magazines/$magazine/editions/$edition/toc/$entry/recitation/$format/!bump", [], [], []);
+            }
         } else {
             if (!isset($editionInfo['downloads'][$format]) || !$editionInfo['downloads'][$format]) {
                 $this->plugin->getGrav()->fireEvent('onPageNotFound');
@@ -96,8 +102,9 @@ class Magazines {
             }
             $url = $editionInfo['downloads'][$format]['url'];
 
-            // bump download count
-            $this->bridge->post("/magazines/$magazine/editions/$edition/files/$format/!bump", [], [], []);
+            if ($shouldBumpDownloadCount) {
+                $this->bridge->post("/magazines/$magazine/editions/$edition/files/$format/!bump", [], [], []);
+            }
         }
 
         http_response_code(302); // Found
