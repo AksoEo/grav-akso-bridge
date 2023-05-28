@@ -680,15 +680,19 @@ class AksoBridgePlugin extends Plugin {
             $styleNonces .= " 'nonce-" . $sn . "'";
         }
         $extraImgSrc = $this->grav['config']->get('plugins.akso-bridge.csp_img');
+        $extraMediaSrc = $this->grav['config']->get('plugins.akso-bridge.csp_media');
         $extraChildSrc = $this->grav['config']->get('plugins.akso-bridge.csp_child');
         if ($extraImgSrc) $extraImgSrc = implode(' ', $extraImgSrc);
         else $extraImgSrc = '';
+        if ($extraMediaSrc) $extraMediaSrc = implode(' ', $extraMediaSrc);
+        else $extraMediaSrc = '';
         if ($extraChildSrc) $extraChildSrc = implode(' ', $extraChildSrc);
         else $extraChildSrc = '';
 
         $csp = [
             "default-src 'self'",
             "img-src 'self' data: " . $this->apiHost . " https://tile.openstreetmap.org " . $extraImgSrc,
+            "media-src 'self' " . $extraMediaSrc,
             "script-src 'self' " . $scriptNonces,
             "style-src 'self' 'unsafe-inline' " . $styleNonces,
             "child-src 'self' " . $extraChildSrc,

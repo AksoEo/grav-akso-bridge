@@ -1,6 +1,7 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridge\CongressPrograms;
 use Grav\Plugin\AksoBridge\Utils;
 
@@ -225,15 +226,13 @@ class CongressLocations {
         $instance = $this->instanceId;
         $locationId = $this->locationId;
         $res = $this->app->bridge->get("/congresses/$congress/instances/$instance/locations/$locationId", array(
-            'fields' => ['type', 'name', 'description', 'openHours', 'address', 'll', 'rating.rating', 'rating.type', 'rating.max', 'icon', 'externalLoc'],
+            'fields' => ['type', 'name', 'description', 'openHours', 'address', 'll', 'rating.rating', 'rating.type', 'rating.max', 'icon', 'externalLoc', 'thumbnail'],
         ), 60);
         if ($res['k']) {
             $location = $res['b'];
 
             $headerImage = null;
-            $hres = $this->app->bridge->get("/congresses/$congress/instances/$instance/locations/$locationId/thumbnail/32px", [], 60);
-            if ($hres['k']) {
-                // $imgPrefix = $this->plugin->apiHost . "/congresses/$congress/instances/$instance/locations/$locationId/thumbnail";
+            if ($location['thumbnail']) {
                 $imgPrefix = \Grav\Plugin\AksoBridgePlugin::CONGRESS_LOC_THUMBNAIL_PATH . '?' .
                     self::TH_CONGRESS . '=' . $congress . '&' .
                     self::TH_INSTANCE . '=' . $instance . '&' .
@@ -493,21 +492,24 @@ class CongressLocations {
         $instance = isset($_GET[self::TH_INSTANCE]) ? $_GET[self::TH_INSTANCE] : '?';
         $location = isset($_GET[self::TH_LOCATION]) ? $_GET[self::TH_LOCATION] : '?';
         $size = isset($_GET[self::TH_SIZE]) ? $_GET[self::TH_SIZE] : '?';
-        $path = "/congresses/$congress/instances/$instance/locations/$location/thumbnail/$size";
-
-        $res = $this->app->bridge->getRaw($path, 60);
-        if ($res['k']) {
-            header('Content-Type: ' . $res['h']['content-type']);
-            try {
-                readfile($res['ref']);
-            } finally {
-                $this->app->bridge->releaseRaw($path);
-            }
-            die();
-        } else {
+        $res = $this->app->bridge->get("/congresses/$congress/instances/$instance/locations/$location", array(
+            'fields' => ['thumbnail'],
+        ), 240);
+        if (!$res['k']) {
+            Grav::instance()['log']->error("could not load congress $congress instance $instance location $location for thumbnail: " . $res['b']);
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
-            die();
+            return;
         }
+        if (!$res['b']['thumbnail']) {
+            $this->plugin->getGrav()->fireEvent('onPageNotFound');
+            return;
+        }
+        $size = preg_replace('/px$/', '', $size);
+        $url = $res['b']['thumbnail'][$size] ?? '';
+
+        http_response_code(302); // Found
+        header('Location: ' . $url);
+        die();
     }
 
     // Renders the locations page.

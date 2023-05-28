@@ -109,6 +109,12 @@ form:
           label: PLUGIN_AKSO_BRIDGE.SETTINGS.CSP.IMG
           validate:
             type: commalist
+        csp_media:
+          type: selectize
+          size: large
+          label: PLUGIN_AKSO_BRIDGE.SETTINGS.CSP.MEDIA
+          validate:
+            type: commalist
         csp_child:
           type: selectize
           size: large

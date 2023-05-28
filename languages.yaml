@@ -28,6 +28,7 @@ en:
       CSP:
         TITLE: Content Security Policy
         IMG: Image Sources
+        MEDIA: Media Sources
         CHILD: IFrame Sources
       MAGAZINE_PAGE:
         MAGAZINES_SHOWN: Revuoj montrotaj

@@ -25,20 +25,25 @@ class Magazines {
         $magazine = isset($_GET[self::TH_MAGAZINE]) ? $_GET[self::TH_MAGAZINE] : '?';
         $edition = isset($_GET[self::TH_EDITION]) ? $_GET[self::TH_EDITION] : '?';
         $size = isset($_GET[self::TH_SIZE]) ? $_GET[self::TH_SIZE] : '?';
-        $path = "/magazines/$magazine/editions/$edition/thumbnail/$size";
 
-        $res = $this->bridge->getRaw($path, 600);
-        if ($res['k']) {
-            header('Content-Type: ' . $res['h']['content-type']);
-            try {
-                readfile($res['ref']);
-            } finally {
-                $this->bridge->releaseRaw($path);
-            }
-            die();
-        } else {
+        $res = $this->bridge->get("/magazines/$magazine/editions/$edition", array(
+            'fields' => ['thumbnail'],
+        ), 240);
+        if (!$res['k']) {
+            Grav::instance()['log']->error("could not load magazine $magazine edition $edition for thumbnail: " . $res['b']);
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
+            return;
         }
+        if (!$res['b']['thumbnail']) {
+            $this->plugin->getGrav()->fireEvent('onPageNotFound');
+            return;
+        }
+        $size = preg_replace('/px$/', '', $size);
+        $url = $res['b']['thumbnail'][$size] ?? '';
+
+        http_response_code(302); // Found
+        header('Location: ' . $url);
+        die();
     }
 
     public const DL_MAGAZINE = 'm';
@@ -64,85 +69,40 @@ class Magazines {
             return;
         }
 
-        $path = null;
-        $tryStream = false;
         if ($entry !== '?') {
-            $path = "/magazines/$magazine/editions/$edition/toc/$entry/recitation/$format";
-            $tryStream = true;
+            $res = $this->bridge->get("/magazines/$magazine/editions/$edition/toc/$entry/recitation", array(
+                'fields' => ['format', 'url'],
+            ), 240);
+            if (!$res['k']) {
+                Grav::instance()['log']->error("could not load magazine $magazine edition $edition recitations: " . $res['b']);
+                $this->plugin->getGrav()->fireEvent('onPageNotFound');
+                return;
+            }
+            $url = null;
+            foreach ($res['b'] as $file) {
+                if ($file['format'] === $format) {
+                    $url = $file['url'];
+                    break;
+                }
+            }
+            if (!$url) {
+                $this->plugin->getGrav()->fireEvent('onPageNotFound');
+                return;
+            }
         } else {
-            $path = "/magazines/$magazine/editions/$edition/files/$format";
+            if (!isset($editionInfo['downloads'][$format]) || !$editionInfo['downloads'][$format]) {
+                $this->plugin->getGrav()->fireEvent('onPageNotFound');
+                return;
+            }
+            $url = $editionInfo['downloads'][$format]['url'];
 
             // bump download count
             $this->bridge->post("/magazines/$magazine/editions/$edition/files/$format/!bump", [], [], []);
         }
 
-        $res = null;
-        if ($tryStream) {
-            $srange = [0, null];
-            $useRange = false;
-
-            if (isset($_SERVER['HTTP_RANGE'])) {
-                // copied from diversen/sendfile
-                list($a, $range) = explode("=", $_SERVER['HTTP_RANGE'], 2);
-                list($range) = explode(",", $range, 2);
-                list($range, $range_end) = explode("-", $range);
-                $range = intval($range);
-                if (!$range_end) {
-                    $range_end = null;
-                } else {
-                    $range_end = intval($range_end);
-                }
-                $srange[0] = $range;
-                $srange[1] = $range_end;
-                $useRange = true;
-            } else {
-                // the first request always has no range, so we bump here
-                $this->bridge->post("/magazines/$magazine/editions/$edition/toc/$entry/recitation/$format/!bump", [], [], []);
-            }
-
-            $res = $this->bridge->getRawStream($path, 600, $srange, function ($chunk) use ($useRange) {
-                if (isset($chunk['sc'])) {
-                    $headers = ['content-type', 'content-length', 'accept-ranges', 'cache-control', 'pragma', 'expires'];
-                    if ($useRange) {
-                        header('HTTP/1.1 206 Partial Content');
-                        $headers[] = 'content-range';
-                    } else {
-                        header('HTTP/1.1 200 OK');
-                    }
-                    foreach ($headers as $k) {
-                        if (isset($chunk['h'][$k])) {
-                            header($k . ': ' . $chunk['h'][$k]);
-                        }
-                    }
-                }
-
-                echo base64_decode($chunk['chunk']);
-                ob_flush();
-                flush();
-            });
-            if (!(isset($res['cached']) && $res['cached'])) {
-                // if the data is cached, there weren't any stream chunks and we need to run
-                // sendfile. otherwise, quit now
-                die();
-            }
-        } else {
-            $res = $this->bridge->getRaw($path, 0); // no caching because user auth
-        }
-
-        {
-            if ($res['k']) {
-                try {
-                    $sendFile = new sendfile();
-                    $sendFile->contentType($res['h']['content-type']);
-                    $sendFile->send($res['ref'], false);
-                } finally {
-                    $this->bridge->releaseRaw($path);
-                }
-                die();
-            } else {
-                throw new \Exception("Magazine download: file response not ok!\n" . $res['b']);
-            }
-        }
+        http_response_code(302); // Found
+        header('Location: ' . $url);
+        die();
     }
 
     function addEditionDownloadLinks($magazine, $edition, $magazineName, $detailed = false) {
@@ -152,7 +112,7 @@ class Magazines {
             if ($detailed) {
                 $path = "/magazines/$magazine/editions/$editionId/files";
                 $res = $this->bridge->get($path, array(
-                    'fields' => ['format', 'downloads', 'size'],
+                    'fields' => ['format', 'downloads', 'size', 'url'],
                 ), 120);
                 if ($res['k']) {
                     $files = $res['b'];
@@ -171,6 +131,7 @@ class Magazines {
                         . '?' . self::DL_MAGAZINE . '=' . $magazine
                         . '&' . self::DL_EDITION . '=' . $editionId
                         . '&' . self::DL_FORMAT . '=' . $item['format'],
+                    'url' => $item['url'],
                     'size' => $item['size'],
                 );
             }
@@ -180,7 +141,7 @@ class Magazines {
 
     function getLatestEditions($magazine, $n) {
         $res = $this->bridge->get("/magazines/$magazine/editions", array(
-            'fields' => ['id', 'idHuman', 'date', 'description', 'hasThumbnail', 'subscribers', 'subscriberFiltersCompiled'],
+            'fields' => ['id', 'idHuman', 'date', 'description', 'thumbnail', 'subscribers', 'subscriberFiltersCompiled'],
             'filter' => ['published' => true],
             'order' => [['date', 'desc']],
             'offset' => 0,
@@ -251,7 +212,7 @@ class Magazines {
         $allEditions = [];
         while (true) {
             $res = $this->bridge->get("/magazines/$magazine/editions", array(
-                'fields' => ['id', 'idHuman', 'date', 'hasThumbnail', 'subscribers', 'subscriberFiltersCompiled', 'files'],
+                'fields' => ['id', 'idHuman', 'date', 'thumbnail', 'subscribers', 'subscriberFiltersCompiled', 'files'],
                 'filter' => ['published' => true],
                 'order' => [['date', 'desc']],
                 'offset' => count($allEditions),
@@ -281,7 +242,7 @@ class Magazines {
 
     function getMagazineEdition($magazine, $edition, $magazineName) {
         $res = $this->bridge->get("/magazines/$magazine/editions/$edition", array(
-            'fields' => ['id', 'idHuman', 'date', 'description', 'hasThumbnail', 'published', 'subscribers', 'subscriberFiltersCompiled', 'files'],
+            'fields' => ['id', 'idHuman', 'date', 'description', 'thumbnail', 'published', 'subscribers', 'subscriberFiltersCompiled', 'files'],
         ), 240);
         if ($res['k']) {
             $edition = $res['b'];

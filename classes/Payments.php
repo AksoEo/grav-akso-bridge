@@ -2,6 +2,7 @@
 
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridgePlugin;
 
 class Payments {
@@ -19,28 +20,33 @@ class Payments {
         $org = isset($_GET[self::TH_ORG]) ? $_GET[self::TH_ORG] : '?';
         $method = isset($_GET[self::TH_METHOD]) ? $_GET[self::TH_METHOD] : '?';
         $size = isset($_GET[self::TH_SIZE]) ? $_GET[self::TH_SIZE] : '?';
-        $path = "/aksopay/payment_orgs/$org/methods/$method/thumbnail/$size";
 
-        $res = $this->app->bridge->getRaw($path, 60);
-        if ($res['k']) {
-            header('Content-Type: ' . $res['h']['content-type']);
-            try {
-                readfile($res['ref']);
-            } finally {
-                $this->app->bridge->releaseRaw($path);
-            }
-        } else {
+        $res = $this->app->bridge->get("/aksopay/payment_orgs/$org/methods/$method", array(
+            'fields' => ['thumbnail'],
+        ), 240);
+
+        if (!$res['k']) {
+            Grav::instance()['log']->error("could not load payment org $org method $method for thumbnail: " . $res['b']);
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
+            return;
         }
+        if (!$res['b']['thumbnail']) {
+            $this->plugin->getGrav()->fireEvent('onPageNotFound');
+            return;
+        }
+        $size = preg_replace('/px$/', '', $size);
+        $url = $res['b']['thumbnail'][$size] ?? '';
+
+        http_response_code(302); // Found
+        header('Location: ' . $url);
         die();
     }
 
     public function hasThumbnail($org, $method) {
-        // very hacky.. alas. PaymentMethods do not have any other indication that they have a thumbnail
-        $path = "/aksopay/payment_orgs/$org/methods/$method/thumbnail/32px";
-        $res = $this->app->bridge->getRaw($path, 60);
-        $this->app->bridge->releaseRaw($path);
-        return $res['k'];
+        $res = $this->app->bridge->get("/aksopay/payment_orgs/$org/methods/$method", array(
+            'fields' => ['thumbnail'],
+        ), 240);
+        return $res['k'] && $res['b']['thumbnail'] !== null;
     }
 
     public function getMethodThumbnailSrcSet($org, $method, int $baseSize) {

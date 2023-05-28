@@ -715,7 +715,7 @@ class MarkdownExt {
                 if (!$error) {
                     foreach ($ids as $id) {
                         $res = $this->app->bridge->get("/magazines/$id/editions", array(
-                            'fields' => ['id', 'idHuman', 'date', 'description'],
+                            'fields' => ['id', 'idHuman', 'date', 'description', 'thumbnail'],
                             'order' => [['date', 'desc']],
                             'offset' => 0,
                             'limit' => 1,
@@ -731,15 +731,6 @@ class MarkdownExt {
 
                         $edition = $res['b'][0];
                         $editionId = $edition['id'];
-                        $hasThumbnail = false;
-                        try {
-                            $path = "/magazines/$id/editions/$editionId/thumbnail/32px";
-                            $res = $this->app->bridge->getRaw($path, 120);
-                            if ($res['k']) {
-                                $hasThumbnail = true;
-                            }
-                            $this->app->bridge->releaseRaw($path);
-                        } catch (Exception $e) {}
 
                         $posters[] = array(
                             'magazine' => $id,
@@ -748,7 +739,7 @@ class MarkdownExt {
                             'idHuman' => $edition['idHuman'],
                             'date' => $edition['date'],
                             'description' => $edition['description'],
-                            'hasThumbnail' => $hasThumbnail,
+                            'thumbnail' => $edition['thumbnail'],
                         );
                     }
                 }
@@ -763,7 +754,7 @@ class MarkdownExt {
                         $coverContainer = new Element('a');
                         $coverContainer->href = $link;
                         $coverContainer->class = 'magazine-cover-container';
-                        if ($poster['hasThumbnail']) {
+                        if ($poster['thumbnail']) {
                             $img = new Element('img');
                             $img->class = 'magazine-cover';
                             $basePath = AksoBridgePlugin::MAGAZINE_COVER_PATH . '?'

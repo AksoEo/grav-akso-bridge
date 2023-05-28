@@ -410,25 +410,18 @@ class UserAccount {
 
     // Streams the user’s profile picture and quits
     public function runProfilePicture() {
-        $res = $this->bridge->get('codeholders/self', array('fields' => ['profilePictureHash']));
-        if (!$res['k'] || !$res['b']['profilePictureHash'] || !isset($_GET['s'])) die();
-        $hash = bin2hex($res['b']['profilePictureHash']);
-        $size = $_GET['s'];
-        // TODO: check if this is safe
-        $path = "/codeholders/self/profile_picture/$size";
-        // hack: use noop as unique cache key for getRaw
-        $res = $this->bridge->getRaw($path, 10, array('noop' => $hash));
-        if ($res['k']) {
-            header('Content-Type: ' . $res['h']['content-type']);
-            try {
-                readfile($res['ref']);
-            } finally {
-                $this->bridge->releaseRaw($path);
-            }
-            die();
-        } else {
-            throw new \Exception('Failed to load picture');
+        $res = $this->bridge->get('codeholders/self', array('fields' => ['profilePicture']));
+        if (!$res['k'] || !$res['b']['profilePicture'] || !isset($_GET['s'])) {
+            $this->plugin->getGrav()->fireEvent('onPageNotFound');
+            return;
         }
+        $size = $_GET['s'];
+        $size = preg_replace('/px$/', '', $size);
+        $url = $res['b']['profilePicture'][$size] ?? '';
+
+        http_response_code(302); // Found
+        header('Location: ' . $url);
+        die();
     }
 
     function renderResetPassword() {

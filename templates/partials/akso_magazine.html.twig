@@ -79,7 +79,7 @@
             </a>
         </h3>
         <div class="edition-page-content-split">
-            {% if akso_magazines.edition.hasThumbnail %}
+            {% if akso_magazines.edition.thumbnail %}
                 {% set mtb = akso_magazine_cover_path ~ '?m=' ~ akso_magazines.magazine.id ~ '&e=' ~ akso_magazines.edition.id ~ '&s=' %}
                 <div class="edition-cover">
                     <img

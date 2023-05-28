@@ -155,7 +155,7 @@ class CodeholderLists {
                 'filter' => array('id' => array('$in' => [$chId])),
                 'fields' => [
                     'id',
-                    'profilePictureHash',
+                    'profilePicture',
                     'profilePicturePublicity'
                 ],
                 'limit' => 100,
@@ -174,7 +174,8 @@ class CodeholderLists {
             }
         }
         $ch = $found;
-        if (!$found || !$ch['profilePictureHash']) {
+
+        if (!$found || !$ch['profilePicture']) {
             Grav::instance()->fireEvent('onPageNotFound');
             return;
         }
@@ -183,21 +184,12 @@ class CodeholderLists {
             Grav::instance()->fireEvent('onPageNotFound');
             return;
         }
-        $hash = bin2hex($ch['profilePictureHash']);
-        $path = "/codeholders/$chId/profile_picture/$size";
-        // hack: use noop as unique cache key for getRaw
-        $res = $bridge->getRaw($path, 10, array('noop' => $hash));
-        if ($res['k']) {
-            header('Content-Type: ' . $res['h']['content-type']);
-            try {
-                readfile($res['ref']);
-            } finally {
-                $bridge->releaseRaw($path);
-            }
-            die();
-        } else {
-            throw new Exception('Failed to load picture');
-        }
+        $size = preg_replace('/px$/', '', $size);
+        $url = $ch['profilePicture'][$size] ?? '';
+
+        http_response_code(302);
+        header('Location: ' . $url);
+        die();
     }
 
 
