@@ -74,7 +74,7 @@ export function getRequiredPerms(orgs) {
         // - used for markdown codeholder lists
         // - used for vote options
 
-        memberFields.push(`codeholderType`, `profilePictureHash`, `profilePicturePublicity`);
+        memberFields.push(`codeholderType`, `profilePicture`, `profilePictureHash`, `profilePicturePublicity`);
         // - used for delegates
         // - used for markdown codeholder lists
         // - used for vote options
