@@ -2,6 +2,7 @@ import './index.less';
 import '../form';
 import countryCurrencies from '../../../country_currencies.ini';
 import initAddressFields from './address-fields';
+import initCountrySelector from './country-selector';
 import './manual-warning';
 
 window.addEventListener('DOMContentLoaded', init);
@@ -23,6 +24,10 @@ function init() {
         }
     }
 
+    const countrySelectors = document.querySelectorAll('.country-selector');
+    for (let i = 0; i < countrySelectors.length; i++) {
+        initCountrySelector(countrySelectors[i]);
+    }
     initAutoFeeCountry();
     initAutoCurrency();
     initAddressFields();

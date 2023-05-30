@@ -409,19 +409,21 @@
             <label for="codeholder-address-country">
                 {{akso_locale.registration.codeholder_country}}
             </label>
-            <select id="codeholder-address-country" name="codeholder[address][country]">
-                <option value="">—</option>
-                {% for country in akso_registration.countries %}
-                    <option
-                        value="{{ country.code|e('html_attr') }}"
-                        {% if akso_registration.state.codeholder.address.country == country.code %}
-                        selected
-                        {% endif %}
+            <div class="country-selector">
+                <select id="codeholder-address-country" name="codeholder[address][country]">
+                    <option value="">—</option>
+                    {% for country in akso_registration.countries %}
+                        <option
+                            value="{{ country.code|e('html_attr') }}"
+                            {% if akso_registration.state.codeholder.address.country == country.code %}
+                                selected
+                            {% endif %}
                         >{{country.name_eo|e}}</option>
-                {% endfor %}
-                <!-- todo: fancy JS selection with search -->
-                <!-- todo: default to IP country -->
-            </select>
+                    {% endfor %}
+                    <!-- todo: fancy JS selection with search -->
+                    <!-- todo: default to IP country -->
+                </select>
+            </div>
         </div>
         {{_self.akso_field_extra(akso_registration, akso_locale, 'address.country')}}
     </div>
@@ -558,21 +560,23 @@
                 {{akso_locale.registration.settings_fee_country}}
                 <span class="required-star" title="{{akso_locale.registration.required_field|e('html_attr')}}"> *</span>
             </label>
-            <select
-                id="registration-field-fee-country"
-                name="codeholder[feeCountry]">
-                <option value="">—</option>
-                {% for country in akso_registration.countries %}
-                    <option
-                        value="{{ country.code|e('html_attr') }}"
-                        {% if akso_registration.state.codeholder.feeCountry == country.code %}
-                        selected
-                        {% endif %}
-                        >{{country.name_eo|e}}</option>
-                {% endfor %}
-                <!-- todo: fancy JS selection with search -->
-                <!-- todo: default to IP country -->
-            </select>
+            <div class="country-selector">
+                <select
+                    id="registration-field-fee-country"
+                    name="codeholder[feeCountry]">
+                    <option value="">—</option>
+                    {% for country in akso_registration.countries %}
+                        <option
+                            value="{{ country.code|e('html_attr') }}"
+                            {% if akso_registration.state.codeholder.feeCountry == country.code %}
+                            selected
+                            {% endif %}
+                            >{{country.name_eo|e}}</option>
+                    {% endfor %}
+                    <!-- todo: fancy JS selection with search -->
+                    <!-- todo: default to IP country -->
+                </select>
+            </div>
         </div>
         {% if akso_reg_editing %}
         <div class="field-description">

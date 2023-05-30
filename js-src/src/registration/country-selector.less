@@ -1,0 +1,111 @@
+.js-country-selector {
+    position: relative;
+    border: 1px solid rgb(var(--accent));
+    border-radius: var(--radius);
+    width: 300px;
+    max-width: 100%;
+    padding: 0.2em 1em;
+    margin: 0 0.2em;
+    padding-right: 2em;
+    box-sizing: border-box;
+    cursor: default;
+    background: none;
+    text-align: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &::before {
+        content: '';
+        position: absolute;
+        right: 0.5em;
+        top: calc(50% - 0.15em);
+        border: 0.4em solid transparent;
+        border-top-color: currentColor;
+    }
+
+    &:hover {
+        background: rgb(var(--bg1));
+    }
+    &:active {
+        background: rgb(var(--bg2));
+    }
+}
+
+.js-country-selector-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    padding: 1em;
+    justify-content: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+
+    .inner-backdrop {
+        background: rgba(0, 0, 0, 0.1);
+        position: absolute;
+        inset: 0;
+    }
+
+    .inner-dialog {
+        position: relative;
+        background: rgb(var(--bg));
+        border-radius: var(--radius);
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 520px;
+        max-height: 90vh;
+        box-shadow: 0 0.5em 1em rgba(0, 0, 0, 0.3);
+
+        .inner-header {
+            flex-shrink: 0;
+            padding: 0.2em;
+            display: flex;
+
+            input {
+                flex: 1;
+            }
+        }
+
+        .inner-list {
+            height: 0;
+            flex: 1;
+            overflow: auto;
+
+            .inner-list-items {
+                padding: 0;
+                margin: 0;
+            }
+
+            .inner-list-item {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                padding: 0.4em 1em;
+                cursor: default;
+
+                & + .inner-list-item {
+                    border-top: 1px solid rgb(var(--lighter-separator));
+                }
+
+                &::before {
+                    content: '';
+                    display: inline-block;
+                    width: 1em;
+                    margin-right: 0.5em;
+                    text-align: right;
+                }
+
+                &.is-selected::before {
+                    content: '✓';
+                }
+
+                &:active {
+                    background: rgb(var(--bg2));
+                }
+            }
+        }
+    }
+}
