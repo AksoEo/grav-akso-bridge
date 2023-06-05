@@ -455,6 +455,8 @@ class Magazines {
             $accessMessages = $header->magazine_access_messages;
         }
 
+        if (!$magazines) return [];
+
         if (!$path) {
             if (count($magazines) == 1) {
                 // just one magazine; show the detail view directly

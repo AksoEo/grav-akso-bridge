@@ -466,7 +466,7 @@ class Form {
                 $name = $item['name'];
 
                 if (!$existingData || $item['editable']) {
-                    $fieldData = isset($this->data[$name]) ? $this->data[$name] : null;
+                    $fieldData = $this->data[$name] ?? null;
 
                     if (isset($data[$name]) || isset($data[self::DATA_VAR_EXISTENCE_PREFIX . $name])) {
                         $fieldData = $data[$name] ?? null;
@@ -544,5 +544,37 @@ class Form {
         }
 
         return $ok;
+    }
+
+    protected function dataWithDisabledFieldsOmitted(): ?array {
+        if ($this->data === null) return null;
+        $scriptCtx = new FormScriptExecCtx($this->app);
+
+        $newData = [];
+
+        foreach ($this->form as $item) {
+            if ($item['el'] === 'input') {
+                $value = null;
+                if (!isset($this->data[$item['name']])) continue;
+
+                if ($item['disabled'] === true) {
+                    continue;
+                } else if (gettype($item['disabled']) === 'array') {
+                    // script
+                    $res = $scriptCtx->eval($item['disabled']);
+                    if ($res['s'] && $res['v']) {
+                        // disabled
+                        continue;
+                    }
+                }
+
+                $newData[$item['name']] = $this->data[$item['name']];
+                $scriptCtx->setFormVar($item['name'], $value);
+            } else if ($item['el'] === 'script') {
+                $scriptCtx->pushScript($item['script']);
+            }
+        }
+
+        return $newData;
     }
 }

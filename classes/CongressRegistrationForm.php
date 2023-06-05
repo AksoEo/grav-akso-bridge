@@ -1,8 +1,11 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use DateTime;
+use DateTimeZone;
+use DOMException;
+use Exception;
 use Grav\Common\Grav;
-use Grav\Plugin\AksoBridge\Form;
 
 // Handles the congress registration form.
 class CongressRegistrationForm extends Form {
@@ -59,16 +62,14 @@ class CongressRegistrationForm extends Form {
         }
     }
 
-    private $didSubmit = false;
-    private $submitResult = null;
-
     function submit() {
-        $args = array('data' => $this->data);
+        $args = array(
+            'data' => $this->dataWithDisabledFieldsOmitted(),
+        );
         $ch = $this->getCodeholder();
         if ($ch && $ch['codeholderType'] === 'human') {
             $args['codeholderId'] = $ch['id'];
         }
-        $this->didSubmit = true;
         $congressId = $this->congressId;
         $instanceId = $this->instanceId;
 
@@ -136,7 +137,7 @@ class CongressRegistrationForm extends Form {
     public $cancelSucceeded = false;
 
     /// Attempts to cancel the form.
-    public function cancel() {
+    public function cancel(): ?int {
         $canceledTime = time();
         $patchData = array(
             'cancelledTime' => $canceledTime
@@ -149,6 +150,9 @@ class CongressRegistrationForm extends Form {
         }
     }
 
+    /**
+     * @throws DOMException
+     */
     function renderTop() {
         $err = $this->doc->createElement('div');
         $err->setAttribute('class', 'registration-error');
@@ -254,6 +258,9 @@ class CongressRegistrationForm extends Form {
         return null;
     }
 
+    /**
+     * @throws DOMException
+     */
     function renderInputItem($scriptCtx, $item) {
         $root = $this->doc->createElement('div');
         $root->setAttribute('class', 'form-field form-item form-input-item');
@@ -552,34 +559,36 @@ class CongressRegistrationForm extends Form {
             $tz = 'UTC';
             if ($item['tz']) $tz = $item['tz'];
             try {
-                $tz = new \DateTimeZone($tz);
-                $root->setAttribute('data-tz', $tz->getOffset());
-            } catch (\Exception $e) {
-                $tz = new \DateTimeZone('UTC');
+                $tz = new DateTimeZone($tz);
+                // what is this $sample for? we just don't know. this getOffset API is strange
+                $sample = new DateTime('now', $tz);
+                $root->setAttribute('data-tz', $tz->getOffset($sample));
+            } catch (Exception $e) {
+                $tz = new DateTimeZone('UTC');
             }
 
             if ($item['min'] !== null) {
                 try {
                     $epoch = $item['min'];
-                    $dateTime = new \DateTime("@$epoch");
+                    $dateTime = new DateTime("@$epoch");
                     $dateTime->setTimezone($tz);
                     $formatted = $dateTime->format('Y-m-d') . 'T' . $dateTime->format('H:i');
 
                     $input->setAttribute('min', $formatted);
-                } catch (\Exception $e) {}
+                } catch (Exception $e) {}
             }
             if ($item['max'] !== null) {
                 try {
                     $epoch = $item['max'];
-                    $dateTime = new \DateTime("@$epoch");
+                    $dateTime = new DateTime("@$epoch");
                     $dateTime->setTimezone($tz);
                     $formatted = $dateTime->format('Y-m-d') . 'T' . $dateTime->format('H:i');
 
-                    $input->setAttribute('max', $item['max']);
-                } catch (\Exception $e) {}
+                    $input->setAttribute('max', $formatted);
+                } catch (Exception $e) {}
             }
             if ($value !== null) {
-                $dateTime = new \DateTime("@$value");
+                $dateTime = new DateTime("@$value");
                 $dateTime->setTimezone($tz);
                 $formatted = $dateTime->format('Y-m-d') . 'T' . $dateTime->format('H:i');
                 $input->setAttribute('value', $formatted);
@@ -750,12 +759,18 @@ class CongressRegistrationForm extends Form {
         return $root;
     }
 
+    /**
+     * @throws DOMException
+     */
     function renderItem($scriptCtx, $item) {
         if ($item['el'] === 'input') return $this->renderInputItem($scriptCtx, $item);
         if ($item['el'] === 'text') return $this->renderTextItem($scriptCtx, $item);
         if ($item['el'] === 'script') return $this->renderScriptItem($scriptCtx, $item);
     }
 
+    /**
+     * @throws DOMException
+     */
     public function render() {
         $root = $this->doc->createElement('div');
         $root->setAttribute('class', 'congress-registration-form-contents');
