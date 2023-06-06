@@ -1,8 +1,9 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
-use Grav\Plugin\AksoBridge\CongressPrograms;
-use Grav\Plugin\AksoBridge\Utils;
+use DiDom\Document;
+use DiDom\Element;
+use Grav\Plugin\AksoBridgePlugin;
 
 // Handles the congress locations page type.
 class CongressLocations {
@@ -14,8 +15,8 @@ class CongressLocations {
 
     private $plugin;
     private $app;
-    private $congressId = null;
-    private $instanceId = null;
+    private $congressId;
+    private $instanceId;
     private $doc;
 
     public function __construct($plugin, $app, $congressId, $instanceId) {
@@ -24,7 +25,7 @@ class CongressLocations {
         $this->congressId = $congressId;
         $this->instanceId = $instanceId;
 
-        $this->doc = new \DOMDocument();
+        $this->doc = new Document();
 
         $this->readQuery();
     }
@@ -48,7 +49,7 @@ class CongressLocations {
     }
 
     // Renders a list of internal locations.
-    function renderInternalList($intLoc) {
+    function renderInternalList($intLoc): Element {
         $int = $this->doc->createElement('ul');
         $int->setAttribute('class', 'internal-locations-list');
 
@@ -62,7 +63,7 @@ class CongressLocations {
             $name->setAttribute('href', $this->plugin->getGrav()['uri']->path() . '?' . self::QUERY_LOC . '=' . $location['id']);
             $name->setAttribute('class', 'location-name');
             $name->setAttribute('data-loc-id', $location['id']);
-            $name->textContent = $location['name'];
+            $name->setValue( $location['name']);
             $li->appendChild($name);
 
             $description = $this->doc->createElement('div');
@@ -70,7 +71,7 @@ class CongressLocations {
             if ($location['description']) {
                 $rules = ['emphasis', 'strikethrough', 'link', 'list', 'table'];
                 $res = $this->app->bridge->renderMarkdown($location['description'], $rules);
-                Utils::setInnerHTML($description, $res['c']);
+                $description->setInnerHtml($res['c']);
             }
             $li->appendChild($description);
 
@@ -81,7 +82,7 @@ class CongressLocations {
     }
 
     // Creates a table mapping dates to timezone offset for each congress day.
-    function congressTzOffsets() {
+    function congressTzOffsets(): array {
         $congressId = $this->congressId;
         $instanceId = $this->instanceId;
         $res = $this->app->bridge->get("/congresses/$congressId/instances/$instanceId", array(
@@ -107,14 +108,13 @@ class CongressLocations {
     }
 
     // Renders a list of external locations.
-    function renderList() {
+    function renderList(): Element {
         $tzOffsets = $this->congressTzOffsets();
 
         // first, collect all locations into two bins
         $extLocations = []; // array of locations
         $intLocations = []; // map (external loc id -> item array)
         $locCount = 0;
-        $error = false;
         while (true) {
             $congress = $this->congressId;
             $instance = $this->instanceId;
@@ -141,7 +141,6 @@ class CongressLocations {
                     break;
                 }
             } else {
-                $error = true;
                 break;
             }
         }
@@ -189,7 +188,7 @@ class CongressLocations {
             $name->setAttribute('href', $path . '?' . self::QUERY_LOC . '=' . $location['id']);
             $name->setAttribute('class', 'location-name');
             $name->setAttribute('data-loc-id', $location['id']);
-            $name->textContent = $location['name'];
+            $name->setValue($location['name']);
             $liDetails->appendChild($name);
 
             $description = $this->doc->createElement('div');
@@ -197,7 +196,7 @@ class CongressLocations {
             if ($location['description']) {
                 $rules = ['emphasis', 'strikethrough', 'link', 'list', 'table'];
                 $res = $this->app->bridge->renderMarkdown($location['description'], $rules);
-                Utils::setInnerHTML($description, $res['c']);
+                $description->setInnerHtml($res['c']);
             }
             $liDetails->appendChild($description);
 
@@ -217,7 +216,7 @@ class CongressLocations {
     }
 
     // Renders the detail page for a location.
-    function renderDetail() {
+    function renderDetail(): ?Element {
         $container = $this->doc->createElement('div');
         $container->setAttribute('class', 'congress-location');
 
@@ -234,7 +233,7 @@ class CongressLocations {
             $hres = $this->app->bridge->get("/congresses/$congress/instances/$instance/locations/$locationId/thumbnail/32px", [], 60);
             if ($hres['k']) {
                 // $imgPrefix = $this->plugin->apiHost . "/congresses/$congress/instances/$instance/locations/$locationId/thumbnail";
-                $imgPrefix = \Grav\Plugin\AksoBridgePlugin::CONGRESS_LOC_THUMBNAIL_PATH . '?' .
+                $imgPrefix = AksoBridgePlugin::CONGRESS_LOC_THUMBNAIL_PATH . '?' .
                     self::TH_CONGRESS . '=' . $congress . '&' .
                     self::TH_INSTANCE . '=' . $instance . '&' .
                     self::TH_LOCATION . '=' . $locationId . '&' .
@@ -266,11 +265,11 @@ class CongressLocations {
                 $backLink->setAttribute('class', 'back-link');
                 $backLink->setAttribute('data-loc-id', '');
                 $backLink->setAttribute('href', $this->plugin->getGrav()['uri']->path());
-                $backLink->textContent = '<';
+                $backLink->setValue('<');
                 $header->appendChild($backLink);
 
                 $name = $this->doc->createElement('h1');
-                $name->textContent = $location['name'];
+                $name->setValue( $location['name']);
                 $header->appendChild($name);
             }
 
@@ -286,10 +285,10 @@ class CongressLocations {
                     $container->setAttribute('data-icon', $eres['b']['icon']);
 
                     $label = $this->doc->createElement('span');
-                    $label->textContent = $this->plugin->locale['congress_locations']['located_within'] . ' ';
+                    $label->setValue( $this->plugin->locale['congress_locations']['located_within'] . ' ');
 
                     $extLink = $this->doc->createElement('a');
-                    $extLink->textContent = $eres['b']['name'];
+                    $extLink->setValue( $eres['b']['name']);
                     $extLink->setAttribute('data-loc-id', $externalLocId);
                     $extLink->setAttribute('href', $this->plugin->getGrav()['uri']->path() . '?' . self::QUERY_LOC . '=' . $externalLocId);
 
@@ -347,7 +346,7 @@ class CongressLocations {
 
                 $val = $this->doc->createElement('span');
                 $val->setAttribute('class', 'rating-value is-' . $type);
-                $val->textContent = round($rating * 10) / 10;
+                $val->setValue( round($rating * 10) / 10);
                 $ratingContainer->appendChild($val);
 
                 $container->appendChild($ratingContainer);
@@ -358,7 +357,7 @@ class CongressLocations {
             if ($location['description']) {
                 $rules = ['emphasis', 'strikethrough', 'link', 'list', 'table'];
                 $res = $this->app->bridge->renderMarkdown($location['description'], $rules);
-                Utils::setInnerHTML($description, $res['c']);
+                $description->setInnerHtml($res['c']);
             }
             $container->appendChild($description);
 
@@ -366,7 +365,7 @@ class CongressLocations {
                 $openHoursContainer = $this->doc->createElement('div');
                 $openHoursContainer->setAttribute('class', 'location-open-hours-container');
                 $openHoursTitle = $this->doc->createElement('div');
-                $openHoursTitle->textContent = $this->plugin->locale['congress_locations']['open_hours'];
+                $openHoursTitle->setValue( $this->plugin->locale['congress_locations']['open_hours']);
                 $openHoursTitle->setAttribute('class', 'open-hours-title');
                 $openHoursContainer->appendChild($openHoursTitle);
                 $openHours = $this->doc->createElement('ul');
@@ -376,7 +375,7 @@ class CongressLocations {
                     $li->setAttribute('class', 'open-hours-day');
                     $dayLabel = $this->doc->createElement('span');
                     $dayLabel->setAttribute('class', 'day-label');
-                    $dayLabel->textContent = Utils::formatDayMonth($k);
+                    $dayLabel->setValue( Utils::formatDayMonth($k));
                     $li->appendChild($dayLabel);
                     $li->appendChild($this->doc->createTextNode(': '));
 
@@ -387,7 +386,7 @@ class CongressLocations {
                     }
 
                     $hours = $this->doc->createElement('san');
-                    $hours->textContent = $hoursText;
+                    $hours->setValue( $hoursText);
                     $li->appendChild($hours);
                     $openHours->appendChild($li);
                 }
@@ -400,13 +399,13 @@ class CongressLocations {
                 $addressContainer->setAttribute('class', 'address-container');
                 $label = $this->doc->createElement('label');
                 $label->setAttribute('class', 'address-field-label');
-                $label->textContent = $this->plugin->locale['congress_locations']['address'];
+                $label->setValue( $this->plugin->locale['congress_locations']['address']);
                 $addressContainer->appendChild($label);
                 $lines = explode("\n", $location['address']);
                 foreach ($lines as $line) {
                     $ln = $this->doc->createElement('div');
                     $ln->setAttribute('class', 'address-line');
-                    $ln->textContent = $line;
+                    $ln->setValue( $line);
                     $addressContainer->appendChild($ln);
                 }
                 $container->appendChild($addressContainer);
@@ -427,7 +426,7 @@ class CongressLocations {
 
                     $title = $this->doc->createElement('h4');
                     $title->setAttribute('class', 'internal-list-title');
-                    $title->textContent = $this->plugin->locale['congress_locations']['internal_locations_title'];
+                    $title->setValue( $this->plugin->locale['congress_locations']['internal_locations_title']);
                     $internalListContainer->appendChild($title);
 
                     $internalListContainer->appendChild($this->renderInternalList($eres['b']));
@@ -439,7 +438,7 @@ class CongressLocations {
                 $viewPrograms = $this->doc->createElement('a');
                 $viewPrograms->setAttribute('class', 'view-programs-link');
                 $viewPrograms->setAttribute('href', $this->programsPath . '?' . CongressPrograms::QUERY_LOC . '=' . $locationId);
-                $viewPrograms->textContent = $this->plugin->locale['congress_locations']['view_programs_here'];
+                $viewPrograms->setValue( $this->plugin->locale['congress_locations']['view_programs_here']);
                 $container->appendChild($viewPrograms);
             }
 
@@ -452,7 +451,7 @@ class CongressLocations {
     private $didRenderLocation = false;
 
     // Renders page contents.
-    function render() {
+    function render(): string {
         $root = $this->doc->createElement('div');
         $root->setAttribute('class', 'congress-locations-rendered');
 
@@ -480,7 +479,7 @@ class CongressLocations {
             $root->appendChild($this->renderList());
         }
 
-        return $this->doc->saveHtml($root);
+        return $root->html();
     }
 
     // Thumbnail handling (early entry; see akso-bridge.php)
@@ -489,10 +488,10 @@ class CongressLocations {
     const TH_LOCATION = 'l';
     const TH_SIZE = 's';
     public function runThumbnail() {
-        $congress = isset($_GET[self::TH_CONGRESS]) ? $_GET[self::TH_CONGRESS] : '?';
-        $instance = isset($_GET[self::TH_INSTANCE]) ? $_GET[self::TH_INSTANCE] : '?';
-        $location = isset($_GET[self::TH_LOCATION]) ? $_GET[self::TH_LOCATION] : '?';
-        $size = isset($_GET[self::TH_SIZE]) ? $_GET[self::TH_SIZE] : '?';
+        $congress = $_GET[self::TH_CONGRESS] ?? '?';
+        $instance = $_GET[self::TH_INSTANCE] ?? '?';
+        $location = $_GET[self::TH_LOCATION] ?? '?';
+        $size = $_GET[self::TH_SIZE] ?? '?';
         $path = "/congresses/$congress/instances/$instance/locations/$location/thumbnail/$size";
 
         $res = $this->app->bridge->getRaw($path, 60);

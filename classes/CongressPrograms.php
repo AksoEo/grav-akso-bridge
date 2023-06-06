@@ -1,8 +1,10 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
-use Grav\Plugin\AksoBridge\CongressLocations;
-use Grav\Plugin\AksoBridge\Utils;
+use DateTime;
+use DiDom\Document;
+use DiDom\Element;
+use Ds\Set;
 
 // Handles the congress programs page type.
 class CongressPrograms {
@@ -14,8 +16,8 @@ class CongressPrograms {
 
     private $plugin;
     private $app;
-    private $congressId = null;
-    private $instanceId = null;
+    private $congressId;
+    private $instanceId;
     private $doc;
 
     public function __construct($plugin, $app, $congressId, $instanceId) {
@@ -24,7 +26,7 @@ class CongressPrograms {
         $this->congressId = $congressId;
         $this->instanceId = $instanceId;
 
-        $this->doc = new \DOMDocument();
+        $this->doc = new Document();
 
         $this->load();
     }
@@ -51,12 +53,12 @@ class CongressPrograms {
     }
 
     /// Renders a single program item in the list
-    function renderProgramItem($program, $locations) {
+    function renderProgramItem($program, $locations): Element {
         $node = $this->doc->createElement('div');
         $node->setAttribute('class', 'program-item');
 
-        $timeFrom = (new \DateTime('@' . $program['timeFrom'], $this->tz))->format('H:i');
-        $timeTo = (new \DateTime('@' . $program['timeTo'], $this->tz))->format('H:i');
+        $timeFrom = (new DateTime('@' . $program['timeFrom'], $this->tz))->format('H:i');
+        $timeTo = (new DateTime('@' . $program['timeTo'], $this->tz))->format('H:i');
 
         $timeLabel = $this->doc->createElement('div');
         $timeLabel->setAttribute('class', 'item-time-span');
@@ -66,9 +68,9 @@ class CongressPrograms {
         $timeSpanLabel->setAttribute('class', 'time-span');
         $timeToLabel = $this->doc->createElement('span');
         $timeToLabel->setAttribute('class', 'time-to');
-        $timeFromLabel->textContent = $timeFrom;
-        $timeSpanLabel->textContent = '–';
-        $timeToLabel->textContent = $timeTo;
+        $timeFromLabel->setValue( $timeFrom);
+        $timeSpanLabel->setValue( '–');
+        $timeToLabel->setValue( $timeTo);
         $timeLabel->appendChild($timeFromLabel);
         $timeLabel->appendChild($timeSpanLabel);
         $timeLabel->appendChild($timeToLabel);
@@ -84,7 +86,7 @@ class CongressPrograms {
         $titleNode->setAttribute('class', 'program-title');
         $titleLinkNode = $this->doc->createElement('a');
         $titleLinkNode->setAttribute('href', $linkTarget);
-        $titleLinkNode->textContent = $program['title'];
+        $titleLinkNode->setValue( $program['title']);
         $titleNode->appendChild($titleLinkNode);
         $titleContainer->appendChild($titleNode);
 
@@ -96,7 +98,7 @@ class CongressPrograms {
 
             $locationPre = $this->doc->createElement('span');
             $locationPre->setAttribute('class', 'location-itext');
-            $locationPre->textContent = $this->plugin->locale['congress_programs']['program_location_pre'] . ' ';
+            $locationPre->setValue( $this->plugin->locale['congress_programs']['program_location_pre'] . ' ');
             $locationContainer->appendChild($locationPre);
 
             $locationLink = $this->renderLocationLink($location);
@@ -109,7 +111,7 @@ class CongressPrograms {
         $rules = ['emphasis', 'strikethrough', 'link', 'list', 'table', 'image'];
         if ($program['description']) {
             $res = $this->app->bridge->renderMarkdown($program['description'], $rules);
-            Utils::setInnerHTML($description, $res['c']);
+            $description->setInnerHtml($res['c']);
         }
         $node->appendChild($description);
 
@@ -117,7 +119,7 @@ class CongressPrograms {
     }
 
     // loads all locations with the given ids
-    function batchLoadLocations($ids) {
+    function batchLoadLocations($ids): array {
         $locations = [];
         for ($i = 0; true; $i += 100) {
             $congressId = $this->congressId;
@@ -143,11 +145,11 @@ class CongressPrograms {
 
     // Renders the program list for a single day
     // - $date: string like 2020-01-02
-    function renderDayAgenda($date, $showNoItems = false, $extraFilter = []) {
-        $unixFrom = \DateTime::createFromFormat("Y-m-d", $date, $this->tz);
-        $unixFrom->setTime(0, 0, 0);
-        $unixTo = \DateTime::createFromFormat("Y-m-d", $date, $this->tz);
-        $unixTo->setTime(24, 0, 0);
+    function renderDayAgenda($date, $showNoItems = false, $extraFilter = []): ?Element {
+        $unixFrom = DateTime::createFromFormat("Y-m-d", $date, $this->tz);
+        $unixFrom->setTime(0, 0);
+        $unixTo = DateTime::createFromFormat("Y-m-d", $date, $this->tz);
+        $unixTo->setTime(24, 0);
         $unixFrom = (int) $unixFrom->format('U');
         $unixTo = (int) $unixTo->format('U');
 
@@ -176,7 +178,7 @@ class CongressPrograms {
             if (count($programs) >= $res['h']['x-total-items']) break;
         }
 
-        $locationIds = new \Ds\Set();
+        $locationIds = new Set();
         foreach ($programs as $program) {
             if ($program['location']) {
                 $locationIds->add($program['location']);
@@ -189,7 +191,7 @@ class CongressPrograms {
 
         $dayTitle = $this->doc->createElement('h2');
         $dayTitle->setAttribute('class', 'program-day-title');
-        $dayTitle->textContent = Utils::formatDayMonth($date);
+        $dayTitle->setValue( Utils::formatDayMonth($date));
         $root->appendChild($dayTitle);
 
         foreach ($programs as $program) {
@@ -199,7 +201,7 @@ class CongressPrograms {
         if ($showNoItems && count($programs) === 0) {
             $noItems = $this->doc->createElement('div');
             $noItems->setAttribute('class', 'no-items');
-            $noItems->textContent = $this->plugin->locale['congress_programs']['no_items_on_this_day'];
+            $noItems->setValue( $this->plugin->locale['congress_programs']['no_items_on_this_day']);
             $root->appendChild($noItems);
         } else if (!$showNoItems && count($programs) === 0) {
             return null;
@@ -209,18 +211,22 @@ class CongressPrograms {
     }
 
     // Renders the program for all days
-    function renderWholeAgenda() {
+    function renderWholeAgenda(): ?Element {
         if (!$this->congress) return null;
         $root = $this->doc->createElement('div');
         $root->setAttribute('class', 'whole-program');
 
-        $cursor = \DateTime::createFromFormat('Y-m-d', $this->congress['dateFrom']);
+        $cursor = DateTime::createFromFormat('Y-m-d', $this->congress['dateFrom']);
         for ($i = 0; $i < 64; $i++) {
             $date = $cursor->format('Y-m-d');
 
             $root->appendChild($this->renderDayAgenda($date, true));
 
-            $cursor->setDate($cursor->format('Y'), $cursor->format('m'), $cursor->format('d') + 1);
+            $cursor->setDate(
+                $cursor->format('Y'),
+                $cursor->format('m'),
+                (int) $cursor->format('d') + 1,
+            );
             if ($cursor->format('Y-m-d') == $this->congress['dateTo']) {
                 break;
             }
@@ -230,11 +236,11 @@ class CongressPrograms {
     }
 
     // Renders the day switcher at the top
-    function renderDaySwitcher($currentDate) {
+    function renderDaySwitcher($currentDate): Element {
         if (!$this->congress) {
             $error = $this->doc->createElement('div');
             $error->setAttribute('class', 'md-render-error');
-            $error->textContent = $this->plugin->locale['content']['render_error'];
+            $error->setValue( $this->plugin->locale['content']['render_error']);
             return $error;
         }
         $node = $this->doc->createElement('div');
@@ -243,22 +249,26 @@ class CongressPrograms {
         $button = $this->doc->createElement('a');
         $button->setAttribute('class', 'program-day link-button' . (!$currentDate ? ' is-primary' : ''));
         $button->setAttribute('href', $this->plugin->getGrav()['uri']->path() . '?' . self::QUERY_DATE . '=' . urlencode(self::QUERY_DATE_ALL));
-        $button->textContent = $this->plugin->locale['congress_programs']['day_switcher_all'];
+        $button->setValue( $this->plugin->locale['congress_programs']['day_switcher_all']);
         $node->appendChild($button);
 
-        $cursor = \DateTime::createFromFormat('Y-m-d', $this->congress['dateFrom']);
+        $cursor = DateTime::createFromFormat('Y-m-d', $this->congress['dateFrom']);
         for ($i = 0; $i < 64; $i++) {
             $date = $cursor->format('Y-m-d');
 
             $isCurrent = $date == $currentDate;
             $button = $this->doc->createElement('a');
             $button->setAttribute('class', 'program-day link-button' . ($isCurrent ? ' is-primary' : ''));
-            $button->textContent = Utils::formatDayMonth($date);
+            $button->setValue( Utils::formatDayMonth($date));
             $node->appendChild($button);
 
             $button->setAttribute('href', $this->plugin->getGrav()['uri']->path() . '?' . self::QUERY_DATE . '=' . $date);
 
-            $cursor->setDate($cursor->format('Y'), $cursor->format('m'), $cursor->format('d') + 1);
+            $cursor->setDate(
+                $cursor->format('Y'),
+                $cursor->format('m'),
+                (int) $cursor->format('d') + 1,
+            );
             if ($cursor->format('Y-m-d') == $this->congress['dateTo']) {
                 break;
             }
@@ -268,7 +278,7 @@ class CongressPrograms {
     }
 
     // Renders the detail page for a program item
-    function renderProgramPage($programId) {
+    function renderProgramPage($programId): ?Element {
         $congressId = $this->congressId;
         $instanceId = $this->instanceId;
         $res = $this->app->bridge->get("/congresses/$congressId/instances/$instanceId/programs/$programId", array(
@@ -280,8 +290,8 @@ class CongressPrograms {
         }
         $program = $res['b'];
 
-        $timeFrom = new \DateTime('@' . $program['timeFrom'], $this->tz);
-        $timeTo = new \DateTime('@' . $program['timeTo'], $this->tz);
+        $timeFrom = new DateTime('@' . $program['timeFrom'], $this->tz);
+        $timeTo = new DateTime('@' . $program['timeTo'], $this->tz);
         $dateFrom = $timeFrom->format('Y-m-d');
         $timeFrom = $timeFrom->format('H:i');
         $timeTo = $timeTo->format('H:i');
@@ -297,34 +307,34 @@ class CongressPrograms {
             $timeDate = $this->doc->createElement('span');
             $time->appendChild($timeDate);
             $timeDate->setAttribute('class', 'time-date');
-            $timeDate->textContent = Utils::formatDayMonth($dateFrom);
+            $timeDate->setValue( Utils::formatDayMonth($dateFrom));
 
             $timeSpanContainer = $this->doc->createElement('span');
             $timeSpanContainer->setAttribute('class', 'time-span-container');
             $time->appendChild($timeSpanContainer);
             $timeSpanFrom = $this->doc->createElement('span');
             $timeSpanContainer->appendChild($timeSpanFrom);
-            $timeSpanFrom->textContent = $timeFrom;
+            $timeSpanFrom->setValue( $timeFrom);
 
             $timeSpanSpan = $this->doc->createElement('span');
             $timeSpanSpan->setAttribute('class', 'time-span-span');
             $timeSpanContainer->appendChild($timeSpanSpan);
-            $timeSpanSpan->textContent = '–';
+            $timeSpanSpan->setValue( '–');
 
             $timeSpanTo = $this->doc->createElement('span');
             $timeSpanContainer->appendChild($timeSpanTo);
-            $timeSpanTo->textContent = $timeTo;
+            $timeSpanTo->setValue( $timeTo);
         }
 
         {
             $ptitle = $this->doc->createElement('h1');
             $ptitle->setAttribute('class', 'program-title');
-            $ptitle->textContent = $program['title'];
+            $ptitle->setValue( $program['title']);
             $root->appendChild($ptitle);
         }
 
         if ($program['location']) {
-            $locationIds = new \Ds\Set();
+            $locationIds = new Set();
             $locationIds->add($program['location']);
             $locations = $this->batchLoadLocations($locationIds);
             $location = $locations[$program['location']];
@@ -336,7 +346,7 @@ class CongressPrograms {
 
                 $containerText = $this->doc->createElement('span');
                 $containerText->setAttribute('class', 'location-itext');
-                $containerText->textContent = $this->plugin->locale['congress_programs']['program_location_pre'];
+                $containerText->setValue( $this->plugin->locale['congress_programs']['program_location_pre']);
                 $container->appendChild($containerText);
 
                 $container->appendChild($this->doc->createTextNode(' '));
@@ -352,7 +362,7 @@ class CongressPrograms {
             $root->appendChild($programOwner);
 
             $programOwnerText = $this->doc->createElement('span');
-            $programOwnerText->textContent = $this->plugin->locale['congress_programs']['program_owner_pre'];
+            $programOwnerText->setValue( $this->plugin->locale['congress_programs']['program_owner_pre']);
             $programOwnerText->setAttribute('class', 'owner-itext');
             $programOwner->appendChild($programOwnerText);
 
@@ -360,7 +370,7 @@ class CongressPrograms {
 
             $programOwnerContent = $this->doc->createElement('span');
             $programOwnerContent->setAttribute('class', 'owner-content');
-            $programOwnerContent->textContent = $program['owner'];
+            $programOwnerContent->setValue( $program['owner']);
             $programOwner->appendChild($programOwnerContent);
         }
 
@@ -369,7 +379,7 @@ class CongressPrograms {
         $rules = ['emphasis', 'strikethrough', 'link', 'list', 'table', 'image'];
         if ($program['description']) {
             $res = $this->app->bridge->renderMarkdown($program['description'], $rules);
-            Utils::setInnerHTML($description, $res['c']);
+            $description->setInnerHtml($res['c']);
         }
         $root->appendChild($description);
 
@@ -377,7 +387,7 @@ class CongressPrograms {
     }
 
     // Renders a link to a congress location with an icon
-    function renderLocationLink($location) {
+    function renderLocationLink($location): Element {
         $locationLink = $this->doc->createElement('a');
         $locationLink->setAttribute('class', 'location-link');
 
@@ -390,7 +400,7 @@ class CongressPrograms {
 
         $locationName = $this->doc->createElement('span');
         $locationName->setAttribute('class', 'location-name');
-        $locationName->textContent = $location['name'];
+        $locationName->setValue( $location['name']);
         $locationLink->appendChild($locationName);
 
         if ($this->locationsPath) {
@@ -401,7 +411,7 @@ class CongressPrograms {
     }
 
     // Renders the “events in this location” page for the given location
-    function renderEventsInLocation($locationId) {
+    function renderEventsInLocation($locationId): ?Element {
         $congressId = $this->congressId;
         $instanceId = $this->instanceId;
         $res = $this->app->bridge->get("/congresses/$congressId/instances/$instanceId/locations/$locationId", array(
@@ -427,7 +437,7 @@ class CongressPrograms {
         }
         $hasAnyDay = false;
 
-        $cursor = \DateTime::createFromFormat('Y-m-d', $this->congress['dateFrom']);
+        $cursor = DateTime::createFromFormat('Y-m-d', $this->congress['dateFrom']);
         for ($i = 0; $i < 255; $i++) {
             $date = $cursor->format('Y-m-d');
 
@@ -439,7 +449,11 @@ class CongressPrograms {
                 $hasAnyDay = true;
             }
 
-            $cursor->setDate($cursor->format('Y'), $cursor->format('m'), $cursor->format('d') + 1);
+            $cursor->setDate(
+                $cursor->format('Y'),
+                $cursor->format('m'),
+                (int) $cursor->format('d') + 1,
+            );
             if ($cursor->format('Y-m-d') == $this->congress['dateTo']) {
                 break;
             }
@@ -448,7 +462,7 @@ class CongressPrograms {
         if (!$hasAnyDay) {
             $noItems = $this->doc->createElement('div');
             $noItems->setAttribute('class', 'location-no-items');
-            $noItems->textContent = $this->plugin->locale['congress_programs']['no_items_in_this_loc'];
+            $noItems->setValue( $this->plugin->locale['congress_programs']['no_items_in_this_loc']);
             $root->appendChild($noItems);
         }
 
@@ -457,10 +471,10 @@ class CongressPrograms {
 
     // Returns the date the user has requested, or null for all days.
     // returns YYYY-MM-DD string or null.
-    function readCurrentDate() {
+    function readCurrentDate(): ?string {
         if (!$this->congress) return null;
-        $dateFrom = \DateTime::createFromFormat('Y-m-d', $this->congress['dateFrom']);
-        $dateTo = \DateTime::createFromFormat('Y-m-d', $this->congress['dateTo']);
+        $dateFrom = DateTime::createFromFormat('Y-m-d', $this->congress['dateFrom']);
+        $dateTo = DateTime::createFromFormat('Y-m-d', $this->congress['dateTo']);
 
         $currentDate = null;
         $forceNull = false;
@@ -469,13 +483,13 @@ class CongressPrograms {
             if ($_GET[self::QUERY_DATE] === self::QUERY_DATE_ALL) {
                 $forceNull = true;
             } else {
-                $qdate = \DateTime::createFromFormat('Y-m-d', $_GET[self::QUERY_DATE]);
+                $qdate = DateTime::createFromFormat('Y-m-d', $_GET[self::QUERY_DATE]);
                 if ($qdate !== false) $currentDate = $qdate;
             }
         }
         if (!$currentDate && !$forceNull) {
             // default to current date if congress is ongoing
-            $currentDate = new \DateTime();
+            $currentDate = new DateTime();
             if ($dateFrom->diff($currentDate)->invert || $currentDate->diff($dateTo)->invert) {
                 // out of bounds
                 $currentDate = null;
@@ -493,29 +507,29 @@ class CongressPrograms {
         return $currentDate->format('Y-m-d');
     }
 
-    public function run() {
+    public function run(): array {
         $contents = null;
 
         if (isset($_GET[self::QUERY_LOC]) && gettype($_GET[self::QUERY_LOC]) === 'string') {
             $locationId = (int) $_GET[self::QUERY_LOC];
 
-            $contents = $this->doc->saveHtml($this->renderEventsInLocation($locationId));
+            $contents = $this->renderEventsInLocation($locationId)->html();
         }
 
         if (isset($_GET[self::QUERY_PROG]) && gettype($_GET[self::QUERY_PROG]) === 'string') {
             $programId = (int) $_GET[self::QUERY_PROG];
 
-            $contents = $this->doc->saveHtml($this->renderProgramPage($programId));
+            $contents = $this->renderProgramPage($programId)->html();
         }
 
         if (!$contents) {
             $currentDate = $this->readCurrentDate();
 
-            $contents = $this->doc->saveHtml($this->renderDaySwitcher($currentDate));
+            $contents = $this->renderDaySwitcher($currentDate)->html();
             if ($currentDate) {
-                $contents .= $this->doc->saveHtml($this->renderDayAgenda($currentDate, true));
+                $contents .= $this->renderDayAgenda($currentDate, true)->html();
             } else {
-                $contents .= $this->doc->saveHtml($this->renderWholeAgenda());
+                $contents .= $this->renderWholeAgenda()->html();
             }
         }
 

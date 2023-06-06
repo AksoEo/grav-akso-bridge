@@ -20,12 +20,6 @@ class Utils {
         return Parsedown2::instance()->pd2Elements($elements);
     }
 
-    static function setInnerHTML($node, $html) {
-        $fragment = $node->ownerDocument->createDocumentFragment();
-        $fragment->appendXML($html);
-        $node->appendChild($fragment);
-    }
-
     static function formatDateTimeUtc($dateTime) {
         $time = $dateTime->getTimestamp();
         $dateTime = new \DateTime("@$time");
