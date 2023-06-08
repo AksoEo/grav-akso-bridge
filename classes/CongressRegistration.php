@@ -590,6 +590,7 @@ class CongressRegistration {
                             Grav::instance()['log']->error($e);
                         }
                     } else {
+                        $form->validate($post);
                         $form->setNonceInvalid();
                     }
                 }
