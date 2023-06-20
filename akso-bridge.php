@@ -124,7 +124,6 @@ class AksoBridgePlugin extends Plugin {
     // if set, will contain info on the akso user
     // an array with keys 'id', 'uea'
     public $aksoUser = null;
-    public $aksoUserFormattedName = null;
 
     // will redirect after closing the bridge and setting cookies if not null
     private $redirectStatus = null;
@@ -166,7 +165,6 @@ class AksoBridgePlugin extends Plugin {
                 $unsetAksoCookies = true;
             }
         }
-        $this->updateFormattedName();
         $this->userLogin->flush();
 
         if ($unsetAksoCookies) {
@@ -364,7 +362,6 @@ class AksoBridgePlugin extends Plugin {
 
             $state = $this->userLogin->runLoginPage();
             $this->aksoUser = $this->userLogin->aksoUser;
-            $this->updateFormattedName();
         }
 
         $state['akso_auth_failed'] = $this->userLogin->loginConnFailed;
@@ -373,55 +370,11 @@ class AksoBridgePlugin extends Plugin {
         $state['akso_user_is_member'] = $this->aksoUser ? $this->aksoUser['member'] : false;
 
         if ($this->aksoUser !== null) {
-            $state['akso_user_fmt_name'] = $this->aksoUserFormattedName;
+            $state['akso_user_fmt_name'] = $this->userLogin->getFormattedName();
             $state['akso_uea_code'] = $this->aksoUser['uea'];
         }
 
         $this->pageVars = $state;
-    }
-
-    public function updateFormattedName() {
-        if ($this->aksoUser && !$this->aksoUserFormattedName) {
-            $res = $this->bridge->get('codeholders/self', array(
-                'fields' => [
-                    'firstName',
-                    'lastName',
-                    'firstNameLegal',
-                    'lastNameLegal',
-                    'honorific',
-                    'fullName',
-                    'fullNameLocal',
-                    'nameAbbrev'
-                ]
-            ));
-            if ($res['k']) {
-                $data = $res['b'];
-                $isOrg = isset($data['fullName']);
-                if ($isOrg) {
-                    $this->aksoUserFormattedName = $data['fullName'];
-                    if (isset($data['nameAbbrev']) && strlen($data['fullName']) > 16) {
-                        $this->aksoUserFormattedName = $data['nameAbbrev'];
-                    }
-                } else {
-                    $this->aksoUserFormattedName = '';
-                    if (isset($data['honorific'])) {
-                        $this->aksoUserFormattedName .= $data['honorific'] . ' ';
-                    }
-                    if (isset($data['firstName'])) {
-                        $this->aksoUserFormattedName .= $data['firstName'] . ' ';
-                    } else {
-                        $this->aksoUserFormattedName .= $data['firstNameLegal'] . ' ';
-                    }
-                    if (isset($data['lastName'])) {
-                        $this->aksoUserFormattedName .= $data['lastName'];
-                    } else if (isset($data['lastNameLegal'])) {
-                        $this->aksoUserFormattedName .= $data['lastNameLegal'];
-                    }
-                }
-            } else {
-                $this->aksoUserFormattedName = $this->aksoUser['uea'];
-            }
-        }
     }
 
     // add various pages to grav
@@ -533,7 +486,7 @@ class AksoBridgePlugin extends Plugin {
         if ($refp != false && isset($refp['path'])) {
             $rpath = $refp['path'];
             if (isset($refp['query'])) $rpath .= '?' . $refp['query'];
-            if (isset($refp['anchor'])) $rpath .= '#' + $refp['anchor'];
+            if (isset($refp['anchor'])) $rpath .= '#' . $refp['anchor'];
         }
         return $rpath;
     }
@@ -571,7 +524,7 @@ class AksoBridgePlugin extends Plugin {
         if ($auth && $path === "/admin/akso_bridge") {
             header('Content-Type: application/json;charset=utf-8');
             $task = $uri->query('task');
-            $app = new AppBridge($this->grav);
+            $app = new AppBridge();
             $app->open();
 
             if ($task === "list_congresses") {

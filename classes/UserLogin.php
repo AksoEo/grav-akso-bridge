@@ -50,6 +50,52 @@ class UserLogin {
         }
     }
 
+    private $userFormattedName = null;
+    public function getFormattedName() {
+        if ($this->aksoUser && !$this->userFormattedName) {
+            $res = $this->bridge->get('codeholders/self', array(
+                'fields' => [
+                    'firstName',
+                    'lastName',
+                    'firstNameLegal',
+                    'lastNameLegal',
+                    'honorific',
+                    'fullName',
+                    'fullNameLocal',
+                    'nameAbbrev'
+                ]
+            ));
+            if ($res['k']) {
+                $data = $res['b'];
+                $isOrg = isset($data['fullName']);
+                if ($isOrg) {
+                    $this->userFormattedName = $data['fullName'];
+                    if (isset($data['nameAbbrev']) && strlen($data['fullName']) > 16) {
+                        $this->userFormattedName = $data['nameAbbrev'];
+                    }
+                } else {
+                    $this->userFormattedName = '';
+                    if (isset($data['honorific'])) {
+                        $this->userFormattedName .= $data['honorific'] . ' ';
+                    }
+                    if (isset($data['firstName'])) {
+                        $this->userFormattedName .= $data['firstName'] . ' ';
+                    } else {
+                        $this->userFormattedName .= $data['firstNameLegal'] . ' ';
+                    }
+                    if (isset($data['lastName'])) {
+                        $this->userFormattedName .= $data['lastName'];
+                    } else if (isset($data['lastNameLegal'])) {
+                        $this->userFormattedName .= $data['lastNameLegal'];
+                    }
+                }
+            } else {
+                $this->userFormattedName = $this->aksoUser['uea'];
+            }
+        }
+        return $this->userFormattedName;
+    }
+
     public function flush() {
         if ($this->isOpen) {
             $this->bridge->flushCookies();

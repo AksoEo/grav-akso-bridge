@@ -93,7 +93,7 @@ class UserAccount {
         }
 
         if ($details['codeholderType'] === 'human') {
-            $details['fmtName'] = $this->plugin->aksoUserFormattedName;
+            $details['fmtName'] = $this->plugin->userLogin->getFormattedName();
             if ($details['firstName'] || $details['lastName']) {
                 $details['fmtLegalName'] = $details['firstNameLegal'] . ' ' . $details['lastNameLegal'];
             }
@@ -228,7 +228,6 @@ class UserAccount {
         ));
 
         if ($res['k']) {
-            $this->plugin->updateFormattedName();
             $details = $res['b'];
 
             if ($includePending) {

@@ -209,8 +209,11 @@
                     </tbody>
                 </table>
             </div>
-        {% elseif result.type == 'rp' %}
+        {% elseif result.type == 'rp' and result.value.rounds is not empty %}
             <div class="result-rp-value">
+                <div class="rp-interactive-insert"
+                     data-options="{{ vote.options|json_encode }}"
+                     data-codeholders="{{ vote.codeholders_serializable|json_encode }}"></div>
                 <h3>{{ akso_locale.account_votes.result_rp_rounds_title }}</h3>
                 {% for i, round in result.value.rounds %}
                     <div class="rp-round" data-value="{{ round|json_encode }}">

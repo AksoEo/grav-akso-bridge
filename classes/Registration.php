@@ -1583,7 +1583,7 @@ class Registration extends Form {
         $codeholderId = null;
         if ($this->plugin->aksoUser) {
             $codeholderId = $this->plugin->aksoUser['id'];
-            $customerName = $this->plugin->aksoUserFormattedName;
+            $customerName = $this->plugin->userLogin->getFormattedName();
         } else {
             $customerName = [
                 $this->state['codeholder']['honorific'],

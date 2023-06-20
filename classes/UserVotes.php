@@ -118,6 +118,7 @@ class UserVotes {
                 throw new \Exception('Could not fetch vote option codeholders');
             }
             $codeholders = array();
+            $codeholdersSerializable = array();
             $isMember = $this->plugin->aksoUser['member'];
             foreach ($chRes['b'] as $ch) {
                 if ($ch['codeholderType'] === 'human') {
@@ -164,8 +165,15 @@ class UserVotes {
                 $ch['has_details'] = $ch['email'] || $ch['website'] || $ch['biography'];
 
                 $codeholders[$ch['id']] = $ch;
+
+                $codeholdersSerializable['' . $ch['id']] = array(
+                    'icon_src' => $ch['icon_src'] ?? null,
+                    'icon_srcset' => $ch['icon_srcset'] ?? null,
+                    'name' => $ch['fmt_name'],
+                );
             }
             $vote['codeholders'] = $codeholders;
+            $vote['codeholders_serializable'] = $codeholdersSerializable;
         }
 
         if ($vote['hasVoted']) {
