@@ -13,6 +13,7 @@ function initRankedOptions() {
     const methodDescription = document.querySelector('.method-description');
     const rankedOptions = document.querySelector('.ranked-options');
     if (!rankedOptions) return;
+    const isTieBreaker = document.querySelector('.vote-form').dataset.isTieBreaker;
     const method = rankedOptions.dataset.type;
 
     methodDescription.textContent = account_votes[`vote_desc_${method}_js`];
@@ -141,7 +142,7 @@ function initRankedOptions() {
             const card = cards[+e.dataTransfer.getData(CARD_MIME)];
 
             let existingCard;
-            if (method === 'stv' && (existingCard = getRankCard(index))) {
+            if ((method === 'stv' || isTieBreaker) && (existingCard = getRankCard(index))) {
                 // there's already a card here, replace!
                 const thisValue = card.rankInput.value;
                 card.rankInput.value = existingCard.rankInput.value;

@@ -214,8 +214,22 @@
                     </div>
                 {% endif %}
 
-                {% if vote.isActive and vote.mayVote %}
-                    <form class="vote-form" method="POST">
+                {% if (vote.isActive and vote.mayVote) or (vote.tieBreakerNeeded and vote.mayVote) %}
+                    {% if vote.tieBreakerNeeded and vote.hasResults %}
+                        <div class="vote-results">
+                            <h2 class="results-title">
+                                {{akso_locale.account_votes.results_title}}
+                            </h2>
+
+                            {% include 'partials/akso_vote_result.html.twig' %}
+
+                            <div class="vote-results-must-vote-resolution">
+                                {{ akso_locale.account_votes.result_tie_breaker_vote_needed }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <form class="vote-form" method="POST" data-is-tie-breaker="{{ vote.isSelfTieBreaker ? 'true' : 'false' }}">
                         <h2>
                             {% if vote.hasVoted %}
                                 {{akso_locale.account_votes.vote_form_title_again}}
@@ -225,16 +239,22 @@
                         </h2>
 
                         {% if vote.ballotsSecret %}
-                            <div class="vote-secrecy-note">
+                            <div class="vote-desc">
                                 {{akso_locale.account_votes.vote_desc_secret}}
                             </div>
                         {% elseif vote.hasVoted %}
-                            <div class="vote-secrecy-note">
+                            <div class="vote-desc">
                                 {{akso_locale.account_votes.vote_desc_not_secret_again}}
                             </div>
                         {% else %}
-                            <div class="vote-secrecy-note">
+                            <div class="vote-desc">
                                 {{akso_locale.account_votes.vote_desc_not_secret}}
+                            </div>
+                        {% endif %}
+
+                        {% if vote.isSelfTieBreaker %}
+                            <div class="vote-desc is-tie-breaker-note">
+                                {{akso_locale.account_votes.vote_desc_is_tie_breaker}}
                             </div>
                         {% endif %}
 

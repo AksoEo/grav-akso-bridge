@@ -69,6 +69,8 @@ class UserVotes {
             ['emphasis', 'strikethrough', 'link', 'list', 'table', 'image'],
         )['c'];
 
+        $vote['isSelfTieBreaker'] = $vote['tieBreakerCodeholder'] === $this->plugin->aksoUser['id'];
+
         // fix mayVote
         if ($vote['ballotsSecret']) {
             $vote['mayVote'] = $vote['mayVote'] && !$vote['hasVoted'];
@@ -198,6 +200,14 @@ class UserVotes {
             $res = $this->bridge->get("/codeholders/self/votes/$id/result", []);
             if ($res['k']) {
                 $vote['result'] = $res['b'];
+
+                if ($vote['result']['status'] === 'tie-breaker-needed') {
+                    $vote['tieBreakerNeeded'] = true;
+                    if ($vote['isSelfTieBreaker']) {
+                        // user is the tie-breaker and is needed
+                        $vote['mayVote'] = true;
+                    }
+                }
             }
         }
 
@@ -296,6 +306,17 @@ class UserVotes {
                         );
                     }
                     $prevWasNone = $isNone;
+                }
+
+                if ($vote['type'] === 'rp' && $isTieBreaker) {
+                    foreach ($options as $rank) {
+                        if (count($rank) > 1) {
+                            return array(
+                                'error' => $this->plugin->locale['account_votes']['submit_err_not_total_ordering'],
+                                'values' => $ranks,
+                            );
+                        }
+                    }
                 }
 
                 $rvalue = $ranks;

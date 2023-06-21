@@ -167,6 +167,14 @@
     border-radius: var(--radius);
     padding: 0.5em 1em;
 
+    .vote-desc {
+        margin-bottom: 1em;
+
+        &.is-tie-breaker-note {
+            font-weight: bold;
+        }
+    }
+
     .form-submit {
         text-align: right;
     }
@@ -618,5 +626,10 @@
                 opacity: 0.5;
             }
         }
+    }
+
+    .vote-results-must-vote-resolution {
+        margin-top: 1em;
+        font-weight: bold;
     }
 }
