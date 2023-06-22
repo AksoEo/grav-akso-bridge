@@ -286,7 +286,12 @@
                 {% endfor %}
             </div>
         {% elseif result.type == 'stv' %}
-            <div class="result-stv-value">
+            <div class="result-stv-value" data-value="{{ result.value|json_encode }}">
+                <div class="stv-interactive-insert"
+                    data-mentioned-options="{{ result.mentions.includedByMentions|json_encode }}"
+                    data-options="{{ vote.options|json_encode }}"
+                    data-codeholders="{{ vote.codeholders_serializable|json_encode }}"></div>
+
                 {% set quota = null %}
                 {% for event in result.value.events %}
                     {% if event.type == 'elect-with-quota' and quota == null %}

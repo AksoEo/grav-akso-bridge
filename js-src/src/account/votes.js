@@ -5,6 +5,7 @@ import { account_votes } from '../../../locale.ini';
 export default function initVotes() {
     initRankedOptions();
     initRankedPairsViz();
+    initStvViz();
 }
 
 function initRankedOptions() {
@@ -429,7 +430,7 @@ function initRankedPairsViz() {
                         const div = document.createElement('div');
                         div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
                         div.className = 'node-contents';
-                        div.appendChild(renderOption(d.id));
+                        div.appendChild(renderVizOption(voteOptions, codeholders, d.id));
                         this.appendChild(div);
                     })
                 )
@@ -461,34 +462,6 @@ function initRankedPairsViz() {
         simulation.force('link').links(edges);
         simulation.alpha(1).restart().tick();
         ticked();
-    }
-
-    function renderOption(id) {
-        const node = document.createElement('div');
-        node.className = 'graph-option';
-        const option = voteOptions[id];
-        if (option.type === 'simple') {
-            const label = document.createElement('span');
-            label.className = 'option-label';
-            label.textContent = option.name;
-            node.appendChild(label);
-        } else if (option.type === 'codeholder') {
-            node.classList.add('is-codeholder');
-            const codeholder = codeholders[option.codeholderId] || {};
-            if (codeholder.icon_src) {
-                const chImg = document.createElement('img');
-                chImg.className = 'ch-icon';
-                chImg.src = codeholder.icon_src;
-                chImg.srcset = codeholder.icon_srcset;
-                node.appendChild(chImg);
-            }
-            const label = document.createElement('span');
-            label.className = 'ch-label';
-            label.textContent = codeholder.name;
-            node.appendChild(label);
-        }
-
-        return node;
     }
 
     if (rounds.length > 1) {
@@ -526,3 +499,321 @@ function initRankedPairsViz() {
         loadRound(rounds[0]);
     }
 }
+
+function initStvViz() {
+    const resultStv = document.querySelector('.result-stv-value');
+    if (!resultStv) return;
+
+    const containerNode = resultStv.querySelector('.stv-interactive-insert');
+    containerNode.classList.add('is-interactive');
+
+    const data = JSON.parse(resultStv.dataset.value);
+
+    const mentionedOptions = JSON.parse(containerNode.dataset.mentionedOptions);
+    const events = [];
+    let values = {};
+    const chosen = new Set();
+    const eliminated = new Set();
+    let quota = 0;
+    for (const event of data.events) {
+        if (event.type === 'elect-with-quota') {
+            for (const i of event.elected) chosen.add(i);
+            events.push({ ...event, chosen: new Set(chosen), eliminated: new Set(eliminated) });
+            quota = event.quota;
+            values = event.values;
+        } else if (event.type === 'elect-rest') {
+            events.push({
+                ...event,
+                values,
+                chosen: new Set(chosen),
+                eliminated: new Set(eliminated),
+            });
+        } else if (event.type === 'eliminate') {
+            eliminated.add(event.candidate);
+            events.push({
+                ...event,
+                values, // use current values because the event contains the 'after' state
+                chosen: new Set(chosen),
+                eliminated: new Set(eliminated),
+            });
+            values = event.values;
+        }
+    }
+    for (let i = 0; i < events.length; i++) {
+        events[i].prevEvent = events[i - 1];
+        events[i].nextEvent = events[i + 1];
+
+        for (const option of mentionedOptions) {
+            if (!events[i].values[option]) events[i].values[option] = 0;
+        }
+    }
+    const maxValue = Math.max(...events.flatMap(event => Object.values(event.values)));
+
+    const voteOptions = JSON.parse(containerNode.dataset.options);
+    const codeholders = JSON.parse(containerNode.dataset.codeholders);
+
+    const BAR_HEIGHT = 36;
+    const BAR_YSTRIDE = 38;
+    const PAD_TOP = 20;
+
+    const svg = d3.create('svg').attr('height', PAD_TOP + BAR_YSTRIDE * mentionedOptions.length);
+    containerNode.appendChild(svg.node());
+
+    svg.append('defs')
+        .call(defs => defs
+            .append('pattern')
+            .attr('patternUnits', 'userSpaceOnUse')
+            .attr('id', 'diff-sub')
+            .attr('x', '0').attr('y', '0')
+            .attr('width', '8').attr('height', '8')
+            .call(p => p.append('line').attr('x1', '-8').attr('y1', '8').attr('x2', '8').attr('y2', '-8'))
+            .call(p => p.append('line').attr('x1', '0').attr('y1', '8').attr('x2', '8').attr('y2', '0'))
+            .call(p => p.append('line').attr('x1', '0').attr('y1', '16').attr('x2', '16').attr('y2', '0'))
+        )
+        .call(defs => defs
+            .append('pattern')
+            .attr('patternUnits', 'userSpaceOnUse')
+            .attr('id', 'diff-add')
+            .attr('x', '0').attr('y', '0')
+            .attr('width', '8').attr('height', '8')
+            .call(p => p.append('line').attr('x1', '-8').attr('y1', '8').attr('x2', '8').attr('y2', '-8'))
+            .call(p => p.append('line').attr('x1', '0').attr('y1', '8').attr('x2', '8').attr('y2', '0'))
+            .call(p => p.append('line').attr('x1', '0').attr('y1', '16').attr('x2', '16').attr('y2', '0'))
+        );
+
+    const x = d3.scaleLinear().domain([0, maxValue]).range([10, 100]);
+
+    let onDidResize = () => {};
+    const onResize = () => {
+        const width = containerNode.offsetWidth;
+
+        svg
+            .attr('width', width)
+            .attr('viewBox', [0, 0, width, PAD_TOP + BAR_YSTRIDE * mentionedOptions.length]);
+        x.range([10, width - 10]);
+
+        onDidResize();
+    };
+    onResize();
+    window.addEventListener('resize', onResize);
+    if (window.ResizeObserver) {
+        new ResizeObserver(onResize).observe(containerNode);
+    }
+
+    function numberOr(n, f) {
+        if (Number.isFinite(n)) return n;
+        return f;
+    }
+
+    const innerContainer = svg.append('g').attr('transform', `translate(0, ${PAD_TOP})`);
+
+    const xAxis = d3.axisTop(x);
+    let xAxisNode = innerContainer.append('g').attr('class', 'x-axis');
+    xAxisNode.call(xAxis);
+
+    let quotaLine = innerContainer.append('g').selectAll('.quota-line');
+    let bars = innerContainer.append('g').attr('class', 'chart-bars').selectAll('.chart-bar');
+
+    function loadEvent(event) {
+        const minValue = d => {
+            return Math.min(d.value, numberOr(d.nextValue, Infinity));
+        };
+
+        xAxisNode.call(xAxis);
+
+        quotaLine = quotaLine.data([{ quota }])
+            .join(enter => enter.append('line')
+                .attr('class', 'quota-line')
+                    .attr('transform', `translate(${x(0)}, 0)`)
+                .attr('x1', d => x(d.quota) - x(0))
+                .attr('x2', d => x(d.quota) - x(0))
+                .attr('y1', '0')
+                .attr('y2', mentionedOptions.length * BAR_YSTRIDE),
+                update => update
+                    .attr('x1', d => x(d.quota) - x(0))
+                    .attr('x2', d => x(d.quota) - x(0)),
+            );
+
+        const itemClass = (d) => (
+            'chart-bar'
+                + (event.chosen.has(d.id) ? ' is-chosen' : '')
+                + (event.eliminated.has(d.id) ? ' is-eliminated' : '')
+                + (event.type === 'elect-with-quota' && event.elected?.includes(d.id) ? ' is-chosen-now' : '')
+                + (event.type === 'eliminate' && event.candidate === d.id ? ' is-eliminated-now' : '')
+        );
+
+        const data = mentionedOptions.map((option, i) => ({
+            id: option,
+            index: i,
+            value: event.values[option],
+            nextValue: event.nextEvent?.values[option],
+        }));
+        bars = bars.data(data, d => d.id)
+            .join(enter => enter.append('g')
+                    .attr('class', itemClass)
+                    .attr('transform', d => `translate(${x(0)}, ${BAR_YSTRIDE * d.index})`)
+                    .call(node => node.append('rect')
+                        .attr('class', 'chart-bar-base')
+                        .attr('height', BAR_HEIGHT)
+                        .attr('width', d => x(d.value) - x(0))
+                    )
+                    .call(node => node.append('rect')
+                        .attr('class', 'chart-bar-diff is-sub')
+                        .attr('height', BAR_HEIGHT)
+                        .attr('x', d => x(minValue(d)) - x(0))
+                        .attr('width', d => x(d.value) - x(minValue(d)))
+                        .attr('fill', 'url(#diff-sub)')
+                    )
+                    .call(node => node.append('rect')
+                        .attr('class', 'chart-bar-diff is-add')
+                        .attr('height', BAR_HEIGHT)
+                        .attr('x', d => x(minValue(d)) - x(0))
+                        .attr('width', d => x(numberOr(d.nextValue, minValue(d))) - x(minValue(d)))
+                        .attr('fill', 'url(#diff-add)')
+                    )
+                    .call(node => node.append('foreignObject')
+                        .attr('x', '0')
+                        .attr('y', '0')
+                        .attr('width', containerNode.offsetWidth)
+                        .attr('height', BAR_HEIGHT)
+                        .each(function (d) {
+                            const div = document.createElement('div');
+                            div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+                            div.className = 'bar-contents';
+                            div.appendChild(renderVizOption(voteOptions, codeholders, d.id));
+                            this.appendChild(div);
+                        })
+                    ),
+                update => update
+                    .attr('class', itemClass)
+                    .attr('transform', d => `translate(${x(0)}, ${BAR_YSTRIDE * d.index})`)
+                    .call(node => node.select('.chart-bar-base').transition().attr('width', d => x(d.value) - x(0)))
+                    .call(node => node.selectAll('.chart-bar-diff.is-sub')
+                        .transition().attr('width', 0).remove()
+                    )
+                    .call(node => node.selectAll('.chart-bar-diff.is-add')
+                            .transition()
+                            .attr('x', d => x(numberOr(d.nextValue, d.value)) - x(0))
+                            .attr('width', 0)
+                            .remove()
+                    )
+                    .call(node => node.append('rect')
+                        .attr('class', 'chart-bar-diff is-sub')
+                        .attr('height', BAR_HEIGHT)
+                        .attr('fill', 'url(#diff-sub)')
+                        .attr('x', d => x(d.value) - x(0))
+                        .attr('width', '0')
+                        .transition()
+                        .delay(250)
+                        .attr('x', d => x(minValue(d)) - x(0))
+                        .attr('width', d => x(d.value) - x(minValue(d)))
+                    )
+                    .call(node => node.append('rect')
+                        .attr('class', 'chart-bar-diff is-add')
+                        .attr('height', BAR_HEIGHT)
+                        .attr('x', d => x(minValue(d)) - x(0))
+                        .attr('fill', 'url(#diff-add)')
+                        .attr('width', '0')
+                        .transition()
+                        .delay(250)
+                        .attr('width', d => x(numberOr(d.nextValue, minValue(d))) - x(minValue(d)))
+                    ),
+            );
+    }
+
+    function renderBarContents(optionId) {
+        const option = voteOptions[optionId];
+        if (option.type === 'simple') {
+
+        }
+    }
+
+    if (events.length > 1) {
+        const roundSwitcher = document.createElement('div');
+        roundSwitcher.className = 'round-switcher';
+        const prevButton = document.createElement('button');
+        const label = document.createElement('div');
+        const nextButton = document.createElement('button');
+        prevButton.textContent = '←';
+        nextButton.textContent = '→';
+
+        const roundDescription = document.createElement('div');
+        roundDescription.className = 'round-description';
+
+        roundSwitcher.appendChild(prevButton);
+        roundSwitcher.appendChild(label);
+        roundSwitcher.appendChild(nextButton);
+        containerNode.insertBefore(roundDescription, containerNode.firstChild);
+        containerNode.insertBefore(roundSwitcher, containerNode.firstChild);
+
+        let current = 0;
+
+        function update() {
+            label.textContent = account_votes.result_stv_table_header.replace(/%s/, (current + 1).toString());
+
+            const event = events[current];
+            if (event.type === 'elect-with-quota' && event.elected.length) {
+                roundDescription.textContent = account_votes.result_stv_table_header_elect;
+            } else if (event.type === 'elect-with-quota') {
+                roundDescription.textContent = account_votes.result_stv_table_header_elect_empty;
+            } else if (event.type === 'eliminate') {
+                roundDescription.textContent = account_votes.result_stv_table_header_eliminate;
+            } else if (event.type === 'elect-rest') {
+                roundDescription.textContent = account_votes.result_stv_table_header_elect_rest;
+            } else {
+                roundDescription.textContent = '';
+            }
+
+            loadEvent(events[current]);
+
+            prevButton.disabled = current === 0;
+            nextButton.disabled = current === events.length - 1;
+        }
+
+        prevButton.addEventListener('click', () => {
+            if (current === 0) return;
+            current--;
+            update();
+        });
+        nextButton.addEventListener('click', () => {
+            if (current === events.length - 1) return;
+            current++;
+            update();
+        });
+
+        update();
+        onDidResize = update;
+    } else {
+        loadEvent(events[0]);
+        onDidResize = () => loadEvent(events[0]);
+    }
+}
+
+function renderVizOption(voteOptions, codeholders, id) {
+    const node = document.createElement('div');
+    node.className = 'viz-vote-option';
+    const option = voteOptions[id];
+    if (option.type === 'simple') {
+        const label = document.createElement('span');
+        label.className = 'option-label';
+        label.textContent = option.name;
+        node.appendChild(label);
+    } else if (option.type === 'codeholder') {
+        node.classList.add('is-codeholder');
+        const codeholder = codeholders[option.codeholderId] || {};
+        if (codeholder.icon_src) {
+            const chImg = document.createElement('img');
+            chImg.className = 'ch-icon';
+            chImg.src = codeholder.icon_src;
+            chImg.srcset = codeholder.icon_srcset;
+            node.appendChild(chImg);
+        }
+        const label = document.createElement('span');
+        label.className = 'ch-label';
+        label.textContent = codeholder.name;
+        node.appendChild(label);
+    }
+
+    return node;
+}
+

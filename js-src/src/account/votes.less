@@ -456,6 +456,30 @@
         width: 8em;
     }
 
+    .viz-vote-option {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5em;
+        padding: 0 0.5em;
+
+        .ch-img {
+            border-radius: 50%;
+            width: 1.5em;
+            height: 1.5em;
+        }
+
+        .ch-label, .option-label {
+            flex: 1;
+            width: 0;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
     .result-rp-value {
         h3 {
             margin-bottom: 0.3em;
@@ -499,27 +523,8 @@
                     height: 100%;
                     display: flex;
 
-                    .graph-option {
-                        flex: 1;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        gap: 0.5em;
-                        padding: 0 0.5em;
-
-                        .ch-img {
-                            border-radius: 50%;
-                            width: 1.5em;
-                            height: 1.5em;
-                        }
-
+                    .viz-vote-option {
                         .ch-label, .option-label {
-                            flex: 1;
-                            width: 0;
-                            display: block;
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
                             text-align: center;
                         }
                     }
@@ -585,6 +590,109 @@
     }
 
     .result-stv-value {
+        .round-switcher {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stv-interactive-insert {
+            &.is-interactive {
+                border-top: 1px solid rgb(var(--light-separator));
+                border-bottom: 1px solid rgb(var(--light-separator));
+                padding: 1em 0;
+            }
+
+            & > svg {
+                width: 100%;
+                margin: 0 auto;
+
+                #diff-sub line {
+                    stroke: rgb(var(--bg));
+                }
+                #diff-add line {
+                    stroke: rgb(var(--fg));
+                }
+            }
+
+            .round-description {
+                text-align: center;
+                padding: 0.2em 0;
+            }
+
+            .quota-line {
+                stroke-width: 1px;
+                stroke: rgb(var(--fg));
+            }
+
+            .chart-bar {
+                --bar: ~"rgb(var(--fg) / 0.4)";
+                transition: opacity 0.25s;
+
+                .chart-bar-base {
+                    transition: fill 0.25s;
+                    fill: var(--bar);
+                }
+                .chart-bar-diff.is-add {
+                    opacity: 0.5;
+                }
+                .chart-bar-diff {
+                    animation: chart-bar-diff 2s cubic-bezier(.3, 0, .7, 1) infinite;
+                    @keyframes chart-bar-diff {
+                        50% { opacity: 0.1 }
+                    }
+                }
+
+                .bar-contents {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    color: rgb(var(--fg));
+                }
+
+                &.is-chosen {
+                    --bar: rgb(var(--light-accent));
+
+                    &:not(.is-chosen-now) {
+                        opacity: 0.5;
+                    }
+
+                    .chart-bar-base {
+                        transition-delay: 0.25s;
+                    }
+
+                    &.is-chosen-now .chart-bar-base {
+                        stroke: rgb(var(--accent));
+                        stroke-width: 2px;
+                    }
+
+                    .ch-label::after, .option-label::after {
+                        content: ' ✓';
+                    }
+                }
+                &.is-eliminated {
+                    opacity: 0.5;
+
+                    &.is-eliminated-now {
+                        animation: chart-bar-eliminated-now 2s cubic-bezier(.3, 0, .7, 1) infinite;
+                        @keyframes chart-bar-eliminated-now {
+                            50% {
+                                opacity: 1;
+                            }
+                        }
+
+                        .ch-label, .option-label {
+                            text-decoration-color: rgb(var(--error));
+                            text-decoration-thickness: 2px;
+                        }
+                    }
+
+                    .ch-label, .option-label {
+                        text-decoration: line-through;
+                    }
+                }
+            }
+        }
+
         .stv-table-container {
             overflow: auto;
         }
