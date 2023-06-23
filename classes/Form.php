@@ -554,13 +554,17 @@ class Form {
 
         foreach ($this->form as $item) {
             if ($item['el'] === 'input') {
-                $value = null;
                 if (!isset($this->data[$item['name']])) {
                     $newData[$item['name']] = null;
+                    $scriptCtx->setFormVar($item['name'], null);
                     continue;
                 }
+                $value = $this->data[$item['name']];
 
                 if ($item['disabled'] === true) {
+                    if (!$omitEntirely) {
+                        $newData[$item['name']] = null;
+                    }
                     continue;
                 } else if (gettype($item['disabled']) === 'array') {
                     // script
