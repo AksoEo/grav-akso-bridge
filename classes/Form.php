@@ -546,7 +546,7 @@ class Form {
         return $ok;
     }
 
-    protected function dataWithDisabledFieldsRemoved($omitEntirely = false): ?array {
+    protected function dataWithDisabledFieldsRemoved(): ?array {
         if ($this->data === null) return null;
         $scriptCtx = new FormScriptExecCtx($this->app);
 
@@ -562,18 +562,14 @@ class Form {
                 $value = $this->data[$item['name']];
 
                 if ($item['disabled'] === true) {
-                    if (!$omitEntirely) {
-                        $newData[$item['name']] = null;
-                    }
+                    $newData[$item['name']] = null;
                     continue;
                 } else if (gettype($item['disabled']) === 'array') {
                     // script
                     $res = $scriptCtx->eval($item['disabled']);
                     if ($res['s'] && $res['v']) {
                         // disabled
-                        if (!$omitEntirely) {
-                            $newData[$item['name']] = null;
-                        }
+                        $newData[$item['name']] = null;
                         continue;
                     }
                 }

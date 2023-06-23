@@ -64,7 +64,7 @@ class CongressRegistrationForm extends Form {
 
     function submit() {
         $args = array(
-            'data' => $this->dataWithDisabledFieldsRemoved($this->dataId),
+            'data' => $this->dataWithDisabledFieldsRemoved(),
         );
         $ch = $this->getCodeholder();
         if ($ch && $ch['codeholderType'] === 'human') {
