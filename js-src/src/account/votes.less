@@ -504,6 +504,8 @@
             }
 
             .graph-node {
+                transition: opacity 0.2s;
+
                 & > rect {
                     fill: rgb(var(--bg1));
                     stroke: rgb(var(--fg));
@@ -516,6 +518,9 @@
                 &.is-winner .node-contents {
                     color: rgb(var(--light-accent-fg));
                 }
+                &.was-winner {
+                    opacity: 0.8;
+                }
 
                 .node-contents {
                     font-size: 0.8em;
@@ -527,6 +532,20 @@
                         .ch-label, .option-label {
                             text-align: center;
                         }
+                    }
+                }
+
+                .round-marker {
+                    circle {
+                        fill: rgb(var(--light-accent-fg));
+                        stroke: rgb(var(--light-accent));
+                    }
+
+                    text {
+                        fill: rgb(var(--light-accent));
+                        text-anchor: middle;
+                        dominant-baseline: central;
+                        font-size: 0.8em;
                     }
                 }
             }

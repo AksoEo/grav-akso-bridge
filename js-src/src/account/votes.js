@@ -262,6 +262,8 @@ function initRankedPairsViz() {
     const resultRp = document.querySelector('.result-rp-value');
     if (!resultRp) return;
     const rounds = [];
+    const electedNodes = [];
+    let round = 0;
     for (const roundNode of resultRp.querySelectorAll('.rp-round[data-value]')) {
         const roundData = JSON.parse(roundNode.dataset.value);
         const nodesSet = new Set();
@@ -273,13 +275,18 @@ function initRankedPairsViz() {
             id: id.toString(),
             isWinner: roundData.winner === id,
         }));
+
         const edges = roundData.lockGraphEdges.map(edge => ({
             id: [edge.from, edge.to].sort().join('-'),
             source: edge.from.toString(),
             target: edge.to.toString(),
             diff: edge.diff,
         }));
-        rounds.push({ nodes, edges, winner: roundData.winner });
+        rounds.push({ nodes, electedNodes: electedNodes.slice(), edges, winner: roundData.winner });
+        for (const item of nodes.filter(item => item.isWinner)) {
+            electedNodes.push({ ...item, chosenRound: round });
+        }
+        round++;
     }
 
     const containerNode = resultRp.querySelector('.rp-interactive-insert');
@@ -379,8 +386,9 @@ function initRankedPairsViz() {
 
             this.querySelector('path').setAttribute('d', path);
 
-            const centerX = ((tx - trX) + (sx + srX)) / 2;
-            const centerY = ((ty - trY) + (sy + srY)) / 2;
+            const lerp = (a, b, t) => a + (b - a) * t;
+            const centerX = lerp(sx + srX, tx - trX, 0.6);
+            const centerY = lerp(sy + srY, ty - trY, 0.6);
             this.querySelector('.edge-label').setAttribute('transform', `translate(${centerX}, ${centerY})`);
         });
     }
@@ -400,14 +408,15 @@ function initRankedPairsViz() {
         d.fy = null;
     }
 
-    function loadRound(round) {
+    function loadRound(round, roundIndex) {
         const old = new Map(node.data().map(d => [d.id, d]));
-        const nodes = round.nodes.map(node => ({ ...(old.get(node.id) || {}), ...node }));
+        const nodes = round.nodes.map(node => ({ ...(old.get(node.id) || {}), ...node, wasWinner: false }))
+            .concat(round.electedNodes.map(node => ({ ...(old.get(node.id) || {}), ...node, wasWinner: true })));
         const edges = round.edges.map(edge => ({ ...edge }));
 
         node = node.data(nodes, d => d.id)
             .join(enter => enter.append('g')
-                .attr('class', d => 'graph-node' + (d.isWinner ? ' is-winner' : ''))
+                .attr('class', d => 'graph-node' + (d.isWinner ? ' is-winner' : '') + (d.wasWinner ? ' was-winner' : ''))
                 .call(d3.drag()
                     .on('start', nodeDragStarted)
                     .on('drag', nodeDragged)
@@ -433,7 +442,27 @@ function initRankedPairsViz() {
                         div.appendChild(renderVizOption(voteOptions, codeholders, d.id));
                         this.appendChild(div);
                     })
-                )
+                ),
+                update => update
+                    .attr('class', d => 'graph-node' + (d.isWinner ? ' is-winner' : '') + (d.wasWinner ? ' was-winner' : ''))
+                    .each(function (d) {
+                        for (const marker of this.querySelectorAll('.round-marker')) {
+                            marker.parentNode.removeChild(marker);
+                        }
+                        if (d.chosenRound < roundIndex) {
+                            const marker = d3.create('svg:g');
+                            marker
+                                .attr('class', 'round-marker')
+                                .attr('transform', `translate(${NODE_WIDTH / 2}, ${-NODE_HEIGHT / 2})`)
+                                .call(node => node
+                                    .append('circle')
+                                    .attr('r', '10')
+                                )
+                                .append('text')
+                                .text(d.chosenRound + 1);
+                            this.appendChild(marker.node());
+                        }
+                    })
             );
 
         link = link.data(edges, d => [d.source, d.target])
@@ -460,7 +489,7 @@ function initRankedPairsViz() {
 
         simulation.nodes(nodes);
         simulation.force('link').links(edges);
-        simulation.alpha(1).restart().tick();
+        simulation.alpha(0.2).restart().tick();
         ticked();
     }
 
@@ -482,7 +511,7 @@ function initRankedPairsViz() {
 
         function update() {
             label.textContent = account_votes.result_rp_round_n_title.replace(/%s/, (current + 1).toString());
-            loadRound(rounds[current]);
+            loadRound(rounds[current], current);
         }
 
         prevButton.addEventListener('click', () => {
@@ -496,7 +525,7 @@ function initRankedPairsViz() {
 
         update();
     } else {
-        loadRound(rounds[0]);
+        loadRound(rounds[0], 0);
     }
 }
 
