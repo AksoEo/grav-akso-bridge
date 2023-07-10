@@ -322,6 +322,8 @@ class CongressRegistrationForm extends Form {
         $disabled = $item['disabled'] === true;
         if (gettype($item['disabled']) === 'array') {
             $root->setAttribute('data-script-disabled', base64_encode(json_encode($item['disabled'])));
+        } else if ($disabled && $item['hideIfDisabled']) {
+            $item->setAttribute('class', $item->getAttribute('class') . ' item-disabled-hidden');
         }
 
         if ($this->dataId && !$item['editable']) {
