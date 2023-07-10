@@ -17,6 +17,7 @@ use Grav\Plugin\AksoBridge\Delegates;
 use Grav\Plugin\AksoBridge\DelegationApplications;
 use Grav\Plugin\AksoBridge\GkSendToSubscribers;
 use Grav\Plugin\AksoBridge\Magazines;
+use Grav\Plugin\AksoBridge\OneTimeToken;
 use Grav\Plugin\AksoBridge\Registration;
 use Grav\Plugin\AksoBridge\UserAccount;
 
@@ -49,6 +50,7 @@ class AksoBridgePlugin extends Plugin {
     public const MAGAZINE_COVER_PATH = self::RESOURCE_PATH . '/revuo/bildo';
     public const MAGAZINE_DOWNLOAD_PATH = self::RESOURCE_PATH . '/revuo/elshuto';
     public const PAYMENT_METHOD_THUMBNAIL_PATH = self::RESOURCE_PATH . '/pagmetodo/bildo';
+    public const OTT_PATH = '/ott';
 
     // allow access to protected property
     public function getGrav() {
@@ -181,6 +183,8 @@ class AksoBridgePlugin extends Plugin {
 
         if ($this->path === $this->loginPath) {
             $this->addLoginPage();
+        } else if ($this->path === self::OTT_PATH) {
+            $this->addOttPage();
         } else if ($this->pathStartsWithComponent($this->path, $this->accountPath)) {
             if ($this->aksoUser) {
                 $this->addAccountPage();
@@ -311,6 +315,12 @@ class AksoBridgePlugin extends Plugin {
             $app->open();
             $acc = new UserAccount($this, $app, $this->bridge, $this->path);
             $state['account'] = $acc->run();
+            $app->close();
+        } else if ($templateId === 'akso_ott') {
+            $app = new AppBridge();
+            $app->open();
+            $ott = new OneTimeToken($this, $app);
+            $state['ott'] = $ott->run();
             $app->close();
         } else if ($templateId === 'akso_registration') {
             $this->grav['assets']->add('plugin://akso-bridge/js/dist/registration.css');
@@ -501,6 +511,9 @@ class AksoBridgePlugin extends Plugin {
         $this->addVirtualPage($this->accountPath . $notifsPath, '/pages/akso_account/notifs/akso_account_notifs.md');
         $this->addVirtualPage($this->accountPath, '/pages/akso_account/akso_account.md');
     }
+    public function addOttPage() {
+        $this->addVirtualPage(self::OTT_PATH, '/pages/akso_ott/akso_ott.md');
+    }
 
     function addVirtualPage($path, $template) {
         $pages = $this->grav['pages'];
@@ -530,10 +543,10 @@ class AksoBridgePlugin extends Plugin {
         $ref = $_SERVER['HTTP_REFERER'];
         $refp = parse_url($ref);
         $rpath = '/';
-        if ($refp != false && isset($refp['path'])) {
+        if ($refp !== false && isset($refp['path'])) {
             $rpath = $refp['path'];
             if (isset($refp['query'])) $rpath .= '?' . $refp['query'];
-            if (isset($refp['anchor'])) $rpath .= '#' + $refp['anchor'];
+            if (isset($refp['anchor'])) $rpath .= '#' . $refp['anchor'];
         }
         return $rpath;
     }

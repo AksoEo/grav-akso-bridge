@@ -1,0 +1,40 @@
+{% extends 'partials/base.html.twig' %}
+{% block content %}
+    {% if ott.error %}
+        <div class="infobox is-error">
+            {{ akso_locale.ott.submit_error }}
+        </div>
+    {% endif %}
+
+    {% if ott.ctx == 'delete_email_address' %}
+        <h2>{{ akso_locale.ott.del_email_title|format(ott.email) }}</h2>
+
+        {% if ott.done %}
+            <p>{{ akso_locale.ott.del_email_done }}</p>
+        {% else %}
+            <p>{{ akso_locale.ott.del_email_description }}</p>
+
+            <form method="POST">
+                <input type="hidden" name="action" value="submit" />
+                <button type="submit">
+                    {{ akso_locale.ott.del_email_confirm }}
+                </button>
+            </form>
+        {% endif %}
+    {% elseif ott.ctx == 'unsubscribe_newsletter' %}
+        <h2>{{ akso_locale.ott.unsub_newsletter_title|format(ott.name) }}</h2>
+
+        {% if ott.done %}
+            <p>{{ akso_locale.ott.unsub_newsletter_done }}</p>
+        {% else %}
+            <p>{{ akso_locale.ott.unsub_newsletter_description }}</p>
+
+            <form method="POST">
+                <input type="hidden" name="action" value="submit" />
+                <button type="submit">
+                    {{ akso_locale.ott.unsub_newsletter_confirm }}
+                </button>
+            </form>
+        {% endif %}
+    {% endif %}
+{% endblock %}
