@@ -1,17 +1,18 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use DateTime;
+use DateTimeInterface;
+use Exception;
 use Grav\Common\Grav;
 use Grav\Plugin\AksoBridgePlugin;
-use Grav\Plugin\AksoBridge\Utils;
-use diversen\sendfile;
 
 class Magazines {
     const MAGAZINE = 'revuo';
     const EDITION = 'numero';
     const TOC = 'enhavo';
 
-    private $plugin, $user;
+    private $plugin, $bridge;
 
     public function __construct($plugin, $bridge) {
         $this->plugin = $plugin;
@@ -22,9 +23,9 @@ class Magazines {
     public const TH_EDITION = 'e';
     public const TH_SIZE = 's';
     public function runThumbnail() {
-        $magazine = isset($_GET[self::TH_MAGAZINE]) ? $_GET[self::TH_MAGAZINE] : '?';
-        $edition = isset($_GET[self::TH_EDITION]) ? $_GET[self::TH_EDITION] : '?';
-        $size = isset($_GET[self::TH_SIZE]) ? $_GET[self::TH_SIZE] : '?';
+        $magazine = $_GET[self::TH_MAGAZINE] ?? '?';
+        $edition = $_GET[self::TH_EDITION] ?? '?';
+        $size = $_GET[self::TH_SIZE] ?? '?';
 
         $res = $this->bridge->get("/magazines/$magazine/editions/$edition", array(
             'fields' => ['thumbnail'],
@@ -50,11 +51,13 @@ class Magazines {
     public const DL_EDITION = 'e';
     public const DL_ENTRY = 't';
     public const DL_FORMAT = 'f';
+
+    /** @throws Exception */
     public function runDownload() {
-        $magazine = isset($_GET[self::DL_MAGAZINE]) ? $_GET[self::DL_MAGAZINE] : '?';
-        $edition = isset($_GET[self::DL_EDITION]) ? $_GET[self::DL_EDITION] : '?';
-        $entry = isset($_GET[self::DL_ENTRY]) ? $_GET[self::DL_ENTRY] : '?';
-        $format = isset($_GET[self::DL_FORMAT]) ? $_GET[self::DL_FORMAT] : '?';
+        $magazine = $_GET[self::DL_MAGAZINE] ?? '?';
+        $edition = $_GET[self::DL_EDITION] ?? '?';
+        $entry = $_GET[self::DL_ENTRY] ?? '?';
+        $format = $_GET[self::DL_FORMAT] ?? '?';
 
         $magazineInfo = $this->getMagazine($magazine);
         if (!$magazineInfo) {
@@ -142,11 +145,12 @@ class Magazines {
                     'size' => $item['size'],
                 );
             }
-        } catch (\Exception $e) {}
+        } catch (Exception $e) {}
         return $edition;
     }
 
-    function getLatestEditions($magazine, $n) {
+    /** @throws Exception */
+    function getLatestEditions($magazine, $n): array {
         $res = $this->bridge->get("/magazines/$magazine/editions", array(
             'fields' => ['id', 'idHuman', 'date', 'description', 'thumbnail', 'subscribers', 'subscriberFiltersCompiled'],
             'filter' => ['published' => true],
@@ -163,13 +167,14 @@ class Magazines {
 
             return $editions;
         } else {
-            throw new \Exception("Failed to fetch latest editions for magazine $magazine:\n" . $res['b']);
+            throw new Exception("Failed to fetch latest editions for magazine $magazine:\n" . $res['b']);
         }
-        return null;
     }
 
     private $cachedMagazines = null;
-    function listMagazines() {
+
+    /** @throws Exception */
+    function listMagazines(): ?array {
         if (!$this->cachedMagazines) {
             $this->cachedMagazines = [];
             // TODO: handle case where there are more than 100 magazines
@@ -182,11 +187,11 @@ class Magazines {
                     $latest = $this->getLatestEditions($magazine['id'], 2);
                     if (!$latest || count($latest) < 1) continue;
                     $magazine['latest'] = $latest[0];
-                    $magazine['previous'] = isset($latest[1]) ? $latest[1] : null;
+                    $magazine['previous'] = $latest[1] ?? null;
                     $this->cachedMagazines[$magazine['id']] = $magazine;
                 }
             } else {
-                throw new \Exception("Failed to fetch magazines:\n" . $res['b']);
+                throw new Exception("Failed to fetch magazines:\n" . $res['b']);
             }
             uasort($this->cachedMagazines, function ($a, $b) {
                 if ($a === $b) return 0;
@@ -197,13 +202,14 @@ class Magazines {
         return $this->cachedMagazines;
     }
 
+    /** @throws Exception */
     function getMagazine($id) {
         $res = $this->bridge->get("/magazines/$id", array(
-            'fields' => ['id', 'name', 'description', 'org', 'subscribers', 'subscriberFiltersCompiled'],
+            'fields' => ['id', 'name', 'description', 'issn', 'org', 'subscribers', 'subscriberFiltersCompiled'],
         ), 240);
         if ($res['k']) {
             $res['b']['description_rendered'] = $this->bridge->renderMarkdown(
-                $res['b']['description'] ? $res['b']['description'] : '',
+                $res['b']['description'] ?: '',
                 ['emphasis', 'strikethrough', 'link', 'list', 'table'],
             )['c'];
             return $res['b'];
@@ -211,11 +217,12 @@ class Magazines {
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
             return null;
         } else {
-            throw new \Exception("Failed to fetch magazine $id:\n" . $res['b']);
+            throw new Exception("Failed to fetch magazine $id:\n" . $res['b']);
         }
     }
 
-    function getMagazineEditions($magazine, $magazineName) {
+    /** @throws Exception */
+    function getMagazineEditions($magazine, $magazineName): array {
         $allEditions = [];
         while (true) {
             $res = $this->bridge->get("/magazines/$magazine/editions", array(
@@ -227,7 +234,7 @@ class Magazines {
             ), 240);
 
             if (!$res['k']) {
-                throw new \Exception("Failed to fetch magazine editions for $magazine:\n" . $res['b']);
+                throw new Exception("Failed to fetch magazine editions for $magazine:\n" . $res['b']);
             }
             foreach ($res['b'] as $edition) {
                 $edition = $this->addEditionDownloadLinks($magazine, $edition, $magazineName);
@@ -247,6 +254,7 @@ class Magazines {
         return $editionsByYear;
     }
 
+    /** @throws Exception */
     function getMagazineEdition($magazine, $edition, $magazineName) {
         $res = $this->bridge->get("/magazines/$magazine/editions/$edition", array(
             'fields' => ['id', 'idHuman', 'date', 'description', 'thumbnail', 'published', 'subscribers', 'subscriberFiltersCompiled', 'files'],
@@ -263,9 +271,8 @@ class Magazines {
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
             return null;
         } else {
-            throw new \Exception("Failed to fetch magazine edition $magazine/$edition:\n" . $res['b']);
+            throw new Exception("Failed to fetch magazine edition $magazine/$edition:\n" . $res['b']);
         }
-        return null;
     }
 
     private function addEntryDownloadUrl($magazine, $edition, $entry, $magazineName, $editionName) {
@@ -296,7 +303,8 @@ class Magazines {
         return $entry;
     }
 
-    function getEditionTocEntries($magazine, $edition, $magazineName, $editionName, $highlightsOnly = false) {
+    /** @throws Exception */
+    function getEditionTocEntries($magazine, $edition, $magazineName, $editionName, $highlightsOnly = false): array {
         $allEntries = [];
         $hasHighlighted = false;
         while (true) {
@@ -308,7 +316,7 @@ class Magazines {
             );
             if ($highlightsOnly) $options['filter'] = array('highlighted' => true);
             $res = $this->bridge->get("/magazines/$magazine/editions/$edition/toc", $options, 240);
-            if (!$res['k']) throw new \Exception("Failed to fetch toc for $magazine/$edition:\n" . $res['b']);
+            if (!$res['k']) throw new Exception("Failed to fetch toc for $magazine/$edition:\n" . $res['b']);
             foreach ($res['b'] as $entry) {
                 if ($entry['highlighted']) $hasHighlighted = true;
                 $entry = $this->addEntryDownloadUrl($magazine, $edition, $entry, $magazineName, $editionName);
@@ -332,6 +340,7 @@ class Magazines {
         return $allEntries;
     }
 
+    /** @throws Exception */
     function getEditionTocEntry($magazine, $edition, $entry, $magazineName, $editionName) {
         $res = $this->bridge->get("/magazines/$magazine/editions/$edition/toc/$entry", array(
             'fields' => ['id', 'title', 'page', 'author', 'recitationAuthor', 'highlighted', 'text', 'availableRecitationFormats'],
@@ -339,24 +348,24 @@ class Magazines {
         if ($res['k']) {
             $entry = $res['b'];
             $entry['title_rendered'] = $this->bridge->renderMarkdown(
-                $entry['title'] ? $entry['title'] : '',
+                $entry['title'] ?: '',
                 ['emphasis', 'strikethrough'],
                 true,
             )['c'];
             $entry['text_rendered'] = $this->bridge->renderMarkdown(
-                $entry['text'] ? $entry['text'] : '',
+                $entry['text'] ?: '',
                 ['emphasis', 'strikethrough', 'link', 'list', 'table', 'image'],
             )['c'];
-            $entry = $this->addEntryDownloadUrl($magazine, $edition, $entry, $magazineName, $editionName);
-            return $entry;
+            return $this->addEntryDownloadUrl($magazine, $edition, $entry, $magazineName, $editionName);
         } else {
-            throw new \Exception("Failed to fetch toc $magazine/$edition/$entry:\n" . $res['b']);
+            throw new Exception("Failed to fetch toc $magazine/$edition/$entry:\n" . $res['b']);
         }
-        return null;
     }
 
     private $magazineAccessCache = [];
-    private function canUserReadMagazine($user, $magazine, $edition, $accessType) {
+
+    /** @throws Exception */
+    private function canUserReadMagazine($user, $magazine, $edition, $accessType): bool {
         $effectiveSubscribers = $edition['subscribers'] ?: $magazine['subscribers'];
         $effectiveCompiledFilters = $edition['subscriberFiltersCompiled'] ?: $magazine['subscriberFiltersCompiled'];
 
@@ -378,7 +387,7 @@ class Magazines {
                     ),
                     'limit' => 1,
                 ));
-                if (!$res['k']) throw new \Exception("failed to check codeholder magazine access");
+                if (!$res['k']) throw new Exception("failed to check codeholder magazine access");
                 $result = $res['h']['x-total-items'] > 0;
 
                 $this->magazineAccessCache[$cacheKey] = $result;
@@ -394,10 +403,10 @@ class Magazines {
         if (gettype($effectiveSubscribers[$accessType]) === 'array') {
             $freelyAvailableAfter = $effectiveSubscribers[$accessType]['freelyAvailableAfter'];
             if ($freelyAvailableAfter) {
-                $fDate = \DateTime::createFromFormat(\DateTime::RFC3339, $edition['date'] . 'T00:00:00Z');
+                $fDate = DateTime::createFromFormat(DateTimeInterface::RFC3339, $edition['date'] . 'T00:00:00Z');
                 $interval = new \DateInterval($freelyAvailableAfter);
                 $fDate->add($interval);
-                if ($fDate < new \DateTime()) {
+                if ($fDate < new DateTime()) {
                     return true;
                 }
             }
@@ -406,7 +415,8 @@ class Magazines {
         return false;
     }
 
-    public function run() {
+    /** @throws Exception */
+    public function run(): array {
         $header = $this->plugin->getGrav()['page']->header();
         $path = $header->path_subroute;
         $route = ['type' => 'error'];
@@ -477,7 +487,6 @@ class Magazines {
 
         if ($route['type'] === 'list') {
             $magazines = $this->listMagazines();
-            $list = null;
             if ($route['magazines']) {
                 $list = [];
                 foreach ($route['magazines'] as $id) {
@@ -629,7 +638,8 @@ class Magazines {
             );
         } else if ($route['type'] === 'error') {
             $this->plugin->getGrav()->fireEvent('onPageNotFound');
-            return;
         }
+
+        return [];
     }
 }

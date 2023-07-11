@@ -9,6 +9,11 @@
             </div>
         {% endif %}
         <h1>{{akso_magazines.magazine.name}}</h1>
+        {% if akso_magazines.magazine.issn %}
+            <div class="magazine-issn">
+                {{ akso_locale.magazines.magazine_issn }}: <code>{{ akso_magazines.magazine.issn }}</code>
+            </div>
+        {% endif %}
         <div class="magazine-description">
             {{akso_magazines.magazine.description_rendered|raw}}
         </div>
