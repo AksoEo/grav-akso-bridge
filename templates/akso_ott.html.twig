@@ -30,6 +30,28 @@
             <p>{{ akso_locale.ott.unsub_newsletter_description }}</p>
 
             <form method="POST">
+                <p>
+                    {{akso_locale.account_notifs.newsletter_unsubscribe_reason_desc}}
+                </p>
+
+                <ul>
+                    {% for i in 0..(akso_locale.account_notifs.newsletter_unsub_reason_max) %}
+                        <li>
+                            {% set id = 'unsub_reason_' ~ i %}
+                            <input
+                                type="radio"
+                                id="{{id}}"
+                                name="reason"
+                                {% if i == 0 %}
+                                    checked
+                                {% endif %}
+                                value="{{i}}" />
+                            <label for="{{id}}">
+                                {{akso_locale.account_notifs['newsletter_unsub_reason_' ~ i]}}
+                            </label>
+                        </li>
+                    {% endfor %}
+                </ul>
                 <input type="hidden" name="action" value="submit" />
                 <button type="submit">
                     {{ akso_locale.ott.unsub_newsletter_confirm }}

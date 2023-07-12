@@ -33,12 +33,14 @@ class OneTimeToken {
         $data = $res['b'];
 
         $out = array('ctx' => $ctx, 'token' => $token);
-        if ($uri->method() && ($_POST['action'] ?? '') === 'submit') {
-            $res = $this->app->bridge->put('/tokens', [], array(
-                'ctx' => $ctx,
-                'token' => $token,
-            ), []);
+        if ($uri->method() === 'POST') {
+            $args = array('ctx' => $ctx, 'token' => $token);
+            if ($ctx === 'unsubscribe_newsletter') {
+                $args['unsubscribeReason'] = intval($_POST['unsubscribeReason'] ?? $_POST['reason'] ?? 0);
+            }
+            $res = $this->app->bridge->put('/tokens', $args, [], []);
             if (!$res['k']) {
+                Grav::instance()['log']->error("failed to submit a $ctx token: " . $res['b']);
                 $out['error'] = true;
             } else {
                 $out['done'] = true;
