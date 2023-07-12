@@ -55,7 +55,9 @@ function init() {
 
             let path = basePath;
             if (locId) path += '?' + qLoc + '=' + locId;
-            window.history.pushState({}, '', path);
+            if (document.location.pathname + document.location.search !== path) {
+                window.history.pushState({}, '', path);
+            }
         }).catch(err => {
             console.error(err);
             // failed to load for some reason; fall back to browser navigation
@@ -115,7 +117,7 @@ function init() {
 
         const tzOffsets = JSON.parse(atob(list.dataset.tzOffsets));
 
-        const searchFilters = new SearchFilters(searchFilterState);
+        const searchFilters = new SearchFilters(basePath, searchFilterState);
         list.parentNode.insertBefore(searchFilters.node, list);
 
         let lls = [];
@@ -185,6 +187,7 @@ function init() {
                 internalItems,
                 openHours: item.dataset.openHours ? JSON.parse(atob(item.dataset.openHours)) : {},
                 rating: item.dataset.rating ? item.dataset.rating.split('/').map(x => +x) : [0, 0],
+                tags: JSON.parse(item.dataset.tags),
                 tz: item.dataset.tzOffset,
             });
 
@@ -219,7 +222,6 @@ function init() {
                     const parts = span.split('-').map(p => p.split(':'));
                     const start = +parts[0][0] + (+parts[0][1] / 60);
                     const end = +parts[1][0] + (+parts[1][1] / 60);
-                    console.log(day, start, convertedHour, end);
 
                     if (start <= convertedHour && convertedHour <= end) {
                         return true;
@@ -246,6 +248,15 @@ function init() {
                 if (!item.internal && state.filters.rating) {
                     const rating = state.filters.rating;
                     if (!item.rating[1] || item.rating[0] / item.rating[1] < rating) return false;
+                }
+                if (state.filters.tags?.length) {
+                    let found = false;
+                    for (const tag of item.tags) {
+                        if (state.filters.tags.includes(tag.id)) {
+                            found = true;
+                        }
+                    }
+                    if (!found) return false;
                 }
                 return true;
             };

@@ -181,6 +181,13 @@
                             -webkit-filter: @filter;
                             filter: @filter;
                         }
+
+                        .filter-tag {
+                            padding: 0.1em 0.2em;
+                            margin: 0 0.2em;
+                            border: 1px solid ~"rgb(var(--fg) / 0.5)";
+                            border-radius: var(--radius);
+                        }
                     }
                 }
 
@@ -216,7 +223,7 @@
 
                 &.full-filters-open {
                     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.2);
-                    background: rgb(var(--bg2));
+                    background: rgb(var(--bg1));
 
                     .filter-bar-inner {
                         .filter-blob {
@@ -228,7 +235,7 @@
 
             .full-filters {
                 box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.2);
-                background: rgb(var(--bg2));
+                background: rgb(var(--bg1));
                 animation: full-filters-in 0.2s;
 
                 @keyframes full-filters-in {
@@ -306,6 +313,45 @@
                                 }
                                 &:active {
                                     transform: scale(1);
+                                }
+                            }
+                        }
+                    }
+
+                    .tags-filter {
+                        background: rgb(var(--bg));
+                        border-radius: var(--radius);
+                        padding: 0.5em;
+
+                        .tags-search {
+                            .i-input {
+                                width: 100%;
+                                margin: 0;
+                            }
+                        }
+
+                        .tags-scroll-view {
+                            max-height: 9em;
+                            overflow: auto;
+                        }
+
+                        .tags-list {
+                            margin: 0;
+                            padding: 0;
+                            list-style: none;
+
+                            .tags-list-item {
+                                display: flex;
+                                align-items: center;
+                                padding: 0.5em 1em;
+                                gap: 0.5em;
+
+                                .i-label {
+                                    flex: 1;
+                                }
+
+                                & + .tags-list-item {
+                                    border-top: 1px solid rgb(var(--light-separator));
                                 }
                             }
                         }
