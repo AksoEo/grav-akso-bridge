@@ -1,6 +1,33 @@
 {% extends 'partials/base.html.twig' %}
 {% block content %}
-    {% if account.reset_password.active %}
+    {% if account.auth_confirmation.active %}
+        <a class="link-button back-button" href="{{ account.auth_confirmation.return_link }}">
+            <span class="back-icon"></span>
+            {{ akso_locale.account.auth_confirm_cancel }}
+        </a>
+        <div class="account-auth-confirmation">
+            <h2>{{ akso_locale.account.auth_confirm_title }}</h2>
+            {% if account.auth_confirmation.error %}
+                <div class="infobox is-error">
+                    {{ account.auth_confirmation.error }}
+                </div>
+            {% endif %}
+            <p>
+                {{ akso_locale.account.auth_confirm_description }}
+            </p>
+            <form method="POST">
+                <div class="form-field">
+                    <label for="password-input">{{ akso_locale.login.password }}</label>
+                    <input id="password-input" name="password" type="password" autofocus />
+                </div>
+                <div class="form-footer">
+                    <button type="submit" class="is-primary">
+                        {{ akso_locale.account.auth_confirm_confirm }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    {% elseif account.reset_password.active %}
         <h2>{{ akso_locale.account.reset_password }}</h2>
         <p>
             {% if account.reset_password.state is same as('none') %}

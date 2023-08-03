@@ -456,7 +456,44 @@ class UserAccount {
         );
     }
 
-    function renderTotpSetup() {
+    function runUserAuthConfirmation() {
+        $authVar = 'user_confirmed_auth';
+        $validitySecs = 600;
+        $now = time();
+
+        if (isset($_POST['password']) && gettype($_POST['password']) === 'string') {
+            $password = $_POST['password'];
+            $res = $this->bridge->post('/codeholders/self/!validate_login', array(
+                'password' => $password,
+            ), [], []);
+            unset($_SESSION[$authVar]);
+            if ($res['k'] && $res['b']['password']) {
+                $_SESSION[$authVar] = $now;
+            } else if ($res['k']) {
+                return array(
+                    'active' => true,
+                    'confirmed' => false,
+                    'error' => $this->plugin->locale['account']['auth_confirm_error_invalid'],
+                    'return_link' => $this->path,
+                );
+            } else {
+                return array(
+                    'active' => true,
+                    'confirmed' => false,
+                    'error' => $this->plugin->locale['account']['auth_confirm_error_internal'],
+                    'return_link' => $this->path,
+                );
+            }
+        }
+
+        return array(
+            'active' => false,
+            'confirmed' => isset($_SESSION[$authVar]) && $now - $_SESSION[$authVar] < $validitySecs,
+            'return_link' => $this->path,
+        );
+    }
+
+    function renderTotpSetup($authConfirmation) {
         $returnLink = $this->plugin->getGrav()['uri']->path();
         $link = $returnLink . '?' . $this->plugin->locale['account']['totp_path'];
         $active = false;
@@ -465,6 +502,7 @@ class UserAccount {
         $error = null;
 
         if (isset($_GET[$this->plugin->locale['account']['totp_path']])) {
+            if (!$authConfirmation['confirmed']) return array('needs_auth_confirmation' => true);
             $active = true;
 
             $post = !empty($_POST) ? $_POST : [];
@@ -508,6 +546,7 @@ class UserAccount {
 
         return array(
             'active' => $active,
+            'needs_auth_confirmation' => false,
             'link' => $link,
             'return_link' => $returnLink,
             'submit_link' => $link,
@@ -733,11 +772,18 @@ class UserAccount {
                 );
             }
 
+            $authConfirmation = $this->runUserAuthConfirmation();
+            if ($authConfirmation['active']) {
+                return array(
+                    'auth_confirmation' => $authConfirmation,
+                );
+            }
+
             $details = $this->renderDetails();
             $membership = $this->renderMembership();
             $congressParts = $this->renderCongressParticipations();
             $resetPassword = $this->renderResetPassword();
-            $totpSetup = $this->renderTotpSetup();
+            $totpSetup = $this->renderTotpSetup($authConfirmation);
             $notifications = $this->renderNotifications();
             $pendingReq = $this->getPendingRequest();
             $pendingDetails = null;
@@ -751,6 +797,13 @@ class UserAccount {
                         $pendingDetails[$key] = $newDetails[$key];
                     }
                 }
+            }
+
+            if ($totpSetup['needs_auth_confirmation']) {
+                $authConfirmation['active'] = true;
+                return array(
+                    'auth_confirmation' => $authConfirmation,
+                );
             }
 
             return array(
@@ -794,5 +847,7 @@ class UserAccount {
                 'details' => $details,
             );
         }
+
+        return [];
     }
 }

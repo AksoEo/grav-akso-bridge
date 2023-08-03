@@ -349,6 +349,42 @@
     }
 }
 
+.account-auth-confirmation {
+    background: rgb(var(--bg));
+    border-radius: var(--radius);
+    padding: 1em;
+    box-sizing: border-box;
+    max-width: 32ch;
+    margin: 1em auto;
+    box-shadow: @shade-both;
+
+    h2 {
+        margin-top: 0;
+    }
+
+    .form-field {
+        margin: 1em 0;
+
+        label {
+            display: block;
+            padding-left: 0.6em;
+        }
+
+        input {
+            width: 100%;
+            margin: 0;
+        }
+    }
+
+    .form-footer {
+        text-align: right;
+
+        button:last-child {
+            margin-right: 0;
+        }
+    }
+}
+
 .account-pending-request-banner, .account-cancel-change-request {
     --accent: var(--warning);
     background: rgb(var(--bg));

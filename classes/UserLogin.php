@@ -11,6 +11,7 @@ class UserLogin {
     public $aksoUser = null;
     public $loginConnFailed = false;
     public $isOpen = false;
+    public $pageState = [];
 
     public function __construct($plugin) {
         $this->plugin = $plugin;
@@ -219,7 +220,6 @@ class UserLogin {
         if ($this->aksoUser !== null && $this->aksoUser['totp'] && isset($post['totp'])) {
             $remember = isset($post['remember']);
 
-            $result = null;
             if ($this->aksoUser['needs_totp'] && isset($post['totpSetup'])) {
                 $setupData = self::readTotpSetup($post['totpSetup']);
                 if ($setupData) {
