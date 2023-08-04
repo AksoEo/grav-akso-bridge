@@ -1,6 +1,7 @@
 <?php
 namespace Grav\Plugin\AksoBridge;
 
+use Grav\Common\Grav;
 use Grav\Plugin\AksoBridge\CongressLocations;
 use Grav\Plugin\AksoBridge\Utils;
 
@@ -54,6 +55,8 @@ class CongressPrograms {
     function renderProgramItem($program, $locations) {
         $node = $this->doc->createElement('div');
         $node->setAttribute('class', 'program-item');
+        $node->setAttribute('data-title', $program['title']);
+        $node->setAttribute('data-tags', json_encode($program['tags']));
 
         $timeFrom = (new \DateTime('@' . $program['timeFrom'], $this->tz))->format('H:i');
         $timeTo = (new \DateTime('@' . $program['timeTo'], $this->tz))->format('H:i');
@@ -127,7 +130,7 @@ class CongressPrograms {
                 'filter' => ['id' => ['$in' => $ids->slice(0, 100)->toArray()]],
                 'limit' => 100,
                 'offset' => $i,
-            ));
+            ), 60);
             if (!$res['k']) {
                 // TODO: emit error
                 break;
@@ -157,7 +160,7 @@ class CongressPrograms {
             $congressId = $this->congressId;
             $instanceId = $this->instanceId;
             $res = $this->app->bridge->get("/congresses/$congressId/instances/$instanceId/programs", array(
-                'fields' => ['id', 'title', 'description', 'timeFrom', 'timeTo', 'location'],
+                'fields' => ['id', 'title', 'description', 'timeFrom', 'timeTo', 'location', 'tags'],
                 'filter' => array_merge(array(
                     'timeTo' => ['$gte' => $unixFrom],
                     'timeFrom' => ['$lt' => $unixTo],
@@ -493,8 +496,41 @@ class CongressPrograms {
         return $currentDate->format('Y-m-d');
     }
 
+    /** handles a JS request for tags */
+    function runTags() {
+        $congress = $this->congressId;
+        $instance = $this->instanceId;
+        $tags = [];
+        $total = 1;
+
+        while (count($tags) < $total) {
+            $res = $this->app->bridge->get("/congresses/$congress/instances/$instance/program_tags", array(
+                'offset' => count($tags),
+                'limit' => 100,
+                'fields' => ['id', 'name'],
+            ), 600);
+            if (!$res['k']) {
+                Grav::instance()['log']->error("failed to load program tags for $congress/$instance: " . $res['b']);
+                http_response_code(500);
+                die();
+            }
+            $total = $res['h']['x-total-items'];
+            foreach ($res['b'] as $item) {
+                $tags[] = $item;
+            }
+        }
+
+        header('Content-Type: application/json;charset=utf-8');
+        echo json_encode($tags);
+        die();
+    }
+
     public function run() {
         $contents = null;
+
+        if (isset($_GET['tags'])) {
+            $this->runTags();
+        }
 
         if (isset($_GET[self::QUERY_LOC]) && gettype($_GET[self::QUERY_LOC]) === 'string') {
             $locationId = (int) $_GET[self::QUERY_LOC];

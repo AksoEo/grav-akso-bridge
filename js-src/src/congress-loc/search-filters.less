@@ -1,0 +1,245 @@
+.congress-loc-or-prog-filters {
+    .search-container {
+        padding: 0.5em;
+        display: flex;
+
+        .search-input {
+            margin: 0;
+            width: 100%;
+            flex: 1;
+        }
+    }
+
+    .filter-bar {
+        display: flex;
+        padding: 0.5em;
+        padding-top: 0.2em;
+        transition: background 0.2s;
+
+        .filter-bar-title {
+            margin-right: 0.5em;
+        }
+
+        .filter-bar-inner {
+            flex: 1;
+            width: 0;
+            overflow: hidden;
+            padding-top: 0;
+
+            .filter-blob {
+                display: inline-block;
+                padding: 0.2em 0.4em;
+                background: none;
+                box-shadow: none;
+                border: 1px solid rgb(var(--light-accent));
+                border-radius: var(--radius);
+                font-size: 0.87em;
+                cursor: default;
+
+                &::before {
+                    display: inline-block;
+                    content: '';
+                    width: 0em;
+                    opacity: 0;
+                    transition: width 0.3s, opacity 0.3s;
+                }
+
+                &.is-active {
+                    background: rgb(var(--light-accent));
+                    color: rgb(var(--light-accent-fg));
+
+                    &::before {
+                        content: '✓';
+                        width: 1em;
+                        opacity: 1;
+                    }
+                }
+
+                .filter-rating {
+                    display: inline-block;
+                    line-height: 0;
+                    margin: 0;
+                }
+                &.is-active .filter-rating {
+                    @filter: drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(1px 0 0 #fff);
+                    -webkit-filter: @filter;
+                    filter: @filter;
+                }
+
+                .filter-tag {
+                    padding: 0.1em 0.2em;
+                    margin: 0 0.2em;
+                    border: 1px solid ~"rgb(var(--fg) / 0.5)";
+                    border-radius: var(--radius);
+                }
+            }
+        }
+
+        .filter-button {
+            position: relative;
+            margin: 0;
+            margin-left: 0.5em;
+
+            &::before, &::after {
+                content: '';
+                position: absolute;
+                background: currentColor;
+                width: 0.7em;
+                height: 3px;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                transition: transform 0.2s cubic-bezier(0.2, 0.3, 0, 1);
+            }
+            &::after {
+                transform: translate(-50%, -50%) rotate(90deg);
+            }
+
+            &.is-open {
+                &::before {
+                    transform: translate(-50%, -50%) rotate(45deg) scaleX(-1.2);
+                }
+                &::after {
+                    transform: translate(-50%, -50%) rotate(-45deg) scaleX(-1.2);
+                }
+            }
+        }
+
+        &.full-filters-open {
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.2);
+            background: rgb(var(--bg1));
+
+            .filter-bar-inner {
+                .filter-blob {
+                    display: none;
+                }
+            }
+        }
+    }
+
+    .full-filters {
+        box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+        background: rgb(var(--bg1));
+        animation: full-filters-in 0.2s;
+
+        @keyframes full-filters-in {
+            0% {
+                background: none;
+            }
+        }
+
+        .filter-item {
+            padding: 0.5em;
+
+            .state-switch {
+                display: flex;
+                border: 1px solid rgb(var(--light-accent));
+                border-radius: var(--radius);
+
+                button {
+                    flex: 1;
+                    width: 0;
+                    font: inherit;
+                    font-size: 0.9em;
+                    padding: 0.2em 0.5em;
+                    margin: 0;
+                    border: none;
+                    box-shadow: none;
+                    background: none;
+                    border-radius: 0;
+
+                    &.is-selected {
+                        background: rgb(var(--light-accent));
+                    }
+                }
+            }
+
+            .date-editor-container {
+                margin-top: 1em;
+                text-align: center;
+
+                .native-date-editor {
+                    width: 100%;
+                    margin: 0;
+                }
+            }
+
+            .js-date-time-editor {
+                font-size: 0.87em;
+                text-align: center;
+
+                .inner-input {
+                    display: none;
+                }
+                .js-time-editor {
+                    margin-top: 0.5em;
+                }
+            }
+
+            .rating-container {
+                margin-top: 0.2em;
+                text-align: center;
+                font-size: 1.3em;
+
+                .location-rating {
+                    display: inline-block;
+                    background: rgb(var(--bg));
+                    line-height: 0;
+                    padding: 0.2em;
+                    border-radius: 100px;
+
+                    .rating-icon {
+                        transition: transform 0.2s;
+
+                        &:hover {
+                            transform: scale(1.17);
+                            transition: transform 0.05s;
+                        }
+                        &:active {
+                            transform: scale(1);
+                        }
+                    }
+                }
+            }
+
+            .tags-filter {
+                background: rgb(var(--bg));
+                border-radius: var(--radius);
+                padding: 0.5em;
+
+                .tags-search {
+                    .i-input {
+                        width: 100%;
+                        margin: 0;
+                    }
+                }
+
+                .tags-scroll-view {
+                    max-height: 9em;
+                    overflow: auto;
+                }
+
+                .tags-list {
+                    margin: 0;
+                    padding: 0;
+                    list-style: none;
+
+                    .tags-list-item {
+                        display: flex;
+                        align-items: center;
+                        padding: 0.5em 1em;
+                        gap: 0.5em;
+
+                        .i-label {
+                            flex: 1;
+                        }
+
+                        & + .tags-list-item {
+                            border-top: 1px solid rgb(var(--light-separator));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

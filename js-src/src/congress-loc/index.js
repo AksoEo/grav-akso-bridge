@@ -3,6 +3,7 @@ if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitR
 import L from 'leaflet';
 import { createMap, Marker } from '../common/map';
 import { SearchFilters } from './search-filters';
+import { FILTERS } from './filters';
 import { initGlobals } from './globals';
 import { renderRating } from './rating';
 import { fuzzyScore } from '../util/fuzzy';
@@ -117,7 +118,7 @@ function init() {
 
         const tzOffsets = JSON.parse(atob(list.dataset.tzOffsets));
 
-        const searchFilters = new SearchFilters(basePath, searchFilterState);
+        const searchFilters = new SearchFilters(FILTERS, basePath, searchFilterState);
         list.parentNode.insertBefore(searchFilters.node, list);
 
         let lls = [];
