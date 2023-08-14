@@ -5,6 +5,7 @@ use Grav\Common\Plugin;
 use Grav\Plugin\AksoBridge\AksoTwigExt;
 use Grav\Plugin\AksoBridge\CodeholderLists;
 use Grav\Plugin\AksoBridge\Payments;
+use Grav\Plugin\AksoBridge\RateLimit;
 use Grav\Plugin\AksoBridge\UserLogin;
 use RocketTheme\Toolbox\Event\Event;
 use Grav\Common\Page\Page;
@@ -60,6 +61,9 @@ class AksoBridgePlugin extends Plugin {
     public $locale;
     public $country_currencies;
 
+    /** @var RateLimit */
+    public $rateLimit;
+
     function pathStartsWithComponent($path, $component) {
         return str_starts_with($path, $component) && (strlen($path) === strlen($component) || substr($path, strlen($component), 1) === '/');
     }
@@ -72,6 +76,7 @@ class AksoBridgePlugin extends Plugin {
 
         $this->locale = parse_ini_file(dirname(__FILE__) . '/locale.ini', true);
         $this->country_currencies = parse_ini_file(dirname(__FILE__) . '/country_currencies.ini', true);
+        $this->rateLimit = new RateLimit();
 
         // get request uri
         $uri = $this->grav['uri'];

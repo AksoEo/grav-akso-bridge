@@ -387,6 +387,10 @@
             <div class="registration-error">
                 {{akso_locale.registration_form.user_data_not_found}}
             </div>
+        {% elseif akso_congress_registration.is_rate_limit %}
+            <div class="registration-error">
+                {{akso_locale.registration_form.user_data_rate_limited}}
+            </div>
         {% elseif akso_congress_registration.user_data_error %}
             <div class="registration-error">
                 {{akso_locale.registration_form.user_data_generic_error}}

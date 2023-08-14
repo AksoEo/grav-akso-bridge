@@ -5,6 +5,7 @@ namespace Grav\Plugin\AksoBridge;
 use DateInterval;
 use DateTime;
 use Grav\Common\Grav;
+use Grav\Plugin\AksoBridgePlugin;
 
 class CongressRegistration {
     public const DATAID = 'dataId';
@@ -17,6 +18,7 @@ class CongressRegistration {
     const PAYMENT_SUCCESS_RETURN = 'payment_success_return';
     const NONCES = 'crf_nonces';
 
+    /** @var AksoBridgePlugin */
     private $plugin;
     private $app;
     private $congressId;
@@ -87,6 +89,11 @@ class CongressRegistration {
         $this->isEditable = $this->form['editable'];
         $this->isCancelable = $this->form['cancellable'];
 
+        if ($this->plugin->rateLimit->shouldLimitClient('congress_reg', 3)) {
+            $this->userDataError = ['sc' => 429];
+            return;
+        }
+
         $fields = ['cancelledTime', 'price', 'amountPaid', 'hasPaidMinimum', 'codeholderId', 'createdTime', 'editedTime', 'customFormVars'];
         foreach ($this->form['form'] as $formItem) {
             if ($formItem['el'] === 'input') $fields[] = 'data.' . $formItem['name'];
@@ -103,6 +110,7 @@ class CongressRegistration {
                 $this->isActualCancellation = false;
             }
         } else {
+            $this->plugin->rateLimit->addClientHit('congress_reg', 60);
             $this->userDataError = $res;
         }
     }
@@ -689,6 +697,7 @@ class CongressRegistration {
                 'form' => '',
                 'is_error' => true,
                 'is_not_found' => $this->userDataError['sc'] === 404,
+                'is_rate_limit' => $this->userDataError['sc'] === 429,
             );
         } else if ($this->participant && !$this->canceledTime && $this->isPayment) {
             return $this->runPayment();
