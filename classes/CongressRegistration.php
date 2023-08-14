@@ -193,6 +193,12 @@ class CongressRegistration {
                         }
                     }
 
+                    if ($this->plugin->rateLimit->shouldLimitClient('congress_reg', 3)) {
+                        $error = $this->plugin->locale['registration_form']['payment_err_rate_limit'];
+                        break;
+                    }
+                    $this->plugin->rateLimit->addClientHit('congress_reg', 60);
+
                     $mvalue = $post['amount'];
                     $notes = $post['notes'];
                     if (gettype($mvalue) !== 'string' || gettype($notes) !== 'string' || gettype($currency) !== 'string') {

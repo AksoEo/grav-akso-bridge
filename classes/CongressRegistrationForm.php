@@ -86,6 +86,12 @@ class CongressRegistrationForm extends Form {
                 $this->error = $this->localize('err_submit_generic');
             }
         } else {
+            if ($this->plugin->rateLimit->shouldLimitClient('congress_reg_submit', 3)) {
+                $this->error = $this->plugin->locale['registration_form']['err_submit_rate_limit'];
+                return;
+            }
+            $this->plugin->rateLimit->addClientHit('congress_reg_submit', 300);
+
             // new registration
             $res = $this->app->bridge->post('/congresses/' . $congressId . '/instances/' . $instanceId . '/participants', $args, [], []);
             if ($res['k']) {
