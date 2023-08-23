@@ -21,8 +21,15 @@ function followIntentRedirect() {
 removeNoscripts();
 followIntentRedirect();
 
-loadCountryFmt().then(() => console.log('Loaded ASC countries'));
-loadPhoneFmt().then(() => console.log('Loaded ASC phone-numbers'));
+let rerenderAfterExtraLoaded;
+loadCountryFmt().then(() => {
+    console.debug('Loaded ASC countries');
+    if (rerenderAfterExtraLoaded) rerenderAfterExtraLoaded();
+});
+loadPhoneFmt().then(() => {
+    console.debug('Loaded ASC phone-numbers');
+    if (rerenderAfterExtraLoaded) rerenderAfterExtraLoaded();
+});
 
 // TODO: validate number ranges/step anyway because browsers are often rather unhelpful with their
 // error messages
@@ -667,6 +674,7 @@ function init() {
         return isValid;
     };
     update();
+    rerenderAfterExtraLoaded = update;
 
     if (submitButton) {
         submitButton.addEventListener('click', (e) => {
