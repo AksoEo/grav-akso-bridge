@@ -231,7 +231,7 @@ class Utils {
                 $after = substr($text, $mid);
                 $text = substr($text, 0, $mid);
             }
-            $emailPart = new Element('span', $text);
+            $emailPart = new Element('span', htmlspecialchars($text));
             $emailPart->class = 'epart';
             $emailPart->setAttribute('data-at-sign', '@');
             $emailPart->setAttribute('data-after', $after);

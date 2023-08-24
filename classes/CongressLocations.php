@@ -63,7 +63,7 @@ class CongressLocations {
             $name->setAttribute('href', $this->plugin->getGrav()['uri']->path() . '?' . self::QUERY_LOC . '=' . $location['id']);
             $name->setAttribute('class', 'location-name');
             $name->setAttribute('data-loc-id', $location['id']);
-            $name->setValue( $location['name']);
+            $name->setValue( htmlspecialchars($location['name']));
             $li->appendChild($name);
 
             $description = $this->doc->createElement('div');
@@ -188,7 +188,7 @@ class CongressLocations {
             $name->setAttribute('href', $path . '?' . self::QUERY_LOC . '=' . $location['id']);
             $name->setAttribute('class', 'location-name');
             $name->setAttribute('data-loc-id', $location['id']);
-            $name->setValue($location['name']);
+            $name->setValue(htmlspecialchars($location['name']));
             $liDetails->appendChild($name);
 
             $description = $this->doc->createElement('div');
@@ -265,11 +265,11 @@ class CongressLocations {
                 $backLink->setAttribute('class', 'back-link');
                 $backLink->setAttribute('data-loc-id', '');
                 $backLink->setAttribute('href', $this->plugin->getGrav()['uri']->path());
-                $backLink->setValue('<');
+                $backLink->setValue(htmlspecialchars('<'));
                 $header->appendChild($backLink);
 
                 $name = $this->doc->createElement('h1');
-                $name->setValue( $location['name']);
+                $name->setValue( htmlspecialchars($location['name']));
                 $header->appendChild($name);
             }
 
@@ -285,10 +285,10 @@ class CongressLocations {
                     $container->setAttribute('data-icon', $eres['b']['icon']);
 
                     $label = $this->doc->createElement('span');
-                    $label->setValue( $this->plugin->locale['congress_locations']['located_within'] . ' ');
+                    $label->setValue( htmlspecialchars($this->plugin->locale['congress_locations']['located_within'] . ' '));
 
                     $extLink = $this->doc->createElement('a');
-                    $extLink->setValue( $eres['b']['name']);
+                    $extLink->setValue( htmlspecialchars($eres['b']['name']));
                     $extLink->setAttribute('data-loc-id', $externalLocId);
                     $extLink->setAttribute('href', $this->plugin->getGrav()['uri']->path() . '?' . self::QUERY_LOC . '=' . $externalLocId);
 
@@ -346,7 +346,7 @@ class CongressLocations {
 
                 $val = $this->doc->createElement('span');
                 $val->setAttribute('class', 'rating-value is-' . $type);
-                $val->setValue( round($rating * 10) / 10);
+                $val->setValue( htmlspecialchars(round($rating * 10) / 10));
                 $ratingContainer->appendChild($val);
 
                 $container->appendChild($ratingContainer);
@@ -365,7 +365,7 @@ class CongressLocations {
                 $openHoursContainer = $this->doc->createElement('div');
                 $openHoursContainer->setAttribute('class', 'location-open-hours-container');
                 $openHoursTitle = $this->doc->createElement('div');
-                $openHoursTitle->setValue( $this->plugin->locale['congress_locations']['open_hours']);
+                $openHoursTitle->setValue( htmlspecialchars($this->plugin->locale['congress_locations']['open_hours']));
                 $openHoursTitle->setAttribute('class', 'open-hours-title');
                 $openHoursContainer->appendChild($openHoursTitle);
                 $openHours = $this->doc->createElement('ul');
@@ -375,7 +375,7 @@ class CongressLocations {
                     $li->setAttribute('class', 'open-hours-day');
                     $dayLabel = $this->doc->createElement('span');
                     $dayLabel->setAttribute('class', 'day-label');
-                    $dayLabel->setValue( Utils::formatDayMonth($k));
+                    $dayLabel->setValue( htmlspecialchars(Utils::formatDayMonth($k)));
                     $li->appendChild($dayLabel);
                     $li->appendChild($this->doc->createTextNode(': '));
 
@@ -386,7 +386,7 @@ class CongressLocations {
                     }
 
                     $hours = $this->doc->createElement('san');
-                    $hours->setValue( $hoursText);
+                    $hours->setValue( htmlspecialchars($hoursText));
                     $li->appendChild($hours);
                     $openHours->appendChild($li);
                 }
@@ -399,13 +399,13 @@ class CongressLocations {
                 $addressContainer->setAttribute('class', 'address-container');
                 $label = $this->doc->createElement('label');
                 $label->setAttribute('class', 'address-field-label');
-                $label->setValue( $this->plugin->locale['congress_locations']['address']);
+                $label->setValue( htmlspecialchars($this->plugin->locale['congress_locations']['address']));
                 $addressContainer->appendChild($label);
                 $lines = explode("\n", $location['address']);
                 foreach ($lines as $line) {
                     $ln = $this->doc->createElement('div');
                     $ln->setAttribute('class', 'address-line');
-                    $ln->setValue( $line);
+                    $ln->setValue( htmlspecialchars($line));
                     $addressContainer->appendChild($ln);
                 }
                 $container->appendChild($addressContainer);
@@ -426,7 +426,7 @@ class CongressLocations {
 
                     $title = $this->doc->createElement('h4');
                     $title->setAttribute('class', 'internal-list-title');
-                    $title->setValue( $this->plugin->locale['congress_locations']['internal_locations_title']);
+                    $title->setValue( htmlspecialchars($this->plugin->locale['congress_locations']['internal_locations_title']));
                     $internalListContainer->appendChild($title);
 
                     $internalListContainer->appendChild($this->renderInternalList($eres['b']));
@@ -438,7 +438,7 @@ class CongressLocations {
                 $viewPrograms = $this->doc->createElement('a');
                 $viewPrograms->setAttribute('class', 'view-programs-link');
                 $viewPrograms->setAttribute('href', $this->programsPath . '?' . CongressPrograms::QUERY_LOC . '=' . $locationId);
-                $viewPrograms->setValue( $this->plugin->locale['congress_locations']['view_programs_here']);
+                $viewPrograms->setValue( htmlspecialchars($this->plugin->locale['congress_locations']['view_programs_here']));
                 $container->appendChild($viewPrograms);
             }
 

@@ -156,13 +156,13 @@ class CongressFields {
             $now = new \DateTime();
             $deltaInterval = $now->diff($tsTime);
 
-            $contents = new Element('span', Utils::formatDuration($deltaInterval));
+            $contents = new Element('span', htmlspecialchars(Utils::formatDuration($deltaInterval)));
             $countdown->appendChild($contents);
         }
 
         $locations = $doc->find('.congress-location');
         foreach ($locations as $location) {
-            $contents = new Element('span', $location->getAttribute('data-name'));
+            $contents = new Element('span', htmlspecialchars($location->getAttribute('data-name')));
             $location->appendChild($contents);
         }
 
@@ -194,7 +194,7 @@ class CongressFields {
                 $span .= '–' . $endDate . ' ' . Utils::formatMonth($endMonth) . ' ' . $endYear;
             }
 
-            $contents = new Element('span', $span);
+            $contents = new Element('span', htmlspecialchars($span));
             $dateSpan->appendChild($contents);
         }
 

@@ -68,9 +68,9 @@ class CongressPrograms {
         $timeSpanLabel->setAttribute('class', 'time-span');
         $timeToLabel = $this->doc->createElement('span');
         $timeToLabel->setAttribute('class', 'time-to');
-        $timeFromLabel->setValue( $timeFrom);
+        $timeFromLabel->setValue( htmlspecialchars($timeFrom));
         $timeSpanLabel->setValue( '–');
-        $timeToLabel->setValue( $timeTo);
+        $timeToLabel->setValue( htmlspecialchars($timeTo));
         $timeLabel->appendChild($timeFromLabel);
         $timeLabel->appendChild($timeSpanLabel);
         $timeLabel->appendChild($timeToLabel);
@@ -86,7 +86,7 @@ class CongressPrograms {
         $titleNode->setAttribute('class', 'program-title');
         $titleLinkNode = $this->doc->createElement('a');
         $titleLinkNode->setAttribute('href', $linkTarget);
-        $titleLinkNode->setValue( $program['title']);
+        $titleLinkNode->setValue( htmlspecialchars($program['title']));
         $titleNode->appendChild($titleLinkNode);
         $titleContainer->appendChild($titleNode);
 
@@ -98,7 +98,7 @@ class CongressPrograms {
 
             $locationPre = $this->doc->createElement('span');
             $locationPre->setAttribute('class', 'location-itext');
-            $locationPre->setValue( $this->plugin->locale['congress_programs']['program_location_pre'] . ' ');
+            $locationPre->setValue( htmlspecialchars($this->plugin->locale['congress_programs']['program_location_pre'] . ' '));
             $locationContainer->appendChild($locationPre);
 
             $locationLink = $this->renderLocationLink($location);
@@ -191,7 +191,7 @@ class CongressPrograms {
 
         $dayTitle = $this->doc->createElement('h2');
         $dayTitle->setAttribute('class', 'program-day-title');
-        $dayTitle->setValue( Utils::formatDayMonth($date));
+        $dayTitle->setValue( htmlspecialchars(Utils::formatDayMonth($date)));
         $root->appendChild($dayTitle);
 
         foreach ($programs as $program) {
@@ -201,7 +201,7 @@ class CongressPrograms {
         if ($showNoItems && count($programs) === 0) {
             $noItems = $this->doc->createElement('div');
             $noItems->setAttribute('class', 'no-items');
-            $noItems->setValue( $this->plugin->locale['congress_programs']['no_items_on_this_day']);
+            $noItems->setValue( htmlspecialchars($this->plugin->locale['congress_programs']['no_items_on_this_day']));
             $root->appendChild($noItems);
         } else if (!$showNoItems && count($programs) === 0) {
             return null;
@@ -240,7 +240,7 @@ class CongressPrograms {
         if (!$this->congress) {
             $error = $this->doc->createElement('div');
             $error->setAttribute('class', 'md-render-error');
-            $error->setValue( $this->plugin->locale['content']['render_error']);
+            $error->setValue( htmlspecialchars($this->plugin->locale['content']['render_error']));
             return $error;
         }
         $node = $this->doc->createElement('div');
@@ -249,7 +249,7 @@ class CongressPrograms {
         $button = $this->doc->createElement('a');
         $button->setAttribute('class', 'program-day link-button' . (!$currentDate ? ' is-primary' : ''));
         $button->setAttribute('href', $this->plugin->getGrav()['uri']->path() . '?' . self::QUERY_DATE . '=' . urlencode(self::QUERY_DATE_ALL));
-        $button->setValue( $this->plugin->locale['congress_programs']['day_switcher_all']);
+        $button->setValue( htmlspecialchars($this->plugin->locale['congress_programs']['day_switcher_all']));
         $node->appendChild($button);
 
         $cursor = DateTime::createFromFormat('Y-m-d', $this->congress['dateFrom']);
@@ -259,7 +259,7 @@ class CongressPrograms {
             $isCurrent = $date == $currentDate;
             $button = $this->doc->createElement('a');
             $button->setAttribute('class', 'program-day link-button' . ($isCurrent ? ' is-primary' : ''));
-            $button->setValue( Utils::formatDayMonth($date));
+            $button->setValue( htmlspecialchars(Utils::formatDayMonth($date)));
             $node->appendChild($button);
 
             $button->setAttribute('href', $this->plugin->getGrav()['uri']->path() . '?' . self::QUERY_DATE . '=' . $date);
@@ -307,14 +307,14 @@ class CongressPrograms {
             $timeDate = $this->doc->createElement('span');
             $time->appendChild($timeDate);
             $timeDate->setAttribute('class', 'time-date');
-            $timeDate->setValue( Utils::formatDayMonth($dateFrom));
+            $timeDate->setValue( htmlspecialchars(Utils::formatDayMonth($dateFrom)));
 
             $timeSpanContainer = $this->doc->createElement('span');
             $timeSpanContainer->setAttribute('class', 'time-span-container');
             $time->appendChild($timeSpanContainer);
             $timeSpanFrom = $this->doc->createElement('span');
             $timeSpanContainer->appendChild($timeSpanFrom);
-            $timeSpanFrom->setValue( $timeFrom);
+            $timeSpanFrom->setValue( htmlspecialchars($timeFrom));
 
             $timeSpanSpan = $this->doc->createElement('span');
             $timeSpanSpan->setAttribute('class', 'time-span-span');
@@ -323,13 +323,13 @@ class CongressPrograms {
 
             $timeSpanTo = $this->doc->createElement('span');
             $timeSpanContainer->appendChild($timeSpanTo);
-            $timeSpanTo->setValue( $timeTo);
+            $timeSpanTo->setValue( htmlspecialchars($timeTo));
         }
 
         {
             $ptitle = $this->doc->createElement('h1');
             $ptitle->setAttribute('class', 'program-title');
-            $ptitle->setValue( $program['title']);
+            $ptitle->setValue( htmlspecialchars($program['title']));
             $root->appendChild($ptitle);
         }
 
@@ -346,7 +346,7 @@ class CongressPrograms {
 
                 $containerText = $this->doc->createElement('span');
                 $containerText->setAttribute('class', 'location-itext');
-                $containerText->setValue( $this->plugin->locale['congress_programs']['program_location_pre']);
+                $containerText->setValue( htmlspecialchars($this->plugin->locale['congress_programs']['program_location_pre']));
                 $container->appendChild($containerText);
 
                 $container->appendChild($this->doc->createTextNode(' '));
@@ -362,7 +362,7 @@ class CongressPrograms {
             $root->appendChild($programOwner);
 
             $programOwnerText = $this->doc->createElement('span');
-            $programOwnerText->setValue( $this->plugin->locale['congress_programs']['program_owner_pre']);
+            $programOwnerText->setValue( htmlspecialchars($this->plugin->locale['congress_programs']['program_owner_pre']));
             $programOwnerText->setAttribute('class', 'owner-itext');
             $programOwner->appendChild($programOwnerText);
 
@@ -370,7 +370,7 @@ class CongressPrograms {
 
             $programOwnerContent = $this->doc->createElement('span');
             $programOwnerContent->setAttribute('class', 'owner-content');
-            $programOwnerContent->setValue( $program['owner']);
+            $programOwnerContent->setValue( htmlspecialchars($program['owner']));
             $programOwner->appendChild($programOwnerContent);
         }
 
@@ -400,7 +400,7 @@ class CongressPrograms {
 
         $locationName = $this->doc->createElement('span');
         $locationName->setAttribute('class', 'location-name');
-        $locationName->setValue( $location['name']);
+        $locationName->setValue( htmlspecialchars($location['name']));
         $locationLink->appendChild($locationName);
 
         if ($this->locationsPath) {
@@ -462,7 +462,7 @@ class CongressPrograms {
         if (!$hasAnyDay) {
             $noItems = $this->doc->createElement('div');
             $noItems->setAttribute('class', 'location-no-items');
-            $noItems->setValue( $this->plugin->locale['congress_programs']['no_items_in_this_loc']);
+            $noItems->setValue( htmlspecialchars($this->plugin->locale['congress_programs']['no_items_in_this_loc']));
             $root->appendChild($noItems);
         }
 

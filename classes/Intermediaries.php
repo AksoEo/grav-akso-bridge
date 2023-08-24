@@ -171,7 +171,7 @@ class Intermediaries {
                     $flag->alt = $emoji['alt'];
                     $countryLabel->appendChild($flag);
 
-                    $label = new Element('span', ' ' . Utils::formatCountry($this->bridge, $country));
+                    $label = new Element('span', htmlspecialchars(' ' . Utils::formatCountry($this->bridge, $country)));
                     $countryLabel->appendChild($label);
 
                     $li->appendChild($countryLabel);

@@ -504,7 +504,7 @@ class MarkdownExt {
         $selector = new Element('div');
         $selector->class = 'country-overview-selector init-collapsed';
         $selector->id = "landoj-$id";
-        $overviewTitle = new Element('h3', $this->plugin->locale['content']['country_selector_title']);
+        $overviewTitle = new Element('h3', htmlspecialchars($this->plugin->locale['content']['country_selector_title']));
         $overviewTitle->class = 'overview-title';
         $selector->appendChild($overviewTitle);
 
@@ -536,7 +536,7 @@ class MarkdownExt {
             $img->alt = $emoji['alt'];
             $a->appendChild($img);
 
-            $name = new Element('span', ' ' . $countryName);
+            $name = new Element('span', htmlspecialchars(' ' . $countryName));
             $a->appendChild($name);
             $li->appendChild($a);
             $overviewItems->appendChild($li);
@@ -633,11 +633,11 @@ class MarkdownExt {
                             $flag->class = 'inline-flag-icon';
                             $flag->src = $emoji['src'];
                             $flag->alt = $emoji['alt'];
-                            $countryName = new Element('span', ' ' . Utils::formatCountry($this->bridge, $key));
+                            $countryName = new Element('span', htmlspecialchars(' ' . Utils::formatCountry($this->bridge, $key)));
                             $sectionTitle->appendChild($flag);
                             $sectionTitle->appendChild($countryName);
                         } else if ($field === 'dataString') {
-                            $tagName = new Element('span', $key);
+                            $tagName = new Element('span', htmlspecialchars($key));
                             $sectionTitle->appendChild($tagName);
                         }
 
@@ -654,7 +654,7 @@ class MarkdownExt {
                     if (count($restItems)) {
                         $restSection = new Element('li');
                         $restSection->class = 'codeholder-list-category';
-                        $sectionTitle = new Element('h4', $this->plugin->locale['content']['codeholder_list_sorted_rest']);
+                        $sectionTitle = new Element('h4', htmlspecialchars($this->plugin->locale['content']['codeholder_list_sorted_rest']));
                         $sectionTitle->class = 'category-label';
                         $restSection->appendChild($sectionTitle);
                         $sectionItems = new Element('ul');
@@ -777,20 +777,20 @@ class MarkdownExt {
                             $coverContainer->class .= ' has-no-thumbnail';
                             $inner = new Element('div');
                             $inner->class = 'th-inner';
-                            $title = new Element('div', $poster['info']['name']);
+                            $title = new Element('div', htmlspecialchars($poster['info']['name']));
                             $title->class = 'th-title';
-                            $subtitle = new Element('div', $poster['idHuman']);
+                            $subtitle = new Element('div', htmlspecialchars($poster['idHuman']));
                             $subtitle->class = 'th-subtitle';
                             $inner->appendChild($title);
                             $inner->appendChild($subtitle);
                             $coverContainer->appendChild($inner);
                         }
                         $mag->appendChild($coverContainer);
-                        $magTitle = new Element('a', $poster['info']['name']);
+                        $magTitle = new Element('a', htmlspecialchars($poster['info']['name']));
                         $magTitle->class = 'magazine-title';
                         $magTitle->href = $link;
                         $mag->appendChild($magTitle);
-                        $magMeta = new Element('div', Utils::formatDate($poster['date']));
+                        $magMeta = new Element('div', htmlspecialchars(Utils::formatDate($poster['date'])));
                         $magMeta->class = 'magazine-meta';
                         $mag->appendChild($magMeta);
                         $newMagazines->appendChild($mag);
@@ -837,13 +837,13 @@ class MarkdownExt {
                 continue;
             }
 
-            $desc = new Element('div', $this->plugin->locale['content']['members_only_desc']);
+            $desc = new Element('div', htmlspecialchars($this->plugin->locale['content']['members_only_desc']));
             $membersOnlyBox->appendChild($desc);
 
-            $loginLink = new Element('a', $this->plugin->locale['content']['members_only_login_0']);
-            $signUpLink = new Element('a', $isLoggedIn
+            $loginLink = new Element('a', htmlspecialchars($this->plugin->locale['content']['members_only_login_0']));
+            $signUpLink = new Element('a', htmlspecialchars($isLoggedIn
                 ? $this->plugin->locale['content']['members_only_sign_up_0']
-                : $this->plugin->locale['content']['members_only_login_2']);
+                : $this->plugin->locale['content']['members_only_login_2']));
 
             $loginLink->href = $this->plugin->loginPath;
             $signUpLink->href = $this->plugin->registrationPath;
@@ -853,9 +853,9 @@ class MarkdownExt {
                 $membersOnlyBox->appendChild($signUpLink);
             } else {
                 $membersOnlyBox->appendChild($loginLink);
-                $membersOnlyBox->appendChild(new Element('span', $this->plugin->locale['content']['members_only_login_1']));
+                $membersOnlyBox->appendChild(new Element('span', htmlspecialchars($this->plugin->locale['content']['members_only_login_1'])));
                 $membersOnlyBox->appendChild($signUpLink);
-                $membersOnlyBox->appendChild(new Element('span', $this->plugin->locale['content']['members_only_login_3']));
+                $membersOnlyBox->appendChild(new Element('span', htmlspecialchars($this->plugin->locale['content']['members_only_login_3'])));
             }
         }
 
@@ -866,22 +866,22 @@ class MarkdownExt {
                 continue;
             }
 
-            $loginLink = new Element('a', $this->plugin->locale['content']['members_only_inline_login_0']);
-            $signUpLink = new Element('a', $isLoggedIn
+            $loginLink = new Element('a', htmlspecialchars($this->plugin->locale['content']['members_only_inline_login_0']));
+            $signUpLink = new Element('a', htmlspecialchars($isLoggedIn
                 ? $this->plugin->locale['content']['members_only_inline_sign_up_0']
-                : $this->plugin->locale['content']['members_only_inline_login_2']);
+                : $this->plugin->locale['content']['members_only_inline_login_2']));
 
             $loginLink->href = $this->plugin->loginPath;
             $signUpLink->href = $this->plugin->registrationPath;
 
             if ($isLoggedIn) {
                 $membersOnlyNotice->appendChild($signUpLink);
-                $membersOnlyNotice->appendChild(new Element('span', $this->plugin->locale['content']['members_only_inline_sign_up_1']));
+                $membersOnlyNotice->appendChild(new Element('span', htmlspecialchars($this->plugin->locale['content']['members_only_inline_sign_up_1'])));
             } else {
                 $membersOnlyNotice->appendChild($loginLink);
-                $membersOnlyNotice->appendChild(new Element('span', $this->plugin->locale['content']['members_only_inline_login_1']));
+                $membersOnlyNotice->appendChild(new Element('span', htmlspecialchars($this->plugin->locale['content']['members_only_inline_login_1'])));
                 $membersOnlyNotice->appendChild($signUpLink);
-                $membersOnlyNotice->appendChild(new Element('span', $this->plugin->locale['content']['members_only_inline_login_3']));
+                $membersOnlyNotice->appendChild(new Element('span', htmlspecialchars($this->plugin->locale['content']['members_only_inline_login_3'])));
             }
         }
     }
@@ -913,19 +913,19 @@ class MarkdownExt {
                 continue;
             }
 
-            $desc = new Element('div', $this->plugin->locale['content']['logged_in_only_desc']);
+            $desc = new Element('div', htmlspecialchars($this->plugin->locale['content']['logged_in_only_desc']));
             $loggedInOnlyBox->appendChild($desc);
 
-            $loginLink = new Element('a', $this->plugin->locale['content']['logged_in_only_login_0']);
-            $signUpLink = new Element('a', $this->plugin->locale['content']['logged_in_only_login_2']);
+            $loginLink = new Element('a', htmlspecialchars($this->plugin->locale['content']['logged_in_only_login_0']));
+            $signUpLink = new Element('a', htmlspecialchars($this->plugin->locale['content']['logged_in_only_login_2']));
 
             $loginLink->href = $this->plugin->loginPath;
             $signUpLink->href = $this->plugin->registrationPath;
 
             $loggedInOnlyBox->appendChild($loginLink);
-            $loggedInOnlyBox->appendChild(new Element('span', $this->plugin->locale['content']['logged_in_only_login_1']));
+            $loggedInOnlyBox->appendChild(new Element('span', htmlspecialchars($this->plugin->locale['content']['logged_in_only_login_1'])));
             $loggedInOnlyBox->appendChild($signUpLink);
-            $loggedInOnlyBox->appendChild(new Element('span', $this->plugin->locale['content']['logged_in_only_login_3']));
+            $loggedInOnlyBox->appendChild(new Element('span', htmlspecialchars($this->plugin->locale['content']['logged_in_only_login_3'])));
         }
     }
 
@@ -996,9 +996,9 @@ class MarkdownExt {
                 $detailsContainer->setAttribute('class', 'congress-details' . ($info['imgHref'] ? ' has-image' : ''));
                 $details = $doc->createElement('div');
                 $details->setAttribute('class', 'congress-inner-details');
-                $name = new Element('div', $info['name']);
+                $name = new Element('div', htmlspecialchars($info['name']));
                 $name->setAttribute('class', 'congress-name');
-                $button = $doc->createElement('button', $info['buttonLabel']);
+                $button = $doc->createElement('button', htmlspecialchars($info['buttonLabel']));
                 $button->setAttribute('class', 'open-button');
                 $details->appendChild($name);
 
@@ -1006,7 +1006,7 @@ class MarkdownExt {
                     $timeDetails = $doc->createElement('div');
                     $timeDetails->setAttribute('class', 'congress-time-details');
 
-                    $congressDate = new Element('span', $info['date']);
+                    $congressDate = new Element('span', htmlspecialchars($info['date']));
                     $congressDate->setAttribute('class', 'congress-date');
                     $timeDetails->appendChild($congressDate);
 
@@ -1067,7 +1067,7 @@ class MarkdownExt {
         // remove all scripts in the page content
         $scripts = $doc->find('.page-container script');
         foreach ($scripts as $script) {
-            $replacement = new Element('div', '<script>' . $script->text() . '</script>');
+            $replacement = new Element('div', htmlspecialchars('<script>' . $script->text() . '</script>'));
             $replacement->class = 'illegal-script-tag';
             $script->replace($replacement);
         }

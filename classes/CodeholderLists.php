@@ -258,7 +258,7 @@ class CodeholderLists {
             $countryFlag->alt = $emoji['alt'];
             $countryFlag->src = $emoji['src'];
 
-            $countryName = new Element('span', ' ' . Utils::formatCountry($bridge, $country));
+            $countryName = new Element('span', htmlspecialchars(' ' . Utils::formatCountry($bridge, $country)));
             $countryBadge->appendChild($countryFlag);
             $countryBadge->appendChild($countryName);
             $right->appendChild($countryBadge);
@@ -281,7 +281,7 @@ class CodeholderLists {
         } else if ($codeholder['codeholderType'] === 'org') {
             $codeholderName = $codeholder['fullName'];
         }
-        $nameContainer = new Element('div', $codeholderName);
+        $nameContainer = new Element('div', htmlspecialchars($codeholderName));
         $nameContainer->class = 'item-name';
         $right->appendChild($nameContainer);
 
@@ -292,7 +292,7 @@ class CodeholderLists {
                 $li = new Element('li');
                 $li->class = 'item-role';
 
-                $roleName = new Element('span', $role['role']['name']);
+                $roleName = new Element('span', htmlspecialchars($role['role']['name']));
                 $roleName->class = 'role-name';
                 $li->appendChild($roleName);
 
@@ -302,7 +302,7 @@ class CodeholderLists {
                     $roleDetails->appendChild(new Element('span', '('));
 
                     if ($role['dataCountry']) {
-                        $dCountry = new Element('span', Utils::formatCountry($bridge, $role['dataCountry']));
+                        $dCountry = new Element('span', htmlspecialchars(Utils::formatCountry($bridge, $role['dataCountry'])));
                         $dCountry->class = 'detail-country';
                         $roleDetails->appendChild($dCountry);
                     }
@@ -311,12 +311,12 @@ class CodeholderLists {
                         if ($role['dataCountry']) $roleDetails->appendChild(new Element('span', ': '));
                         $orgId = $role['dataOrg'];
                         if ($dataOrgs[$orgId]['nameAbbrev']) {
-                            $dOrg = new Element('abbr', $dataOrgs[$orgId]['nameAbbrev']);
+                            $dOrg = new Element('abbr', htmlspecialchars($dataOrgs[$orgId]['nameAbbrev']));
                             $dOrg->title = $dataOrgs[$orgId]['fullName'];
                             $dOrg->class = 'detail-org is-abbrev';
                             $roleDetails->appendChild($dOrg);
                         } else {
-                            $dOrg = new Element('span', $dataOrgs[$orgId]['fullName']);
+                            $dOrg = new Element('span', htmlspecialchars($dataOrgs[$orgId]['fullName']));
                             $dOrg->class = 'detail-org';
                             $roleDetails->appendChild($dOrg);
                         }
@@ -324,7 +324,7 @@ class CodeholderLists {
 
                     if ($role['dataString']) {
                         if ($role['dataCountry'] || $role['dataOrg']) $roleDetails->appendChild(new Element('span', ', '));
-                        $dStr = new Element('span', $role['dataString']);
+                        $dStr = new Element('span', htmlspecialchars($role['dataString']));
                         $dStr->class = 'detail-string';
                         $roleDetails->appendChild($dStr);
                     }
@@ -354,7 +354,7 @@ class CodeholderLists {
         if ($codeholder['website']) {
             $websiteContainer = new Element('div');
             $websiteContainer->class = 'item-website';
-            $websiteLink = new Element('a', $codeholder['website']);
+            $websiteLink = new Element('a', htmlspecialchars($codeholder['website']));
             $websiteLink->target = '_blank';
             $websiteLink->rel = 'nofollow noreferrer';
             $websiteLink->href = $codeholder['website'];
@@ -377,7 +377,7 @@ class CodeholderLists {
             $addressContainer->class = 'item-address';
             $lines = preg_split('/\n/', $formatted);
             foreach ($lines as $line) {
-                $lne = new Element('div', $line);
+                $lne = new Element('div', htmlspecialchars($line));
                 $lne->class = 'address-line';
                 $addressContainer->appendChild($lne);
             }
@@ -392,7 +392,7 @@ class CodeholderLists {
         }
 
         if ($codeholder['biography']) {
-            $bioContainer = new Element('div', $codeholder['biography']);
+            $bioContainer = new Element('div', htmlspecialchars($codeholder['biography']));
             $bioContainer->class = 'item-bio';
             $right->appendChild($bioContainer);
         }
@@ -402,7 +402,7 @@ class CodeholderLists {
             $bioContainer->class = 'item-bio';
             $lines = preg_split("/\n/", $codeholder['mainDescriptor']);
             foreach ($lines as $line) {
-                $bioContainer->appendChild(new Element('div', $line));
+                $bioContainer->appendChild(new Element('div', htmlspecialchars($line)));
             }
             $right->appendChild($bioContainer);
         }
@@ -437,7 +437,7 @@ class CodeholderLists {
             $tr->class = 'ch-factoid';
             $tr->setAttribute('data-type', $fact['type']);
 
-            $label = new Element('th', $factKey);
+            $label = new Element('th', htmlspecialchars($factKey));
             $label->class = 'factoid-label';
             $tr->appendChild($label);
 
@@ -445,17 +445,17 @@ class CodeholderLists {
             $contents->class = 'factoid-contents';
 
             if ($fact['type'] === 'tel') {
-                $a = new Element('a', $fact['val_rendered']);
+                $a = new Element('a', htmlspecialchars($fact['val_rendered']));
                 $a->href = "tel:" . $fact['val'];
                 $contents->appendChild($a);
             } else if ($fact['type'] === 'text') {
                 $contents->setInnerHtml($fact['val_rendered']);
             } else if ($fact['type'] === 'number') {
-                $contents->setValue($fact['val']);
+                $contents->setValue(htmlspecialchars($fact['val']));
             } else if ($fact['type'] === 'email') {
                 $contents->setInnerHtml($fact['val_rendered']);
             } else if ($fact['type'] === 'url') {
-                $a = new Element('a', $fact['val']);
+                $a = new Element('a', htmlspecialchars($fact['val']));
                 $a->class = 'factoid-url';
                 $a->href = $fact['val'];
                 $contents->appendChild($a);
