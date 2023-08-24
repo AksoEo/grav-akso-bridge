@@ -392,8 +392,14 @@ class CodeholderLists {
         }
 
         if ($codeholder['biography']) {
-            $bioContainer = new Element('div', htmlspecialchars($codeholder['biography']));
+            $bioContainer = new Element('div');
             $bioContainer->class = 'item-bio';
+            $lines = preg_split('/\n/', $codeholder['biography']);
+            foreach ($lines as $line) {
+                $lne = new Element('div', htmlspecialchars($line));
+                $lne->class = 'biography-line';
+                $bioContainer->appendChild($lne);
+            }
             $right->appendChild($bioContainer);
         }
 
