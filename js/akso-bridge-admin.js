@@ -275,8 +275,9 @@ $(document).ready(() => {
     const GK_TEMPLATE = 'blog_item';
 
     initGkPagesAddons = () => {
+        console.log('init addons', location.pathname.toLowerCase());
         // stuff in /admin/pages
-        if (location.pathname.toLowerCase() !== '/admin/pages') return;
+        if (!location.pathname.toLowerCase().match(/^(\/\w{2})?\/admin\/pages$/)) return;
 
         const titlebarButtonGroup = document.createElement('div');
         titlebarButtonGroup.className = 'button-group';
@@ -285,9 +286,14 @@ $(document).ready(() => {
             ${locale.createGkPage}
         </button>
         `;
-        const titlebarAdd = document.querySelector('#titlebar-button-back').nextElementSibling;
-        titlebarAdd.parentNode.insertBefore(titlebarButtonGroup, titlebarAdd);
-        titlebarAdd.parentNode.insertBefore(document.createTextNode(' '), titlebarAdd);
+
+        const titlebarButtonBar = document.querySelector('#titlebar .button-bar')?.firstElementChild;
+        if (titlebarButtonBar) {
+            titlebarButtonBar.parentNode.insertBefore(titlebarButtonGroup, titlebarButtonBar);
+            titlebarButtonBar.parentNode.insertBefore(document.createTextNode(' '), titlebarButtonBar);
+        } else {
+            console.error('failed to add GK button because insertion point doesn’t exist');
+        }
 
         const newGkPageDialog = document.createElement('div');
         newGkPageDialog.className = 'new-gk-page';
