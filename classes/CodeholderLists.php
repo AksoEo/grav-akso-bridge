@@ -74,22 +74,30 @@ class CodeholderLists {
                 $chDataById[$ch['id']] = $ch;
             }
 
-            $res2 = $bridge->get("/codeholders/roles", array(
-                'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString', 'role.id', 'codeholderId'],
-                'filter' => array(
-                    'isActive' => true,
-                    'role.public' => true,
-                    'codeholderId' => array('$in' => $codeholderIds),
-                ),
-                'order' => [['role.name', 'asc']],
-                'limit' => 100,
-            ), 60 * 30);
-            if (!$res2['k']) {
-                Grav::instance()['log']->error("could not fetch codeholder roles in list: " . $res2['b']);
-                return null;
+            $totalRoles = 1;
+            $relevantRoles = [];
+            while (count($relevantRoles) < $totalRoles) {
+                $res2 = $bridge->get("/codeholders/roles", array(
+                    'fields' => ['role.name', 'dataCountry', 'dataOrg', 'dataString', 'role.id', 'codeholderId'],
+                    'filter' => array(
+                        'isActive' => true,
+                        'role.public' => true,
+                        'codeholderId' => array('$in' => $codeholderIds),
+                    ),
+                    'order' => [['role.name', 'asc']],
+                    'offset' => count($relevantRoles),
+                    'limit' => 100,
+                ), 60 * 30);
+                if (!$res2['k']) {
+                    Grav::instance()['log']->error("could not fetch codeholder roles in list: " . $res2['b']);
+                    return null;
+                }
+                $totalRoles = (int) $res2['h']['x-total-items'];
+                foreach ($res2['b'] as $role) $relevantRoles[] = $role;
+                if (empty($res2['b'])) break;
             }
 
-            foreach ($res2['b'] as $role) {
+            foreach ($relevantRoles as $role) {
                 $id = $role['codeholderId'];
                 if (!isset($chDataById[$id])) continue;
                 if (!isset($chDataById[$id]['activeRoles'])) $chDataById[$id]['activeRoles'] = [];
